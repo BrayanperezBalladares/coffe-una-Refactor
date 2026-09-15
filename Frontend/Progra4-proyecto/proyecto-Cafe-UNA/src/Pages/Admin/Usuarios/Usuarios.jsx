@@ -1,0 +1,1569 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Pencil, Power, X } from "lucide-react";
+import { AdminLayout } from "../layouts/AdminLayout";
+import { AdminPageGate } from "../../../Components/AdminPageGate/AdminPageGate";
+import { useAdminPageGate } from "../../../hooks/useAdminPageGate";
+import { AdminModal, AdminModalActions, AdminModalBody, AdminModalHeader, adminBtnCancel } from "../../../Components/Admin/ui/AdminModal";
+import { AdminListaToolbar, AdminListaVacia } from "../../../Components/Admin/ui/AdminListaToolbar";
+import { AdminPaginacion } from "../../../Components/Admin/ui/AdminPaginacion";
+import { useAdminListaFiltros } from "../../../hooks/useAdminListaFiltros";
+import { useAdminPaginacion } from "../../../hooks/useAdminPaginacion";
+import {
+  obtenerUsuarios,
+  actualizarUsuario,
+  cambiarEstadoUsuario,
+  solicitarCreacionUsuario,
+  confirmarCreacionUsuario,
+  solicitarCambioCorreoUsuario,
+  confirmarCambioCorreoUsuario,
+} from "../../../services/usuariosService";
+import { getActiveSessionUser } from "../../../services/sessionService";
+import { tienePermiso } from "../../../lib/permisos";
+import {
+  MAX_NOMBRE_USUARIO,
+  MAX_PASSWORD,
+  sanitizeUserFacingError,
+  validateNombreUsuario,
+  validatePassword,
+} from "../../../lib/formLimits";
+import { queueFocusFormError } from "../../../lib/formFocus";
+import { ST } from "../../../Components/T/ST";
+import { t } from "../../../lib/t";
+import { UiSelect } from "../../../Components/ui/Select";
+
+function soloLetras(valor, max = 100) {
+  return String(valor ?? "")
+    .replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+/g, "")
+    .replace(/\s{2,}/g, " ")
+    .slice(0, max);
+}
+
+function soloDigitos(valor, max) {
+  return String(valor ?? "").replace(/\D/g, "").slice(0, max);
+}
+
+function soloTelefono(valor) {
+  const texto = String(valor ?? "");
+  const tieneMas = texto.trimStart().startsWith("+");
+  const digitos = texto.replace(/\D/g, "").slice(0, tieneMas ? 14 : 15);
+  return tieneMas ? `+${digitos}` : digitos;
+}
+
+function formatearCedulaJuridica(valor) {
+  const digitos = String(valor ?? "").replace(/\D/g, "").slice(0, 10);
+  if (digitos.length <= 1) return digitos;
+  if (digitos.length <= 4) return `${digitos.slice(0, 1)}-${digitos.slice(1)}`;
+  return `${digitos.slice(0, 1)}-${digitos.slice(1, 4)}-${digitos.slice(4)}`;
+}
+
+function esRolSuperAdmin(rol) {
+  const clave = String(rol ?? "").trim().toLowerCase();
+  return clave === "superadmin" || clave === "superadministrador";
+}
+
+function esRolCliente(rol) {
+  return String(rol ?? "").trim().toLowerCase() === "cliente";
+}
+
+const CLIENTE_FORM_VACIO = {
+  tipo: "persona",
+  esNacional: "si",
+  tipoDocumento: "cedula",
+  nombreLegal: "",
+  apellido1: "",
+  apellido2: "",
+  identificacion: "",
+  telefono: "",
+  razonSocial: "",
+  nombreComercial: "",
+  representanteLegal: "",
+  cedulaJuridica: "",
+  direccionFiscal: "",
+  telefonoOficina: "",
+};
+
+function validarFormClienteAdmin(form) {
+  const telefono = String(form.telefono || "").trim();
+  if (!telefono || telefono.replace(/\D/g, "").length < 8) {
+    return "El teléfono del cliente es obligatorio.";
+  }
+  if (form.tipo === "empresa") {
+    if (!String(form.razonSocial || "").trim()) return "La razón social es obligatoria.";
+    if (!String(form.nombreComercial || "").trim()) return "El nombre comercial es obligatorio.";
+    if (!String(form.representanteLegal || "").trim()) return "El representante legal es obligatorio.";
+    if (!/^\d{1}-\d{3}-\d{6}$/.test(String(form.cedulaJuridica || "").trim())) {
+      return "La cédula jurídica debe tener el formato 3-101-123456.";
+    }
+    return "";
+  }
+  if (!String(form.nombreLegal || "").trim()) return "El nombre del cliente es obligatorio.";
+  if (!String(form.apellido1 || "").trim()) return "El apellido 1 es obligatorio.";
+  const tipoDocumento = form.esNacional === "si" ? "cedula" : form.tipoDocumento;
+  if (tipoDocumento === "cedula" && !String(form.apellido2 || "").trim()) {
+    return "El apellido 2 es obligatorio.";
+  }
+  const identificacion = String(form.identificacion || "").trim();
+  if (!identificacion) return "La identificación es obligatoria.";
+  if (tipoDocumento === "cedula" && !/^\d{9}$/.test(identificacion.replace(/\D/g, ""))) {
+    return "La cédula costarricense debe tener 9 dígitos.";
+  }
+  if (tipoDocumento === "dimex") {
+    const digitos = identificacion.replace(/\D/g, "");
+    if (digitos.length < 10 || digitos.length > 12) return "El DIMEX debe tener entre 10 y 12 dígitos.";
+  }
+  if (tipoDocumento === "pasaporte" && !/^[A-Za-z0-9]{5,20}$/.test(identificacion)) {
+    return "El pasaporte no tiene un formato válido.";
+  }
+  return "";
+}
+
+function armarDatosClientePayload(form) {
+  if (form.tipo === "empresa") {
+    return {
+      tipo: "empresa",
+      telefono: form.telefono.trim(),
+      razonSocial: form.razonSocial.trim(),
+      nombreComercial: form.nombreComercial.trim(),
+      representanteLegal: form.representanteLegal.trim(),
+      cedulaJuridica: form.cedulaJuridica.trim(),
+      direccionFiscal: form.direccionFiscal.trim() || undefined,
+      telefonoOficina: form.telefonoOficina.trim() || undefined,
+    };
+  }
+  const tipoDocumento = form.esNacional === "si" ? "cedula" : form.tipoDocumento;
+  return {
+    tipo: "persona",
+    telefono: form.telefono.trim(),
+    nombreLegal: form.nombreLegal.trim(),
+    apellido1: form.apellido1.trim(),
+    apellido2: form.apellido2.trim(),
+    identificacion: form.identificacion.trim(),
+    tipoDocumento,
+    esNacional: form.esNacional,
+  };
+}
+
+function Modal({ titulo, onClose, children, maxWidth = "max-w-xl" }) {
+  return (
+    <AdminModal open onClose={onClose} maxWidth={maxWidth} labelledBy="admin-usuarios-modal-title">
+      <AdminModalHeader>
+        <h2 id="admin-usuarios-modal-title" className="text-lg font-semibold text-slate-900">{titulo}</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          aria-label={t("Cerrar")}
+        >
+          <X className="size-5" />
+        </button>
+      </AdminModalHeader>
+      <AdminModalBody>{children}</AdminModalBody>
+    </AdminModal>
+  );
+}
+
+function filaCliente(label, valor) {
+  const texto = String(valor ?? "").trim();
+  if (!texto) return null;
+  return (
+    <div className="grid grid-cols-[minmax(7rem,9rem)_1fr] gap-x-3 gap-y-0.5 text-sm">
+      <dt className="text-slate-500"><ST>{label}</ST></dt>
+      <dd className="font-medium text-slate-900 break-words">{texto}</dd>
+    </div>
+  );
+}
+
+function InfoClienteLectura({ usuario }) {
+  const tipo = String(usuario?.tipoCliente ?? "").trim().toLowerCase();
+  const esCliente = (usuario?.roles || []).some((r) => String(r).toLowerCase() === "cliente");
+  if (!tipo && !esCliente) return null;
+
+  const esEmpresa = tipo === "empresa";
+  const tituloTipo = esEmpresa ? "Empresa" : tipo === "persona" ? "Persona" : "Cliente";
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900"><ST>Datos de cliente</ST></h3>
+        <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200">
+          <ST>{tituloTipo}</ST>
+        </span>
+      </div>
+      {!tipo ? (
+        <p className="text-xs text-slate-600">
+          <ST>Tiene el rol Cliente, pero no hay ficha registrada.</ST>
+        </p>
+      ) : (
+        <dl className="space-y-1.5">
+          {esEmpresa ? (
+            <>
+              {filaCliente("Razón social", usuario.razonSocial)}
+              {filaCliente("Nombre comercial", usuario.nombreComercial)}
+              {filaCliente("Cédula jurídica", usuario.cedulaJuridica)}
+              {filaCliente("Representante", usuario.representanteLegal)}
+              {filaCliente("Dirección fiscal", usuario.direccionFiscal)}
+              {filaCliente("Tel. oficina", usuario.telefonoOficina)}
+              {filaCliente("Teléfono", usuario.telefono)}
+            </>
+          ) : (
+            <>
+              {filaCliente("Nombre", usuario.nombreLegal)}
+              {filaCliente("Apellido 1", String(usuario.apellidos || "").trim().split(/\s+/)[0] || "")}
+              {filaCliente("Apellido 2", String(usuario.apellidos || "").trim().split(/\s+/).slice(1).join(" ") || "")}
+              {filaCliente("Tipo documento", usuario.tipoDocumento)}
+              {filaCliente("Identificación", usuario.identificacion)}
+              {filaCliente("Teléfono", usuario.telefono)}
+            </>
+          )}
+        </dl>
+      )}
+      <p className="text-xs text-slate-500 pt-1">
+        <ST>Si quita el rol Cliente, se borra esta información y la persona debe registrarse de nuevo.</ST>
+      </p>
+    </section>
+  );
+}
+
+const colorRol = {
+  Superadministrador: "bg-slate-100 text-yellow-500",
+  SuperAdmin:         "bg-slate-100 text-yellow-500",
+  Administración:     "bg-slate-100 text-green-600",
+  Admin:              "bg-slate-100 text-green-600",
+  Vendedor:           "bg-slate-100 text-[#5c3317]",
+  Cliente:            "bg-slate-100 text-red-600",
+  Usuario:            "bg-slate-100 text-slate-700",
+};
+
+function claseRol(rol) {
+  const clave = String(rol ?? "").trim().toLowerCase();
+  if (clave === "superadmin" || clave === "superadministrador") return colorRol.SuperAdmin;
+  if (clave === "admin" || clave === "administración" || clave === "administracion") return colorRol.Admin;
+  if (clave === "vendedor") return colorRol.Vendedor;
+  if (clave === "cliente") return colorRol.Cliente;
+  if (clave === "usuario") return colorRol.Usuario;
+  return colorRol[rol] ?? "bg-slate-100 text-slate-700";
+}
+
+function BadgeRol({ rol }) {
+  return (
+    <span className={`inline-block rounded-full px-3 py-0.5 text-[length:var(--text-body)] font-semibold ${claseRol(rol)}`}>
+      <ST>{rol}</ST>
+    </span>
+  );
+}
+
+const btnNegro =
+  "w-full rounded-full border border-slate-950 bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:border-neutral-700 hover:bg-neutral-700 active:border-neutral-700 active:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto";
+
+const btnCancelarGris =
+  "w-full rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:w-auto";
+
+const ROLES_DISPONIBLES = ["SuperAdmin", "Admin", "Vendedor", "Usuario", "Cliente"];
+
+function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, setCargando, puedeEditarRoles = false }) {
+  const actor = (() => {
+    return getActiveSessionUser();
+  })();
+  const actorId = Number(actor?.id) || null;
+  const editandoPropioUsuario = Boolean(inicial?.id) && actorId !== null && Number(inicial.id) === actorId;
+  const correoOriginal = (inicial?.correo ?? "").trim().toLowerCase();
+  const teniaClienteAlAbrir = (inicial?.roles || []).some((r) => String(r).toLowerCase() === "cliente");
+
+  const [pasoCreacion, setPasoCreacion] = useState("datos");
+  const [codigoVerificacion, setCodigoVerificacion] = useState("");
+  const [passwordCorreoUsuario, setPasswordCorreoUsuario] = useState("");
+  const [errorPasswordCorreo, setErrorPasswordCorreo] = useState("");
+  const [correoVerificado, setCorreoVerificado] = useState(true);
+  const [mensajeCorreo, setMensajeCorreo] = useState("");
+  const [errorCorreo, setErrorCorreo] = useState("");
+  const [verificandoCorreo, setVerificandoCorreo] = useState(false);
+  const [correoForm, setCorreoForm] = useState(inicial?.correo ?? "");
+  const [fieldErrors, setFieldErrors] = useState({
+    nombre: "",
+    passwordHash: "",
+    passwordActual: "",
+    formulario: "",
+  });
+  const [clienteForm, setClienteForm] = useState(CLIENTE_FORM_VACIO);
+  const [asignandoCliente, setAsignandoCliente] = useState(false);
+
+  const form = useForm({
+    defaultValues: {
+      nombre: inicial?.nombre ?? "",
+      correo: inicial?.correo ?? "",
+      passwordHash: "",
+      passwordActual: "",
+      roles: (inicial?.roles ?? ["Usuario"]).filter((rol) => {
+        if (!inicial && String(rol).toLowerCase() === "cliente") return false;
+        return true;
+      }),
+    },
+    onSubmit: async ({ value }) => {
+      const correoActual = value.correo.trim().toLowerCase();
+      const rolesPayload = Array.isArray(value.roles) && value.roles.length > 0 ? value.roles : ["Usuario"];
+      const payload = {
+        nombre: value.nombre.trim(),
+        correo: correoActual,
+        roles: rolesPayload,
+      };
+
+      const nextErrors = {
+        nombre: validateNombreUsuario(value.nombre),
+        passwordHash: "",
+        passwordActual: "",
+        formulario: "",
+      };
+
+      if (editandoPropioUsuario) {
+        const teniaSuper = (inicial?.roles || []).some(esRolSuperAdmin);
+        const tieneSuper = rolesPayload.some(esRolSuperAdmin);
+        if (teniaSuper && !tieneSuper) {
+          nextErrors.formulario = "No puede quitarse a sí mismo el rol SuperAdmin.";
+          setFieldErrors(nextErrors);
+          return;
+        }
+      }
+
+      const agregaCliente = rolesPayload.some(esRolCliente) && !teniaClienteAlAbrir;
+      if (agregaCliente) {
+        const errorCliente = validarFormClienteAdmin(clienteForm);
+        if (errorCliente) {
+          nextErrors.formulario = errorCliente;
+          setFieldErrors(nextErrors);
+          setAsignandoCliente(true);
+          return;
+        }
+        payload.datosCliente = armarDatosClientePayload(clienteForm);
+      }
+
+      if (!payload.correo) {
+        setErrorCorreo("Ingrese el correo.");
+        queueFocusFormError({
+          errors: { correo: true },
+          root: document.querySelector('[role="dialog"]'),
+          fieldMap: { correo: "correo" },
+        });
+        return;
+      }
+
+      if (nextErrors.nombre) {
+        setFieldErrors(nextErrors);
+        queueFocusFormError({
+          errors: nextErrors,
+          root: document.querySelector('[role="dialog"]'),
+          fieldOrder: ["nombre", "passwordHash", "passwordActual", "formulario"],
+        });
+        return;
+      }
+
+      if (!inicial) {
+        if (pasoCreacion === "datos") {
+          const passwordError = validatePassword(value.passwordHash);
+          if (passwordError) {
+            setFieldErrors({ ...nextErrors, passwordHash: passwordError });
+            queueFocusFormError({
+              errors: { ...nextErrors, passwordHash: passwordError },
+              root: document.querySelector('[role="dialog"]'),
+              fieldOrder: ["nombre", "passwordHash"],
+            });
+            return;
+          }
+          setFieldErrors(nextErrors);
+          setCargando(true);
+          setErrorCorreo("");
+          try {
+            const result = await solicitarCreacionUsuario({
+              ...payload,
+              passwordHash: value.passwordHash,
+            });
+            setMensajeCorreo(result?.message || "C\u00f3digo enviado al correo.");
+            setPasoCreacion("codigo");
+          } catch (err) {
+            setFieldErrors({
+              ...nextErrors,
+              formulario: sanitizeUserFacingError(err?.message || "No se pudo enviar el c\u00f3digo."),
+            });
+          } finally {
+            setCargando(false);
+          }
+          return;
+        }
+
+        setCargando(true);
+        setErrorCorreo("");
+        try {
+          const nuevo = await confirmarCreacionUsuario({
+            correo: correoActual,
+            token: codigoVerificacion.trim(),
+          });
+          onCreado(nuevo);
+        } catch (err) {
+          setErrorCorreo(sanitizeUserFacingError(err?.message || "No se pudo crear el usuario."));
+        } finally {
+          setCargando(false);
+        }
+        return;
+      }
+
+      if (correoActual !== correoOriginal && !correoVerificado) {
+        setErrorCorreo("Debe verificar el nuevo correo antes de guardar.");
+        return;
+      }
+
+      const cambios = { ...payload };
+      if (value.passwordHash?.trim()) {
+        const passwordError = validatePassword(value.passwordHash, { required: true });
+        if (passwordError) {
+          setFieldErrors({ ...nextErrors, passwordHash: passwordError });
+          queueFocusFormError({
+            errors: { ...nextErrors, passwordHash: passwordError },
+            root: document.querySelector('[role="dialog"]'),
+            fieldOrder: ["nombre", "passwordHash", "passwordActual"],
+          });
+          return;
+        }
+        if (!value.passwordActual?.trim()) {
+          setFieldErrors({ ...nextErrors, passwordActual: "Ingrese su contrase\u00f1a actual." });
+          queueFocusFormError({
+            errors: { passwordActual: true },
+            root: document.querySelector('[role="dialog"]'),
+          });
+          return;
+        }
+        cambios.passwordHash = value.passwordHash;
+        cambios.passwordActual = value.passwordActual;
+      }
+
+      setFieldErrors(nextErrors);
+      setCargando(true);
+      try {
+        await onActualizado(cambios);
+      } catch (err) {
+        const message = sanitizeUserFacingError(err?.message || "No se pudo guardar el usuario.");
+        if (value.passwordHash?.trim()) {
+          setFieldErrors((prev) => ({ ...prev, passwordHash: message }));
+        } else {
+          setFieldErrors((prev) => ({ ...prev, formulario: message }));
+        }
+      } finally {
+        setCargando(false);
+      }
+    },
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    form.handleSubmit();
+  }
+
+  const correoCambio = Boolean(inicial) && correoForm.trim().toLowerCase() !== correoOriginal;
+
+  useEffect(() => {
+    if (!inicial) {
+      setCorreoVerificado(false);
+      return;
+    }
+    setCorreoVerificado(!correoCambio);
+    if (!correoCambio) {
+      setPasswordCorreoUsuario("");
+      setErrorPasswordCorreo("");
+    }
+  }, [correoCambio, inicial]);
+
+  async function handleSolicitarCodigoCorreo() {
+    const correo = correoForm.trim().toLowerCase();
+    if (!correo) {
+      setErrorCorreo("Ingrese el nuevo correo.");
+      return;
+    }
+    if (!passwordCorreoUsuario) {
+      setErrorPasswordCorreo(
+        editandoPropioUsuario
+          ? "Ingrese su contrase\u00f1a actual."
+          : "Ingrese la contrase\u00f1a de esta cuenta.",
+      );
+      return;
+    }
+
+    setVerificandoCorreo(true);
+    setErrorCorreo("");
+    setErrorPasswordCorreo("");
+    setMensajeCorreo("");
+
+    try {
+      const result = await solicitarCambioCorreoUsuario(inicial.id, {
+        nuevoCorreo: correo,
+        passwordActual: passwordCorreoUsuario,
+      });
+      setPasswordCorreoUsuario("");
+      setMensajeCorreo(result?.message || "C\u00f3digo enviado al nuevo correo.");
+    } catch (err) {
+      const message = sanitizeUserFacingError(err?.message || "No se pudo enviar el c\u00f3digo.");
+      if (message.toLowerCase().includes("contrase\u00f1a")) {
+        setErrorPasswordCorreo(message);
+      } else {
+        setErrorCorreo(message);
+      }
+    } finally {
+      setVerificandoCorreo(false);
+    }
+  }
+
+  async function handleConfirmarCodigoCorreo() {
+    const correo = correoForm.trim().toLowerCase();
+    const token = codigoVerificacion.trim();
+    if (!correo || !token) {
+      setErrorCorreo("Ingrese el correo y el c\u00f3digo recibido.");
+      return;
+    }
+
+    setVerificandoCorreo(true);
+    setErrorCorreo("");
+    setMensajeCorreo("");
+
+    try {
+      const actualizado = await confirmarCambioCorreoUsuario(inicial.id, { nuevoCorreo: correo, token });
+      setCorreoVerificado(true);
+      setCodigoVerificacion("");
+      setMensajeCorreo("Correo verificado y actualizado.");
+      form.setFieldValue("correo", actualizado?.correo || correo);
+      setCorreoForm(actualizado?.correo || correo);
+      if (actualizado?.id) {
+        onActualizado({ ...actualizado, soloActualizarLista: true });
+      }
+    } catch (err) {
+      setErrorCorreo(err?.message || "No se pudo verificar el correo.");
+    } finally {
+      setVerificandoCorreo(false);
+    }
+  }
+
+  const inputCls =
+    "w-full rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-none outline-none transition focus:border-slate-400 focus:bg-white focus:shadow-none focus:ring-0 focus:outline-none";
+
+  return (
+    <form onSubmit={handleSubmit} className="usuarios-form space-y-4">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slate-600"><ST>Nombre</ST></label>
+        <form.Field name="nombre">
+          {(field) => (
+            <>
+              <input
+                name="nombre"
+                className={`${inputCls} ${fieldErrors.nombre ? "border-red-500 focus:border-red-500" : ""}`}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => {
+                  setFieldErrors((prev) => ({ ...prev, nombre: "" }));
+                  field.handleChange(event.target.value.slice(0, MAX_NOMBRE_USUARIO));
+                }}
+                maxLength={MAX_NOMBRE_USUARIO}
+                required
+                disabled={!inicial && pasoCreacion === "codigo"}
+                aria-invalid={Boolean(fieldErrors.nombre)}
+              />
+              {fieldErrors.nombre ? (
+                <p className="mt-1 text-xs text-red-600" role="alert"><ST>{fieldErrors.nombre}</ST></p>
+              ) : null}
+            </>
+          )}
+        </form.Field>
+      </div>
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slate-600"><ST>Correo</ST></label>
+        <form.Field name="correo">
+          {(field) => (
+            <input
+              name="correo"
+              type="email"
+              className={inputCls}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(event) => {
+                field.handleChange(event.target.value);
+                setCorreoForm(event.target.value);
+              }}
+              required
+              disabled={!inicial && pasoCreacion === "codigo"}
+            />
+          )}
+        </form.Field>
+        {inicial && correoCambio ? (
+          <div className="mt-3 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-700">{"El correo cambi\u00f3. Debe verificar el nuevo correo antes de guardar otros cambios."}</p>
+            <label className="block text-xs font-medium text-slate-600">
+              {editandoPropioUsuario ? "Su contrase\u00f1a actual" : "Contrase\u00f1a de esta cuenta"}
+              <input
+                type="password"
+                className={`${inputCls} mt-1 ${errorPasswordCorreo ? "border-red-500 focus:border-red-500" : ""}`}
+                value={passwordCorreoUsuario}
+                onChange={(e) => {
+                  setErrorPasswordCorreo("");
+                  setPasswordCorreoUsuario(e.target.value.slice(0, MAX_PASSWORD));
+                }}
+                maxLength={MAX_PASSWORD}
+                placeholder={editandoPropioUsuario ? "Requerida para cambiar el correo" : "Contrase\u00f1a del usuario"}
+              />
+              {errorPasswordCorreo ? <p className="mt-1 text-xs text-red-600"><ST>{errorPasswordCorreo}</ST></p> : null}
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={handleSolicitarCodigoCorreo}
+                disabled={verificandoCorreo}
+                className={`${btnNegro} text-xs sm:py-1.5`}
+              >{"Enviar c\u00f3digo"}</button>
+            </div>
+            <input
+              className={inputCls}
+              value={codigoVerificacion}
+              onChange={(e) => setCodigoVerificacion(e.target.value)}
+              placeholder={"C\u00f3digo de verificaci\u00f3n"}
+            />
+            <button
+              type="button"
+              onClick={handleConfirmarCodigoCorreo}
+              disabled={verificandoCorreo}
+              className={`${adminBtnCancel} text-xs sm:py-1.5`}
+            >
+              Verificar correo
+            </button>
+          </div>
+        ) : null}
+        {mensajeCorreo ? <p className="mt-2 text-xs text-emerald-700">{mensajeCorreo}</p> : null}
+        {errorCorreo ? <p className="mt-2 text-xs text-red-600"><ST>{errorCorreo}</ST></p> : null}
+      </div>
+      {!inicial && pasoCreacion === "codigo" ? (
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-600">{"C\u00f3digo de verificaci\u00f3n"}</label>
+          <input
+            className={inputCls}
+            value={codigoVerificacion}
+            onChange={(e) => setCodigoVerificacion(e.target.value)}
+            placeholder={"6 d\u00edgitos"}
+            required
+          />
+        </div>
+      ) : null}
+      {(!inicial && pasoCreacion === "datos") || inicial ? (
+        <>
+          {!inicial || editandoPropioUsuario ? (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">
+                  {"Contrase\u00f1a"} {inicial && <span className="text-slate-400">(opcional)</span>}
+                </label>
+                <form.Field name="passwordHash">
+                  {(field) => (
+                    <>
+                      <input
+                        name="passwordHash"
+                        type="password"
+                        className={`${inputCls} ${fieldErrors.passwordHash ? "border-red-500 focus:border-red-500" : ""}`}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => {
+                          setFieldErrors((prev) => ({ ...prev, passwordHash: "" }));
+                          field.handleChange(event.target.value.slice(0, MAX_PASSWORD));
+                        }}
+                        maxLength={MAX_PASSWORD}
+                        required={!inicial}
+                        placeholder={inicial ? "Dejar vac\u00edo para no cambiar" : ""}
+                        aria-invalid={Boolean(fieldErrors.passwordHash)}
+                      />
+                      {fieldErrors.passwordHash ? (
+                        <p className="mt-1 text-xs text-red-600" role="alert"><ST>{fieldErrors.passwordHash}</ST></p>
+                      ) : null}
+                    </>
+                  )}
+                </form.Field>
+              </div>
+              {inicial ? (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">{"Contrase\u00f1a actual"}</label>
+                  <form.Field name="passwordActual">
+                    {(field) => (
+                      <>
+                        <input
+                          name="passwordActual"
+                          type="password"
+                          className={`${inputCls} ${fieldErrors.passwordActual ? "border-red-500 focus:border-red-500" : ""}`}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => {
+                            setFieldErrors((prev) => ({ ...prev, passwordActual: "" }));
+                            field.handleChange(event.target.value.slice(0, MAX_PASSWORD));
+                          }}
+                          maxLength={MAX_PASSWORD}
+                          placeholder={"Requerida si cambia la contrase\u00f1a"}
+                          aria-invalid={Boolean(fieldErrors.passwordActual)}
+                        />
+                        {fieldErrors.passwordActual ? (
+                          <p className="mt-1 text-xs text-red-600" role="alert"><ST>{fieldErrors.passwordActual}</ST></p>
+                        ) : null}
+                      </>
+                    )}
+                  </form.Field>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500"><ST>{"Solo puede cambiar su propia contrase\u00f1a."}</ST></p>
+          )}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-slate-600"><ST>Roles</ST></label>
+            {puedeEditarRoles ? (
+              <form.Field name="roles">
+                {(field) => {
+                  const selectedRoles = Array.isArray(field.state.value) ? field.state.value : [];
+                  const rolesVisibles = inicial
+                    ? ROLES_DISPONIBLES
+                    : ROLES_DISPONIBLES.filter((rol) => !esRolCliente(rol));
+                  const toggleRol = (rol) => {
+                    const yaSeleccionado = selectedRoles.includes(rol);
+                    if (esRolSuperAdmin(rol) && yaSeleccionado && editandoPropioUsuario) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        formulario: "No puede quitarse a sí mismo el rol SuperAdmin.",
+                      }));
+                      return;
+                    }
+                    if (esRolCliente(rol) && !yaSeleccionado) {
+                      setAsignandoCliente(true);
+                      setClienteForm(CLIENTE_FORM_VACIO);
+                      field.handleChange([...selectedRoles, rol]);
+                      setFieldErrors((prev) => ({ ...prev, formulario: "" }));
+                      return;
+                    }
+                    if (esRolCliente(rol) && yaSeleccionado) {
+                      setAsignandoCliente(false);
+                      setClienteForm(CLIENTE_FORM_VACIO);
+                    }
+                    field.handleChange(
+                      yaSeleccionado
+                        ? selectedRoles.filter((actual) => actual !== rol)
+                        : [...selectedRoles, rol],
+                    );
+                    setFieldErrors((prev) => ({ ...prev, formulario: "" }));
+                  };
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {rolesVisibles.map((rol) => {
+                          const seleccionado = selectedRoles.includes(rol);
+                          const bloquearSuper =
+                            esRolSuperAdmin(rol) && seleccionado && editandoPropioUsuario;
+                          return (
+                            <button
+                              key={rol}
+                              type="button"
+                              onClick={() => toggleRol(rol)}
+                              title={
+                                bloquearSuper
+                                  ? t("No puede quitarse el rol SuperAdmin.")
+                                  : undefined
+                              }
+                              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                                seleccionado
+                                  ? claseRol(rol)
+                                  : "border border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                              } ${bloquearSuper ? "cursor-not-allowed opacity-80" : ""}`}
+                            >
+                              <ST>{rol}</ST>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {teniaClienteAlAbrir ? (
+                        <p className="text-xs text-amber-800">
+                          <ST>Al quitar Cliente se borra la ficha y debe volver a registrarse para comprar.</ST>
+                        </p>
+                      ) : null}
+                      {asignandoCliente && selectedRoles.some(esRolCliente) ? (
+                        <p className="text-xs text-slate-600">
+                          <ST>Complete los datos de cliente para poder guardar este rol.</ST>
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                }}
+              </form.Field>
+            ) : (
+              <form.Field name="roles">
+                {(field) => (
+                  <div className="flex flex-wrap gap-2">
+                    {(Array.isArray(field.state.value) ? field.state.value : []).map((rol) => (
+                      <BadgeRol key={rol} rol={rol} />
+                    ))}
+                  </div>
+                )}
+              </form.Field>
+            )}
+          </div>
+          {asignandoCliente && inicial ? (
+            <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="text-sm font-semibold text-slate-900"><ST>Datos de cliente</ST></h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "persona", label: "Persona" },
+                  { id: "empresa", label: "Empresa" },
+                ].map((op) => (
+                  <button
+                    key={op.id}
+                    type="button"
+                    onClick={() => setClienteForm((prev) => ({ ...prev, tipo: op.id }))}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      clienteForm.tipo === op.id
+                        ? "bg-slate-900 text-white"
+                        : "border border-slate-200 bg-white text-slate-600"
+                    }`}
+                  >
+                    <ST>{op.label}</ST>
+                  </button>
+                ))}
+              </div>
+              {clienteForm.tipo === "empresa" ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                    <ST>Razón social</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.razonSocial}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, razonSocial: e.target.value.slice(0, 150) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Nombre comercial</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.nombreComercial}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, nombreComercial: e.target.value.slice(0, 150) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Cédula jurídica</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.cedulaJuridica}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, cedulaJuridica: formatearCedulaJuridica(e.target.value) }))}
+                      placeholder="3-101-123456"
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                    <ST>Representante legal</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.representanteLegal}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, representanteLegal: soloLetras(e.target.value, 100) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Teléfono</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.telefono}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, telefono: soloTelefono(e.target.value) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Tel. oficina</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.telefonoOficina}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, telefonoOficina: soloTelefono(e.target.value) }))}
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                    <ST>Dirección fiscal</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.direccionFiscal}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, direccionFiscal: e.target.value.slice(0, 200) }))}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <span className="mb-1 block text-xs font-medium text-slate-600"><ST>¿Es extranjero?</ST></span>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "no", label: "No", esNacional: "si" },
+                        { id: "si", label: "Sí", esNacional: "no" },
+                      ].map((op) => (
+                        <button
+                          key={op.id}
+                          type="button"
+                          onClick={() => setClienteForm((prev) => ({
+                            ...prev,
+                            esNacional: op.esNacional,
+                            tipoDocumento: op.esNacional === "si" ? "cedula" : (prev.tipoDocumento === "cedula" ? "dimex" : prev.tipoDocumento),
+                            identificacion: op.esNacional === "si"
+                              ? soloDigitos(prev.identificacion, 9)
+                              : prev.identificacion,
+                          }))}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            clienteForm.esNacional === op.esNacional
+                              ? "bg-slate-900 text-white"
+                              : "border border-slate-200 bg-white text-slate-600"
+                          }`}
+                        >
+                          <ST>{op.label}</ST>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {clienteForm.esNacional === "no" ? (
+                    <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                      <ST>Tipo de documento</ST>
+                      <div className="mt-1">
+                        <UiSelect
+                          value={clienteForm.tipoDocumento === "cedula" ? "dimex" : clienteForm.tipoDocumento}
+                          onChange={(valor) => setClienteForm((prev) => ({
+                            ...prev,
+                            tipoDocumento: valor,
+                            identificacion: valor === "pasaporte"
+                              ? String(prev.identificacion).replace(/[^A-Za-z0-9]/g, "").slice(0, 20)
+                              : soloDigitos(prev.identificacion, 12),
+                          }))}
+                          options={[
+                            { value: "dimex", label: "DIMEX" },
+                            { value: "pasaporte", label: "Pasaporte" },
+                          ]}
+                        />
+                      </div>
+                    </label>
+                  ) : null}
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>{clienteForm.esNacional === "si" ? "Cédula" : (clienteForm.tipoDocumento === "pasaporte" ? "Pasaporte" : "DIMEX")}</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.identificacion}
+                      onChange={(e) => {
+                        const tipo = clienteForm.esNacional === "si" ? "cedula" : clienteForm.tipoDocumento;
+                        const valor = tipo === "pasaporte"
+                          ? e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 20)
+                          : soloDigitos(e.target.value, tipo === "dimex" ? 12 : 9);
+                        setClienteForm((prev) => ({ ...prev, identificacion: valor }));
+                      }}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Teléfono</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.telefono}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, telefono: soloTelefono(e.target.value) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Nombre</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.nombreLegal}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, nombreLegal: soloLetras(e.target.value, 50) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Apellido 1</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.apellido1}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, apellido1: soloLetras(e.target.value, 40) }))}
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    <ST>Apellido 2</ST>
+                    <input
+                      className={`${inputCls} mt-1`}
+                      value={clienteForm.apellido2}
+                      onChange={(e) => setClienteForm((prev) => ({ ...prev, apellido2: soloLetras(e.target.value, 40) }))}
+                      required={clienteForm.esNacional === "si"}
+                    />
+                  </label>
+                </div>
+              )}
+            </section>
+          ) : null}
+          {inicial && !asignandoCliente ? <InfoClienteLectura usuario={inicial} /> : null}
+        </>
+      ) : null}
+
+      {fieldErrors.formulario ? <p className="text-xs text-red-600"><ST>{fieldErrors.formulario}</ST></p> : null}
+
+      <div className="flex flex-row flex-wrap justify-end gap-2 pt-2">
+        <AdminModalActions
+          onCancel={onCancelar}
+          primaryDisabled={cargando || verificandoCorreo}
+          primaryClassName={btnNegro}
+          cancelClassName={btnCancelarGris}
+          primaryLabel={
+            cargando || verificandoCorreo
+              ? "Procesando…"
+              : !inicial
+                ? pasoCreacion === "datos"
+                  ? "Enviar código al correo"
+                  : "Crear usuario"
+                : "Guardar cambios"
+          }
+        />
+      </div>
+    </form>
+  );
+}
+
+
+const accionBtnBase =
+  "inline-flex items-center justify-center gap-1 rounded-full border text-[11px] font-semibold leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1";
+
+function mapUsuario(item) {
+  const estado = String(item?.estado ?? item?.Estado ?? "").trim().toLowerCase();
+  return {
+    ...item,
+    id: item?.id ?? item?.Id,
+    nombre: item?.nombre ?? item?.Nombre ?? "",
+    correo: item?.correo ?? item?.Correo ?? "",
+    estado: estado === "activo" ? "activo" : "inactivo",
+    roles: Array.isArray(item?.roles) ? item.roles : Array.isArray(item?.Roles) ? item.Roles : [],
+    tipoCliente: item?.tipoCliente ?? item?.TipoCliente ?? null,
+    telefono: item?.telefono ?? item?.Telefono ?? null,
+    apellidos: item?.apellidos ?? item?.Apellidos ?? null,
+    identificacion: item?.identificacion ?? item?.Identificacion ?? null,
+    nombreLegal: item?.nombreLegal ?? item?.NombreLegal ?? null,
+    tipoDocumento: item?.tipoDocumento ?? item?.TipoDocumento ?? null,
+    razonSocial: item?.razonSocial ?? item?.RazonSocial ?? null,
+    nombreComercial: item?.nombreComercial ?? item?.NombreComercial ?? null,
+    representanteLegal: item?.representanteLegal ?? item?.RepresentanteLegal ?? null,
+    cedulaJuridica: item?.cedulaJuridica ?? item?.CedulaJuridica ?? null,
+    direccionFiscal: item?.direccionFiscal ?? item?.DireccionFiscal ?? null,
+    telefonoOficina: item?.telefonoOficina ?? item?.TelefonoOficina ?? null,
+  };
+}
+
+function esUsuarioActivo(estado) {
+  return String(estado ?? "").trim().toLowerCase() === "activo";
+}
+
+function AccionesUsuario({
+  usuario,
+  puedeCambiarEstado,
+  toggleando,
+  onEditar,
+  onToggle,
+  variant = "table",
+}) {
+  const esInactivo = !esUsuarioActivo(usuario.estado);
+  const esMovil = variant === "mobile";
+
+  const editarCls = `${accionBtnBase} border-slate-950 bg-slate-950 text-white hover:border-neutral-700 hover:bg-neutral-700 active:border-neutral-700 active:bg-neutral-700 focus-visible:ring-slate-400`;
+  const toggleCls = `${accionBtnBase} ${
+    esInactivo
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-300"
+      : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 focus-visible:ring-rose-300"
+  }`;
+
+  const toggleLabel = toggleando === usuario.id
+    ? "..."
+    : esInactivo
+      ? "Activar"
+      : "Inactivar";
+
+  if (esMovil) {
+    return (
+      <div className="flex gap-1.5">
+        <button type="button" onClick={onEditar} className={`${editarCls} h-8 px-2.5`}>
+          <Pencil className="size-3 shrink-0" aria-hidden="true" />
+          <span><ST>Editar</ST></span>
+        </button>
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={toggleando === usuario.id || !puedeCambiarEstado}
+          title={!puedeCambiarEstado ? t("Solo SuperAdmin puede cambiar estado.") : ""}
+          className={`${toggleCls} h-8 px-2.5 disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          <Power className="size-3 shrink-0" aria-hidden="true" />
+          <span>{toggleLabel === "..." ? "..." : <ST>{toggleLabel}</ST>}</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-1">
+      <button type="button" onClick={onEditar} className={`${editarCls} h-7 px-2`}>
+        <Pencil className="size-3 shrink-0" aria-hidden="true" />
+        <span><ST>Editar</ST></span>
+      </button>
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={toggleando === usuario.id || !puedeCambiarEstado}
+        title={!puedeCambiarEstado ? t("Solo SuperAdmin puede cambiar estado.") : ""}
+        className={`${toggleCls} h-7 px-2 disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        <Power className="size-3 shrink-0" aria-hidden="true" />
+        <span>{toggleLabel === "..." ? "..." : <ST>{toggleLabel}</ST>}</span>
+      </button>
+    </div>
+  );
+}
+
+
+const AdminUsuarios = () => {
+  const actor = (() => {
+    return getActiveSessionUser();
+  })();
+  const actorId = Number(actor?.id) || null;
+  const actorRoles = Array.isArray(actor?.roles) ? actor.roles : [];
+  const esSuperAdmin = tienePermiso(actorRoles, "editar_usuarios");
+
+  const [usuarios, setUsuarios]   = useState([]);
+  const [cargando, setCargando]   = useState(true);
+  const [error, setError]         = useState(null);
+  const [modalCrear, setModalCrear]   = useState(false);
+  const [usuarioEditar, setUsuarioEditar] = useState(null); // objeto usuario
+  const [guardando, setGuardando] = useState(false);
+  const [toggleando, setToggleando] = useState(null); // id en proceso
+  const [sorting, setSorting] = useState([]);
+  const { showLoading, loadingMessage } = useAdminPageGate('/admin/usuarios', !cargando);
+
+  const filtrosConfig = useMemo(
+    () => [
+      {
+        id: "rol",
+        aplicar: (lista, valor) => {
+          if (!valor || valor === "todos") return lista;
+          const objetivo = String(valor).trim().toLowerCase();
+          return lista.filter((usuario) =>
+            (usuario.roles || []).some(
+              (rol) => String(rol).trim().toLowerCase() === objetivo,
+            ),
+          );
+        },
+      },
+      {
+        id: "estado",
+        aplicar: (lista, valor) => {
+          if (!valor || valor === "todos") return lista;
+          if (valor === "activo" || valor === "Habilitado") {
+            return lista.filter((usuario) => esUsuarioActivo(usuario.estado));
+          }
+          if (valor === "inactivo" || valor === "Deshabilitado") {
+            return lista.filter((usuario) => !esUsuarioActivo(usuario.estado));
+          }
+          return lista.filter((usuario) => usuario.estado === valor);
+        },
+      },
+    ],
+    [],
+  );
+
+  const buscarEn = useCallback(
+    (usuario) => [
+      usuario.nombre,
+      usuario.correo,
+      usuario.estado,
+      ...(Array.isArray(usuario.roles) ? usuario.roles : []),
+    ],
+    [],
+  );
+
+  const {
+    busqueda,
+    setBusqueda,
+    valoresFiltro,
+    setValorFiltro,
+    filtrados: usuariosFiltrados,
+    limpiar,
+    hayFiltrosActivos,
+    total,
+    visibles,
+  } = useAdminListaFiltros(usuarios, {
+    buscarEn,
+    filtrosConfig,
+  });
+
+  const {
+    page,
+    setPage,
+    pageItems: usuariosPagina,
+    totalPages,
+  } = useAdminPaginacion(usuariosFiltrados);
+
+  const rolesDisponibles = useMemo(() => {
+    const vistos = new Set();
+    usuarios.forEach((usuario) => {
+      (usuario.roles || []).forEach((rol) => {
+        if (rol) vistos.add(rol);
+      });
+    });
+    return [...vistos];
+  }, [usuarios]);
+
+  async function cargar() {
+    try {
+      setCargando(true);
+      setError(null);
+      const data = await obtenerUsuarios();
+      setUsuarios(Array.isArray(data) ? data.map(mapUsuario) : []);
+    } catch {
+      setError("No se pudieron cargar los usuarios.");
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerUsuarios()
+      .then((data) => {
+        if (activo) setUsuarios(Array.isArray(data) ? data.map(mapUsuario) : []);
+      })
+      .catch(() => {
+        if (activo) setError("No se pudieron cargar los usuarios.");
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  async function handleCrear(usuario) {
+    setUsuarios((prev) => [...prev, usuario]);
+    setModalCrear(false);
+  }
+
+  async function handleEditar(form) {
+    if (form?.soloActualizarLista) {
+      setUsuarios((prev) => prev.map((u) => (u.id === form.id ? form : u)));
+      setUsuarioEditar(form);
+      return;
+    }
+
+    try {
+      setGuardando(true);
+      const cambios = { ...form };
+      if (!cambios.passwordHash) {
+        delete cambios.passwordHash;
+        delete cambios.passwordActual;
+      }
+      const actualizado = await actualizarUsuario(usuarioEditar.id, cambios);
+      setUsuarios((prev) => prev.map((u) => (u.id === actualizado.id ? mapUsuario(actualizado) : u)));
+      setUsuarioEditar(null);
+    } catch (err) {
+      throw err;
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  const handleToggle = useCallback(async (usuario) => {
+    const esMismoUsuario = actorId !== null && Number(usuario.id) === actorId;
+    if (!esSuperAdmin) {
+      alert(t("Solo un SuperAdmin puede inactivar o activar usuarios."));
+      return;
+    }
+    if (esMismoUsuario) {
+      alert(t("No puede inactivarse a sí mismo."));
+      return;
+    }
+
+    try {
+      setToggleando(usuario.id);
+      const nuevoEstado = esUsuarioActivo(usuario.estado) ? "inactivo" : "activo";
+      const actualizado = await cambiarEstadoUsuario(usuario.id, nuevoEstado);
+      setUsuarios((prev) => prev.map((u) => (u.id === actualizado.id ? mapUsuario(actualizado) : u)));
+    } catch (err) {
+      alert(t(err?.message || "Error al cambiar el estado."));
+    } finally {
+      setToggleando(null);
+    }
+  }, [actorId, esSuperAdmin]);
+
+  const columns = useMemo(() => [
+    {
+      accessorKey: "nombre",
+      header: () => <ST>Nombre</ST>,
+      cell: ({ getValue }) => (
+        <span className="font-medium text-slate-800">{getValue()}</span>
+      ),
+    },
+    {
+      accessorKey: "correo",
+      header: () => <ST>Email</ST>,
+      cell: ({ getValue }) => (
+        <span className="text-slate-500">{getValue()}</span>
+      ),
+    },
+    {
+      accessorKey: "roles",
+      header: () => <ST>Roles</ST>,
+      enableSorting: false,
+      cell: ({ getValue }) => (
+        <div className="flex flex-wrap gap-1">
+          {(Array.isArray(getValue()) ? getValue() : []).map((rol) => <BadgeRol key={rol} rol={rol} />)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "estado",
+      header: () => <ST>Estado</ST>,
+      cell: ({ getValue }) => {
+        const estado = getValue();
+        return (
+          <span className={`text-xs font-medium ${
+            esUsuarioActivo(estado) ? "text-green-700" : "text-red-600"
+          }`}>
+            <ST>{esUsuarioActivo(estado) ? "Habilitado" : "Deshabilitado"}</ST>
+          </span>
+        );
+      },
+    },
+    {
+      id: "acciones",
+      header: () => <ST>Acciones</ST>,
+      enableSorting: false,
+      cell: ({ row }) => {
+        const usuario = row.original;
+        const esMismoUsuario = actorId !== null && Number(usuario.id) === actorId;
+        const puedeCambiarEstado = esSuperAdmin && !esMismoUsuario;
+
+        return (
+          <AccionesUsuario
+            usuario={usuario}
+            puedeCambiarEstado={puedeCambiarEstado}
+            toggleando={toggleando}
+            onEditar={() => setUsuarioEditar(usuario)}
+            onToggle={() => handleToggle(usuario)}
+          />
+        );
+      },
+    },
+  ], [actorId, esSuperAdmin, handleToggle, toggleando]);
+
+  // TanStack Table returns instance helpers by design; the warning is expected with React Compiler.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
+    data: usuariosPagina,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  return (
+    <AdminPageGate showLoading={showLoading} message={loadingMessage}>
+    <AdminLayout>
+      {/* Contenido */}
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        {/* Header */}
+        <div className="flex flex-col gap-4 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900"><ST>Administrar usuarios</ST></h1>
+            <p className="mt-0.5 text-sm text-slate-600"><ST>{"Gesti\u00f3n de acceso y roles"}</ST></p>
+          </div>
+          <button
+            onClick={() => setModalCrear(true)}
+            className="w-full rounded-full border border-slate-950 bg-slate-950 px-5 py-2 text-sm font-semibold text-white transition hover:border-neutral-700 hover:bg-neutral-700 active:border-neutral-700 active:bg-neutral-700 sm:w-auto"
+          >
+            <ST>Nuevo usuario +</ST>
+          </button>
+        </div>
+
+        {!cargando && !error ? (
+          <AdminListaToolbar
+            busqueda={busqueda}
+            onBusquedaChange={setBusqueda}
+            placeholder="Buscar por nombre, correo o rol..."
+            total={total}
+            visibles={visibles}
+            hayFiltrosActivos={hayFiltrosActivos}
+            onLimpiar={limpiar}
+            filtros={[
+              {
+                id: "rol",
+                label: "Rol",
+                value: valoresFiltro.rol || "todos",
+                onChange: (valor) => setValorFiltro("rol", valor),
+                opciones: [
+                  { value: "todos", label: "Todos" },
+                  ...rolesDisponibles.map((rol) => ({ value: rol, label: rol })),
+                ],
+              },
+              {
+                id: "estado",
+                label: "Estado",
+                value: valoresFiltro.estado || "todos",
+                onChange: (valor) => setValorFiltro("estado", valor),
+                opciones: [
+                  { value: "todos", label: "Todos" },
+                  { value: "activo", label: "Habilitado" },
+                  { value: "inactivo", label: "Deshabilitado" },
+                ],
+              },
+            ]}
+          />
+        ) : null}
+
+        {cargando ? (
+          <div className="flex items-center justify-center py-16 text-sm text-slate-600">
+            <ST>Cargando usuarios…</ST>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-sm text-red-500">
+            <ST>{error}</ST>
+            <button onClick={cargar} className="text-slate-600 underline"><ST>Reintentar</ST></button>
+          </div>
+        ) : usuarios.length === 0 ? (
+          <div className="py-16 text-center text-sm text-slate-600"><ST>No hay usuarios registrados.</ST></div>
+        ) : usuariosFiltrados.length === 0 ? (
+          <AdminListaVacia onLimpiar={limpiar} />
+        ) : (
+          <>
+            <div className="admin-table-shell hidden md:block">
+              <table className="w-full text-left text-[length:var(--text-body)]">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th key={header.id}>
+                          {header.column.getCanSort() ? (
+                            <button
+                              type="button"
+                              onClick={header.column.getToggleSortingHandler()}
+                              className="admin-th-sort"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <span className="admin-th-sort__icon" aria-hidden="true">
+                                {header.column.getIsSorted() === "asc" ? "▲" : header.column.getIsSorted() === "desc" ? "▼" : "↕"}
+                              </span>
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="transition hover:bg-slate-50/60">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-6 py-3.5">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="divide-y divide-slate-100 md:hidden">
+              {usuariosPagina.map((usuario) => {
+                const esMismoUsuario = actorId !== null && Number(usuario.id) === actorId;
+                const puedeCambiarEstado = esSuperAdmin && !esMismoUsuario;
+
+                return (
+                  <article key={usuario.id} className="space-y-3 px-4 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-slate-900">{usuario.nombre}</h3>
+                        <p className="mt-0.5 truncate text-sm text-slate-500">{usuario.correo}</p>
+                      </div>
+                      <span className={`shrink-0 text-xs font-medium ${
+                        esUsuarioActivo(usuario.estado) ? "text-green-700" : "text-red-600"
+                      }`}>
+                        {esUsuarioActivo(usuario.estado) ? "Habilitado" : "Deshabilitado"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {(Array.isArray(usuario.roles) ? usuario.roles : []).map((rol) => (
+                        <BadgeRol key={rol} rol={rol} />
+                      ))}
+                    </div>
+
+                    <AccionesUsuario
+                      usuario={usuario}
+                      puedeCambiarEstado={puedeCambiarEstado}
+                      toggleando={toggleando}
+                      onEditar={() => setUsuarioEditar(usuario)}
+                      onToggle={() => handleToggle(usuario)}
+                      variant="mobile"
+                    />
+                  </article>
+                );
+              })}
+            </div>
+            <AdminPaginacion
+              page={page}
+              totalPages={totalPages}
+              total={usuariosFiltrados.length}
+              onChange={setPage}
+              label={"Paginaci\u00f3n de usuarios"}
+            />
+          </>
+        )}
+      </section>
+
+      {modalCrear ? (
+        <Modal titulo={t("Nuevo usuario")} onClose={() => setModalCrear(false)}>
+          <FormUsuario
+            onCreado={handleCrear}
+            onActualizado={handleEditar}
+            onCancelar={() => setModalCrear(false)}
+            cargando={guardando}
+            setCargando={setGuardando}
+            puedeEditarRoles={esSuperAdmin}
+          />
+        </Modal>
+      ) : null}
+      {usuarioEditar ? (
+        <Modal
+          titulo={t("Editar usuario")}
+          onClose={() => setUsuarioEditar(null)}
+          maxWidth="max-w-2xl"
+        >
+          <FormUsuario
+            inicial={usuarioEditar}
+            onCreado={handleCrear}
+            onActualizado={handleEditar}
+            onCancelar={() => setUsuarioEditar(null)}
+            cargando={guardando}
+            setCargando={setGuardando}
+            puedeEditarRoles={esSuperAdmin}
+          />
+        </Modal>
+      ) : null}
+    </AdminLayout>
+    </AdminPageGate>
+  );
+};
+
+export default AdminUsuarios;

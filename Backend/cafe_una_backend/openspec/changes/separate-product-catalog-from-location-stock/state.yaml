@@ -1,0 +1,24 @@
+change: separate-product-catalog-from-location-stock
+phase: tasks
+artifact_store: hybrid
+delivery_strategy: ask-on-risk
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply: false
+  verify: false
+tasks_progress:
+  completed: []
+  pending:
+    - B01
+    - B02
+    - B03
+    - B04
+    - B05
+branch:
+  planning: feature/inventory
+  implementation: feature-branch-chain-approved
+last_updated: 2026-08-23

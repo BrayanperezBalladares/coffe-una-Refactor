@@ -1,0 +1,250 @@
+.footer {
+  position: static;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  gap: 0.95rem;
+  padding: 1.1rem 1.5rem 1rem;
+  background: #1a1a1a;
+  color: #f2f2f2;
+  font-size: var(--text-body);
+}
+
+.footer__top {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, auto) minmax(150px, max-content) minmax(200px, max-content) minmax(140px, max-content);
+  align-items: start;
+  gap: 2.2rem;
+  justify-content: space-between;
+}
+
+.footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer__logo {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+
+.footer__brand-copy {
+  display: grid;
+  gap: 0.15rem;
+  line-height: 1.1;
+}
+
+.footer__brand-copy strong {
+  font-size: var(--text-body);
+}
+
+.footer__brand-copy span {
+  font-size: var(--text-body);
+  color: #f2f2f2;
+}
+
+.footer__column {
+  display: grid;
+  gap: 0.34rem;
+  justify-items: start;
+}
+
+.footer__column h2 {
+  margin: 0 0 0.18rem;
+  color: #f2f2f2;
+  font-size: var(--text-body);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.footer__column a,
+.footer__contact-item {
+  color: #f2f2f2;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.footer__column a:hover,
+.footer__contact-item:hover {
+  color: #f2f2f2;
+  text-decoration: underline;
+}
+
+.footer__contact {
+  gap: 0.36rem;
+}
+
+.footer__contact-item {
+  display: inline-grid;
+  grid-template-columns: 0.95rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.4rem;
+  max-width: 280px;
+}
+
+.footer__contact-icon {
+  width: 0.88rem;
+  height: 0.88rem;
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+  color: #f2f2f2;
+}
+
+.footer__social-links {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.footer__social-links a:hover {
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.footer__social-icon {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: #f2f2f2;
+}
+
+.footer__divider {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.footer__bottom {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.footer__text {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: #f2f2f2;
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding: 1.25rem 1rem 1.1rem;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .footer__top {
+    grid-template-columns: 1fr 1fr;
+    justify-content: stretch;
+    justify-items: center;
+    align-items: start;
+    gap: 1.15rem 1rem;
+    text-align: center;
+  }
+
+  .footer__brand {
+    grid-column: 1 / -1;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+  }
+
+  .footer__logo {
+    height: 52px;
+    flex-shrink: 0;
+  }
+
+  .footer__brand-copy {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .footer__brand-copy span {
+    line-height: 1.35;
+    max-width: none;
+  }
+
+  .footer__column {
+    width: 100%;
+    justify-items: center;
+    gap: 0.45rem;
+    text-align: center;
+  }
+
+  /* Explorar y Contactos centrados */
+  .footer__column:not(.footer__contact):not(.footer__social) {
+    grid-column: 1;
+    justify-self: center;
+  }
+
+  .footer__contact {
+    grid-column: 2;
+    justify-self: center;
+    gap: 0.45rem;
+  }
+
+  /* Redes centradas abajo */
+  .footer__social {
+    grid-column: 1 / -1;
+    justify-items: center;
+    text-align: center;
+    margin-top: 0.15rem;
+  }
+
+  .footer__social h2 {
+    text-align: center;
+  }
+
+  .footer__social-links {
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .footer__column h2 {
+    margin-bottom: 0.2rem;
+    text-align: center;
+  }
+
+  .footer__contact-item {
+    grid-template-columns: 1rem max-content;
+    justify-content: center;
+    justify-items: start;
+    max-width: none;
+    gap: 0.45rem;
+    text-align: left;
+  }
+
+  .footer__contact-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .footer__social-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .footer__bottom {
+    justify-content: center;
+  }
+
+  .footer__text {
+    text-align: center;
+    line-height: 1.4;
+  }
+}

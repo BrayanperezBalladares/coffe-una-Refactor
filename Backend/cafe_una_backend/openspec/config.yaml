@@ -1,0 +1,90 @@
+schema: spec-driven
+persistence: hybrid
+strict_tdd: true
+
+context: |
+  Project: NestJS 11 REST API written in TypeScript 5.7 for Node.js 20+.
+  Architecture: feature modules over shared controllers, services, entities, guards, interceptors, and filters.
+  Persistence: TypeORM 0.3 with PostgreSQL on Supabase; synchronize is disabled and no migrations are tracked.
+  API: global /api prefix with incoming PascalCase normalization and outgoing camelCase serialization.
+  Security: Passport JWT, role/permission guards, Helmet, CORS, and class-validator pipes.
+  Testing: Jest 30 with ts-jest, Nest testing utilities, and Supertest for E2E.
+  Quality: ESLint 9, Prettier 3, TypeScript noEmit checks, and Nest CLI builds.
+
+testing:
+  detected_at: 2026-08-23
+  strict_tdd: true
+  unit:
+    available: true
+    framework: Jest with ts-jest and @nestjs/testing
+    command: npm test -- --runInBand
+    baseline: failing because no src/**/*.spec.ts files exist
+  integration:
+    available: false
+    framework: none detected
+    command: ""
+    baseline: no isolated database or integration harness is configured
+  e2e:
+    available: true
+    framework: Jest with Supertest
+    command: npm run test:e2e -- --runInBand
+    baseline: failing because AppModule requires a reachable Supabase database and the scaffold expects GET / to return Hello World
+  coverage:
+    available: true
+    command: npm run test:cov -- --runInBand
+    threshold: 0
+    baseline: available but no threshold or unit test suite is configured
+  quality:
+    typecheck:
+      available: true
+      command: npm exec -- tsc --noEmit
+      baseline: passing
+    build:
+      available: true
+      command: npm run build
+      baseline: passing
+    lint:
+      available: true
+      command: npm exec -- eslint "{src,apps,libs,test}/**/*.ts"
+      baseline: failing with 80 errors and 2 warnings
+    format:
+      available: true
+      command: npm exec -- prettier --check "src/**/*.ts" "test/**/*.ts"
+      baseline: failing on 73 files
+
+rules:
+  proposal:
+    - Define scope, affected API and persistence boundaries, rollout strategy, and rollback plan.
+    - Separate unrelated concerns into independently reviewable changes.
+  specs:
+    - Use RFC 2119 keywords for normative requirements.
+    - Write observable Given/When/Then scenarios, including validation, authorization, and failure paths.
+    - Specify transaction, concurrency, and inventory invariants when persisted quantities change.
+  design:
+    - Record architecture decisions and rejected alternatives with rationale.
+    - Include sequence diagrams for multi-step or cross-module workflows.
+    - Define forward and rollback migrations for every schema change because synchronize is disabled.
+    - Document authorization, audit, idempotency, and transaction boundaries.
+  tasks:
+    - Group work into small, reviewable phases with hierarchical numbering.
+    - Keep each task completable in one focused session and pair tests with implementation.
+    - Identify backend, database, contract, and documentation impact explicitly.
+  apply:
+    guidelines:
+      - Follow the existing NestJS module, controller, service, entity, guard, interceptor, and filter patterns.
+      - Avoid unrelated formatting or refactoring in feature commits.
+      - Do not expose secrets, infrastructure credentials, or internal database details.
+      - Keep commits atomic and suitable for Scrum Master review before merging.
+    tdd: true
+    test_command: npm test -- --runInBand
+  verify:
+    test_command: npm test -- --runInBand
+    e2e_command: npm run test:e2e -- --runInBand
+    typecheck_command: npm exec -- tsc --noEmit
+    build_command: npm run build
+    lint_command: npm exec -- eslint "{src,apps,libs,test}/**/*.ts"
+    format_command: npm exec -- prettier --check "src/**/*.ts" "test/**/*.ts"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive or backward-incompatible deltas.
+    - Preserve archived changes as immutable audit records.

@@ -1,0 +1,209 @@
+/* Café UNA — estilos públicos compartidos */
+
+:root {
+  --coffee-900: #2a1612;
+  --coffee-800: #3a221c;
+  --coffee-700: #4d2b1f;
+  --coffee-600: #6d432c;
+  --coffee-500: #a7532d;
+  --coffee-400: #c47a4a;
+  --coffee-muted: #6b564c;
+  --coffee-cream: #fafafa;
+  --hero-gradient: linear-gradient(135deg, #4d2b1f 0%, #2a1612 100%);
+  --section-max: 1120px;
+}
+
+/* Fondo blanco suave (mínima diferencia) en páginas públicas */
+.site-main:has(.home-page),
+.site-main:has(.about-page),
+.site-main:has(.products-page),
+.site-main:has(.voluntariado-page),
+#center.site-main:has(.home-page),
+#center.site-main:has(.about-page),
+#center.site-main:has(.products-page),
+#center.site-main:has(.voluntariado-page) {
+  background: #fafafa;
+  place-items: stretch;
+  align-items: stretch;
+}
+
+/* Tipografía de sección — solo título / subtítulo / cuerpo */
+.section-title {
+  margin: 0;
+  color: #2a1612;
+  font-size: var(--text-title);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.section-lead,
+.section-subtitle {
+  margin: 0;
+  color: var(--coffee-muted);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.75rem;
+  border: 1px solid rgba(109, 67, 44, 0.16);
+  border-radius: 999px;
+  background: rgba(251, 244, 234, 0.72);
+  color: var(--coffee-600);
+  font-size: var(--text-body);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Botones pill */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  min-height: var(--control-height);
+  padding: 0 1.35rem;
+  border: none;
+  border-radius: var(--ui-btn-radius);
+  font-size: var(--text-body);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-pill--accent {
+  background: #111;
+  color: #fff;
+}
+
+.btn-pill--accent:hover,
+.btn-pill--accent:focus-visible {
+  background: #2a2a2a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.btn-pill--dark {
+  background: var(--coffee-900);
+  color: #fff;
+}
+
+.btn-pill--dark:hover,
+.btn-pill--dark:focus-visible {
+  background: #2a1711;
+  box-shadow: 0 10px 24px rgba(42, 23, 17, 0.18);
+  transform: translateY(-2px);
+}
+
+.btn-pill--outline {
+  border: 1px solid rgba(26, 15, 10, 0.18);
+  background: transparent;
+  color: var(--coffee-900);
+}
+
+.btn-pill--outline:hover,
+.btn-pill--outline:focus-visible {
+  background: var(--coffee-900);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Paginación */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.5rem;
+}
+
+.pagination__button {
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--ui-btn-radius);
+  border: 1px solid rgba(92, 68, 43, 0.24);
+  background: #fff;
+  color: #3e2f21;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  transition: background 0.18s ease;
+}
+
+.pagination__button:hover:not(:disabled) {
+  background: #f3e7d7;
+}
+
+.pagination__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination__button.is-active {
+  background: var(--coffee-800);
+  color: #fff;
+  border-color: var(--coffee-800);
+}
+
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.category-filter-stack {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 1.25rem;
+}
+
+.category-filter-stack .category-filter {
+  margin: 0;
+}
+
+.category-filter--sub {
+  padding-top: 0.15rem;
+}
+
+.category-filter--sub .category-filter__chip {
+  font-size: var(--text-body);
+  min-height: var(--control-height);
+  padding: 0 var(--control-pad-x);
+  font-weight: 600;
+}
+
+.category-filter__chip {
+  min-height: var(--control-height);
+  padding: 0 var(--control-pad-x);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--ui-btn-radius);
+  background: #fff;
+  color: #111;
+  font-size: var(--text-body);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.category-filter__chip:hover,
+.category-filter__chip:focus-visible {
+  background: #f4f4f5;
+  outline: none;
+}
+
+.category-filter__chip.is-active {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}

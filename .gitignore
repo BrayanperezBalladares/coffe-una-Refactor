@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables (vital: never commit secrets)
+.env
+.env.local
+.env.*.local
+*.local
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Logs & Temporary
+*.log
+tmp/
+runtime-logs/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.codegraph/
+.atl/

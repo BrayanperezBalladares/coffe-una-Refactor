@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+
+# build
+/dist
+/build
+
+# env (secretos — usar .env.example)
+.env
+.env.local
+.env.*.local
+
+# contraseñas del seed local (no subir)
+src/services/usuarios-seed.local.ts
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+.DS_Store
+Thumbs.db
+
+# test
+/coverage
+
+# scripts Flyway / SQL sueltos (el esquema va en bootstrap y migraciones TypeORM)
+/src/database/sql/

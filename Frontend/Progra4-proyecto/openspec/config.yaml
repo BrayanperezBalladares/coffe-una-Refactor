@@ -1,0 +1,93 @@
+schema: spec-driven
+project: cafeuna-frontend
+artifact_store: hybrid
+strict_tdd: false
+
+context: |
+  App root: proyecto-Cafe-UNA.
+  Stack: React 19, Vite 8, JavaScript/JSX, and native ES modules.
+  Routing: TanStack Router with route definitions in src/router.jsx.
+  Data access: feature services use a shared REST API client; session state uses browser storage.
+  UI: Tailwind CSS 4, scoped CSS, Radix/shadcn dependencies, and Lucide icons.
+  Architecture: Pages compose Components/hooks/lib, which call service modules and the backend API.
+  Deployment: Netlify configuration is present; no repository CI workflow was detected.
+  Quality baseline: production build passes, while ESLint currently reports existing violations.
+
+testing:
+  detected: 2026-08-23
+  strict_tdd: false
+  strict_tdd_reason: No test runner or test script is configured, so RED-GREEN-REFACTOR cannot be enforced yet.
+  app_directory: proyecto-Cafe-UNA
+  test_runner:
+    available: false
+    framework: null
+    command: null
+  layers:
+    unit:
+      available: false
+      tool: null
+    integration:
+      available: false
+      tool: null
+    e2e:
+      available: false
+      tool: null
+  coverage:
+    available: false
+    command: null
+    threshold: 0
+  quality:
+    linter:
+      available: true
+      command: npm --prefix proyecto-Cafe-UNA run lint
+      baseline: fail
+      baseline_details: 20 errors and 7 warnings detected before SDD initialization.
+    type_checker:
+      available: false
+      command: null
+    formatter:
+      available: false
+      command: null
+    build:
+      available: true
+      command: npm --prefix proyecto-Cafe-UNA run build
+      baseline: pass
+
+rules:
+  proposal:
+    - Keep each change small enough for one focused pull request.
+    - State frontend/backend contract dependencies and an explicit rollback plan for risky changes.
+    - Separate product inventory, production assets, transfers, and sales concerns.
+  specs:
+    - Use RFC 2119 keywords for normative requirements.
+    - Write acceptance scenarios in Given/When/Then form.
+    - Include authorization, accessibility, loading, empty, validation, and error states when applicable.
+  design:
+    - Document component boundaries, data flow, API contracts, and architecture decisions with rationale.
+    - Reuse established design tokens and accessible UI primitives before adding one-off styles.
+    - Include responsive behavior and a sequence diagram for multi-step transactional flows.
+  tasks:
+    - Group tasks by reviewable implementation phase and use hierarchical numbering.
+    - Keep each task independently verifiable and suitable for one work session.
+    - Identify the repository, branch, dependencies, and validation command for every task.
+  apply:
+    guidelines:
+      - Implement only the approved task batch.
+      - Follow existing project conventions unless the approved design explicitly replaces them.
+      - Do not mix unrelated refactors with feature work.
+      - Preserve the separation between product catalog data and stock per location.
+    tdd: false
+    test_command: ""
+    lint_command: npm --prefix proyecto-Cafe-UNA run lint
+    build_command: npm --prefix proyecto-Cafe-UNA run build
+  verify:
+    test_command: ""
+    lint_command: npm --prefix proyecto-Cafe-UNA run lint
+    build_command: npm --prefix proyecto-Cafe-UNA run build
+    coverage_threshold: 0
+    guidelines:
+      - Compare behavior against every approved acceptance scenario.
+      - Report baseline failures separately from regressions introduced by the change.
+  archive:
+    - Require explicit approval before merging destructive or data-migration deltas.
+    - Preserve archived change artifacts as an immutable audit trail.
