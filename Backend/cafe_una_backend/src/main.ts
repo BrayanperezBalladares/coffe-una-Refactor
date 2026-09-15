@@ -21,7 +21,12 @@ function origenPermitido(origen?: string): boolean {
 
   try {
     const host = new URL(origen).hostname;
-    return host === 'netlify.app' || host.endsWith('.netlify.app');
+    return (
+      host === 'netlify.app' ||
+      host.endsWith('.netlify.app') ||
+      host === 'vercel.app' ||
+      host.endsWith('.vercel.app')
+    );
   } catch {
     return false;
   }
