@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         tslib: fileURLToPath(new URL('./src/lib/tslib-shim.js', import.meta.url)),
+        '@/components': fileURLToPath(new URL('./src/Components', import.meta.url)),
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
