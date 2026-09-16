@@ -37,7 +37,7 @@ export function ImageLightbox({ images, index, onClose, onIndexChange, alt = "" 
   if (!abierto || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="image-lightbox" role="dialog" aria-modal="true" aria-label="Vista ampliada">
+    <dialog open className="image-lightbox border-0 p-0 m-0 bg-transparent w-full h-full max-w-none max-h-none" aria-modal="true" aria-label="Vista ampliada">
       <button
         type="button"
         className="image-lightbox__backdrop"
@@ -72,7 +72,7 @@ export function ImageLightbox({ images, index, onClose, onIndexChange, alt = "" 
           </button>
         ) : null}
       </div>
-    </div>,
+    </dialog>,
     document.body,
   );
 }

@@ -18,6 +18,7 @@ import { format, isBefore, startOfDay } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import BackToHomeLink from "../../Components/BackToHomeLink/BackToHomeLink";
 import AvisoSedeFinca from "../../Components/AvisoSedeFinca/AvisoSedeFinca";
+import { FormConfirmacionExito } from "../../Components/FormConfirmacionExito/FormConfirmacionExito";
 import { NumericInput } from "../../Components/NumericInput/NumericInput";
 import { HOME_SCROLL_SECTIONS } from "../../lib/homeScrollTarget";
 import PageLoading from "../../Components/PageLoading/PageLoading";
@@ -164,32 +165,36 @@ function nombreCompletoDonante(formulario) {
 
 function comprimirFoto(file) {
   return new Promise((resolve, reject) => {
-    const objeto = URL.createObjectURL(file);
-    const imagen = new Image();
-    imagen.onload = () => {
-      URL.revokeObjectURL(objeto);
-      try {
-        const max = 720;
-        const escala = Math.min(1, max / Math.max(imagen.width, imagen.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(imagen.width * escala));
-        canvas.height = Math.max(1, Math.round(imagen.height * escala));
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("No se pudo procesar la imagen."));
-          return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imagen = new Image();
+      imagen.onload = () => {
+        try {
+          const max = 720;
+          const escala = Math.min(1, max / Math.max(imagen.width, imagen.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(imagen.width * escala));
+          canvas.height = Math.max(1, Math.round(imagen.height * escala));
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("No se pudo procesar la imagen."));
+            return;
+          }
+          ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.72));
+        } catch (err) {
+          reject(err);
         }
-        ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.72));
-      } catch (err) {
-        reject(err);
-      }
+      };
+      imagen.onerror = () => {
+        reject(new Error("No se pudo leer la imagen."));
+      };
+      imagen.src = reader.result;
     };
-    imagen.onerror = () => {
-      URL.revokeObjectURL(objeto);
-      reject(new Error("No se pudo leer la imagen."));
+    reader.onerror = () => {
+      reject(new Error("No se pudo leer el archivo."));
     };
-    imagen.src = objeto;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -968,7 +973,7 @@ export default function SolicitarDonacion() {
                     <>
                       <div className="form-grid--4cols">
                         <div className="campo">
-                          <label>
+                          <label htmlFor="don-identificacion">
                             {tIdentificacion} <span className="req">*</span>
                           </label>
                           <NumericInput id="don-identificacion"
@@ -1086,12 +1091,13 @@ export default function SolicitarDonacion() {
                       {errores.correo ? <span className="mensaje-error"><ST>{errores.correo}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label htmlFor="don-descripcion">
+                      <label htmlFor="don-telefono">
                         {tTelefono} <span className="req">*</span>
                       </label>
                       <div className="campo-con-icono">
                         <Phone size={16} className="campo-con-icono__icono" aria-hidden="true" />
                         <NumericInput
+                          id="don-telefono"
                           name="telefono"
                           placeholder="88888888"
                           maxLength={8}
@@ -1106,10 +1112,10 @@ export default function SolicitarDonacion() {
 
                 <SectionCard paso={2} icon={Package} title={tDetalles} hint={tDetallesHint}>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-categoria">
                       {tCategoria} <span className="req">*</span>
                     </label>
-                    <select name="categoriaId" value={formulario.categoriaId} onChange={handleChange}>
+                    <select id="don-categoria" name="categoriaId" value={formulario.categoriaId} onChange={handleChange}>
                       <option value="">{tSeleccione}</option>
                       {necesidades.map((item) => (
                         <option key={item.id} value={String(item.id)}>
@@ -1120,10 +1126,11 @@ export default function SolicitarDonacion() {
                     {errores.categoriaId ? <span className="mensaje-error"><ST>{errores.categoriaId}</ST></span> : null}
                   </div>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-material">
                       {tMaterial} <span className="req">*</span>
                     </label>
                     <select
+                      id="don-material"
                       name="materialId"
                       value={formulario.materialId}
                       onChange={handleChange}
@@ -1139,7 +1146,7 @@ export default function SolicitarDonacion() {
                     {errores.materialId ? <span className="mensaje-error"><ST>{errores.materialId}</ST></span> : null}
                   </div>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-descripcion">
                       {tDescripcion} <span className="req">*</span>
                     </label>
                     <textarea id="don-descripcion"
@@ -1170,10 +1177,10 @@ export default function SolicitarDonacion() {
                       {errores.cantidadEstimada ? <span className="mensaje-error"><ST>{errores.cantidadEstimada}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label htmlFor="don-direccion">
+                      <label htmlFor="don-estadoArticulos">
                         {tEstado} <span className="req">*</span>
                       </label>
-                      <select name="estadoArticulos" value={formulario.estadoArticulos} onChange={handleChange}>
+                      <select id="don-estadoArticulos" name="estadoArticulos" value={formulario.estadoArticulos} onChange={handleChange}>
                         <option value="">{tSeleccione}</option>
                         {ESTADOS_ARTICULOS.map((estado) => (
                           <option key={estado} value={estado}>
@@ -1185,12 +1192,13 @@ export default function SolicitarDonacion() {
                     </div>
                   </div>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-valorEstimado">
                       {tValor} <span className="req">*</span>
                     </label>
                     <div className="campo-prefijo">
                       <span className="campo-prefijo__simbolo">₡</span>
                       <input
+                        id="don-valorEstimado"
                         type="text"
                         name="valorEstimado"
                         value={formulario.valorEstimado}
@@ -1202,7 +1210,7 @@ export default function SolicitarDonacion() {
                     {errores.valorEstimado ? <span className="mensaje-error"><ST>{errores.valorEstimado}</ST></span> : null}
                   </div>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-fotos-input">
                       {tFotos} <span className="req">*</span>
                     </label>
                     <div
@@ -1229,6 +1237,7 @@ export default function SolicitarDonacion() {
                       <small>{tFotosHint}</small>
                     </div>
                     <input
+                      id="don-fotos-input"
                       ref={fileInputRef}
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -1273,10 +1282,10 @@ export default function SolicitarDonacion() {
                 <SectionCard paso={3} icon={MapPin} title={tUbicacion} hint={tUbicacionHint}>
                   <div className="form-grid">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-provincia">
                         {tProvincia} <span className="req">*</span>
                       </label>
-                      <select name="provincia" value={formulario.provincia} onChange={handleChange}>
+                      <select id="don-provincia" name="provincia" value={formulario.provincia} onChange={handleChange}>
                         <option value="">{tSeleccione}</option>
                         {PROVINCIAS_CR.map((provincia) => (
                           <option key={provincia} value={provincia}>{provincia}</option>
@@ -1285,10 +1294,10 @@ export default function SolicitarDonacion() {
                       {errores.provincia ? <span className="mensaje-error"><ST>{errores.provincia}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-canton">
                         {tCanton} <span className="req">*</span>
                       </label>
-                      <select name="canton" value={formulario.canton} onChange={handleChange} disabled={!formulario.provincia}>
+                      <select id="don-canton" name="canton" value={formulario.canton} onChange={handleChange} disabled={!formulario.provincia}>
                         <option value="">{tSeleccione}</option>
                         {cantonesDisponibles.map((canton) => (
                           <option key={canton} value={canton}>{canton}</option>
@@ -1297,10 +1306,10 @@ export default function SolicitarDonacion() {
                       {errores.canton ? <span className="mensaje-error"><ST>{errores.canton}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-distrito">
                         {tDistrito} <span className="req">*</span>
                       </label>
-                      <select name="distrito" value={formulario.distrito} onChange={handleChange} disabled={!formulario.canton}>
+                      <select id="don-distrito" name="distrito" value={formulario.distrito} onChange={handleChange} disabled={!formulario.canton}>
                         <option value="">{tSeleccione}</option>
                         {distritosDisponibles.map((distrito) => (
                           <option key={distrito} value={distrito}>{distrito}</option>
@@ -1310,7 +1319,7 @@ export default function SolicitarDonacion() {
                     </div>
                   </div>
                   <div className="campo">
-                    <label>
+                    <label htmlFor="don-direccion">
                       {tSeñas} <span className="req">*</span>
                     </label>
                     <textarea id="don-direccion"
@@ -1330,7 +1339,7 @@ export default function SolicitarDonacion() {
                       {tMetodo} <span className="req">*</span>
                     </p>
                     <div className="donacion-entrega">
-                      <label className="donacion-entrega__card" htmlFor="don-fechaSolicitud">
+                      <label className="donacion-entrega__card">
                         <input
                           type="radio"
                           name="metodoEntrega"
@@ -1383,10 +1392,10 @@ export default function SolicitarDonacion() {
                         </div>
                       ) : (
                         <div className="campo full flex flex-col items-center">
-                          <label className="self-start">
+                          <p className="campo-label self-start text-xs font-semibold text-slate-700">
                             {tDiaEntregaEntrega}{" "}
                             <span className="req">*</span>
-                          </label>
+                          </p>
                           {fechaEntregaSeleccionada ? (
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-900 bg-white px-5 py-2 shadow-xs">
                               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -1505,7 +1514,7 @@ export default function SolicitarDonacion() {
 
                 <SectionCard paso={5} icon={FileText} title={tDeclaracion} hint={tDeclaracionHint}>
                   <div className="campo">
-                    <label>{tFecha}</label>
+                    <label htmlFor="don-fechaSolicitud">{tFecha}</label>
                     <input id="don-fechaSolicitud"
                       type="date"
                       name="fechaSolicitud"
@@ -1577,20 +1586,12 @@ export default function SolicitarDonacion() {
 
             </>
           ) : (
-            <div className="confirmacion">
-              <div className="confirmacion__icono">
-                <Check size={28} strokeWidth={2.2} aria-hidden="true" />
-              </div>
-              <h2><ST>Solicitud enviada correctamente</ST></h2>
-              <p>
-                <ST>
-                  Recibimos tu solicitud de donación en estado Pendiente. El equipo de Café UNA la revisará y te notificará el resultado por correo electrónico.
-                </ST>
-              </p>
-              <button type="button" className="btn-enviar" onClick={() => setEnviado(false)}>
-                <ST>Realizar otra solicitud</ST>
-              </button>
-            </div>
+            <FormConfirmacionExito
+              titulo="Solicitud enviada correctamente"
+              mensaje="Recibimos tu solicitud de donación en estado Pendiente. El equipo de Café UNA la revisará y te notificará el resultado por correo electrónico."
+              btnTexto="Realizar otra solicitud"
+              onReset={() => setEnviado(false)}
+            />
           )}
         </section>
       </main>

@@ -168,7 +168,7 @@ function ImageUrlModal({
     : (isAdmin ? tVistaPreviaBannerAdmin : tVistaPreviaBanner);
 
   return (
-    <div className="perfil-modal" role="dialog" aria-modal="true" aria-labelledby="perfil-modal-title">
+    <dialog open className="perfil-modal" aria-labelledby="perfil-modal-title">
       <button type="button" className="perfil-modal__backdrop" aria-label={tCerrar} onClick={onClose} />
       <div className={`perfil-modal__card perfil-modal__card--image ${isAvatar ? "perfil-modal__card--avatar" : "perfil-modal__card--banner"}`}>
         <header className="perfil-modal__header">
@@ -221,7 +221,7 @@ function ImageUrlModal({
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 

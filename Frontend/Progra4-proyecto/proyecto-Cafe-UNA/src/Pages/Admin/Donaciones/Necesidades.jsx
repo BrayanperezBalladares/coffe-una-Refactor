@@ -30,6 +30,7 @@ import { t } from "../../../lib/t";
 import { useIdioma } from "../../../lib/useIdioma";
 
 const EMPTY = { titulo: "", descripcion: "", prioridad: "MEDIA", cantidadRequerida: "" };
+const COLUMNAS_TABLA_NECESIDADES = ["Título", "Materiales", "Prioridad", "Estado", "Acciones"];
 
 function etiquetaPrioridad(prioridad) {
   if (prioridad === "ALTA") return "Alta";
@@ -320,11 +321,9 @@ export default function AdminNecesidadesDonacion() {
                 <table className="w-full min-w-[720px] text-center text-[length:var(--text-body)]">
                   <thead>
                     <tr>
-                      <th><ST>Título</ST></th>
-                      <th><ST>Materiales</ST></th>
-                      <th><ST>Prioridad</ST></th>
-                      <th><ST>Estado</ST></th>
-                      <th><ST>Acciones</ST></th>
+                      {COLUMNAS_TABLA_NECESIDADES.map((col) => (
+                        <th key={col}><ST>{col}</ST></th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>

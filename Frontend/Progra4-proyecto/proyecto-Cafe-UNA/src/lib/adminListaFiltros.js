@@ -8,7 +8,11 @@ export function normalizarBusqueda(texto) {
 
 export function coincideBusqueda(valores, query) {
   if (!query) return true;
-  return valores.some((valor) => normalizarBusqueda(valor).includes(query));
+  for (let i = 0; i < valores.length; i += 1) {
+    const texto = normalizarBusqueda(valores[i]);
+    if (texto.split(query).length > 1) return true;
+  }
+  return false;
 }
 
 export function filtrarPorBusqueda(items, query, obtenerValores) {

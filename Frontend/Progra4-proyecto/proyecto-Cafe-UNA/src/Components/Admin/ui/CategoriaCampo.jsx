@@ -143,11 +143,13 @@ export function CategoriaOpcionBorrar({ categoria, nombresEnUso = [], onEliminad
   );
 }
 
+const EMPTY_EXTRAS = [];
+
 export function CategoriaCampo({
   tipo,
   value = "",
   onChange,
-  extras = [],
+  extras = EMPTY_EXTRAS,
   label = "Categoría",
   permitirCrear = false,
   onCreada,

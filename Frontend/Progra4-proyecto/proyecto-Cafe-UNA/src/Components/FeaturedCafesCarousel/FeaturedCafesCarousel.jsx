@@ -31,7 +31,9 @@ function CategoriaLabel({ texto }) {
   return useTraducir(texto);
 }
 
-export default function FeaturedCafesCarousel({ products = [] }) {
+const EMPTY_PRODUCTS = [];
+
+export default function FeaturedCafesCarousel({ products = EMPTY_PRODUCTS }) {
   const [activo, setActivo] = useState(0);
   const lista = useMemo(() => products.filter(Boolean), [products]);
   const total = lista.length;
@@ -95,7 +97,7 @@ export default function FeaturedCafesCarousel({ products = [] }) {
 
           return (
             <article
-              key={producto.id ?? producto.nombre ?? index}
+              key={producto.id || producto.nombre || `cafe-${posicion}`}
               className={`featured-cafes__card featured-cafes__card--${posicion}`}
               aria-hidden={posicion === "hidden"}
             >
@@ -124,7 +126,7 @@ export default function FeaturedCafesCarousel({ products = [] }) {
           <div className="featured-cafes__dots" role="tablist" aria-label={ariaCafes}>
             {lista.map((producto, index) => (
               <button
-                key={producto.id ?? index}
+                key={producto.id ? `dot-${producto.id}` : `dot-${producto.nombre || "item"}`}
                 type="button"
                 className={`featured-cafes__dot${index === activo ? " is-active" : ""}`}
                 onClick={() => setActivo(index)}

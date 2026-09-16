@@ -49,6 +49,8 @@ import {
   etiquetaContadorPalabras,
   limitarPalabras,
 } from "../../../lib/formLimits";
+
+const EMPTY_ARRAY = [];
 import { ST } from "../../../Components/T/ST";
 import { useTraducir } from "../../../hooks/useTraducir";
 import { t } from "../../../lib/t";
@@ -61,6 +63,22 @@ const TARJETA_CAMPOS_TEXTO = ["etiqueta", "titulo", "descripcion", "textoBoton"]
 const FOOTER_CAMPOS_TEXTO = ["fraseMarca", "textoCopyright"];
 const ENLACE_CAMPOS_TEXTO = ["etiqueta"];
 const FAQ_CAMPOS_TEXTO = ["pregunta", "respuesta"];
+
+function CmsItemToolbarHeader({ titulo, btnTexto, onAgregar }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-500"><ST>{titulo}</ST></p>
+      <button
+        type="button"
+        onClick={onAgregar}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-950 bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:border-neutral-700 hover:bg-neutral-700 sm:w-auto"
+      >
+        <Plus className="size-4" />
+        <ST>{btnTexto}</ST>
+      </button>
+    </div>
+  );
+}
 
 const heroInicial = {
   eyebrow: "",
@@ -432,7 +450,7 @@ function ModalHero({ hero, onCerrar, onGuardar, guardando }) {
   );
 }
 
-function ModalSeccionInicio({ clave, config, data, tarjetasInicio = [], onCerrar, onGuardar, guardando }) {
+function ModalSeccionInicio({ clave, config, data, tarjetasInicio = EMPTY_ARRAY, onCerrar, onGuardar, guardando }) {
   const [form, setForm] = useState(() => ({ ...seccionInicioVacia, ...data }));
   const tModalTitle = useTraducir(config.modalTitle || "");
   const tGuardando = useTraducir("Guardando...");
@@ -655,7 +673,7 @@ function ModalTarjetasInicio({ tarjetas, onCerrar, onGuardar, guardando }) {
           >
 
           {form.map((tarjeta, index) => (
-            <div key={tarjeta.clave || index} className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
+            <div key={tarjeta.clave || tarjeta.id || tarjeta.titulo || `tarjeta-${tarjeta.enlaceUrl || "card"}`} className="space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
               <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
                 {TARJETAS_INICIO_LABELS[tarjeta.clave] || tarjeta.clave}
               </h3>
@@ -725,7 +743,7 @@ function ModalTarjetasInicio({ tarjetas, onCerrar, onGuardar, guardando }) {
   );
 }
 
-function ModalNavbar({ navbar, enlaces = [], onCerrar, onGuardar, guardando }) {
+function ModalNavbar({ navbar, enlaces = EMPTY_ARRAY, onCerrar, onGuardar, guardando }) {
   const [form, setForm] = useState(() => ({ ...navbarInicial, ...navbar }));
   const tGuardando = useTraducir("Guardando...");
   const tGuardarCambios = useTraducir("Guardar cambios");
@@ -797,7 +815,7 @@ function ModalNavbar({ navbar, enlaces = [], onCerrar, onGuardar, guardando }) {
   );
 }
 
-function ModalFooter({ footer, enlaces = [], onCerrar, onGuardar, guardando }) {
+function ModalFooter({ footer, enlaces = EMPTY_ARRAY, onCerrar, onGuardar, guardando }) {
   const [form, setForm] = useState(() => ({ ...footerInicial, ...footer }));
   const { idioma } = useIdioma();
   const tGuardando = useTraducir("Guardando...");
@@ -1048,17 +1066,7 @@ function ModalEnlaces({ config, enlaces, navbar, footer, onCerrar, onGuardar, gu
             )}
             ayuda={`Gestion\u00e1 los enlaces de ${config.titulo.toLowerCase()}.`}
           >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500"><ST>Enlaces actuales</ST></p>
-            <button
-              type="button"
-              onClick={agregarItem}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-950 bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:border-neutral-700 hover:bg-neutral-700 sm:w-auto"
-            >
-              <Plus className="size-4" />
-              <ST>Agregar enlace</ST>
-            </button>
-          </div>
+          <CmsItemToolbarHeader titulo="Enlaces actuales" btnTexto="Agregar enlace" onAgregar={agregarItem} />
 
           <AdminListaToolbar
             compacto
@@ -1242,17 +1250,7 @@ function ModalFaqInicio({ items, seccion, onCerrar, onGuardar, guardando, puedeE
             ayuda="Agregá, editá u ordená las preguntas del inicio. El título de la sección se edita en la tarjeta Preguntas frecuentes."
           >
             <div className="space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500"><ST>Preguntas actuales</ST></p>
-                <button
-                  type="button"
-                  onClick={agregarItem}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-950 bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:border-neutral-700 hover:bg-neutral-700 sm:w-auto"
-                >
-                  <Plus className="size-4" />
-                  <ST>Agregar pregunta</ST>
-                </button>
-              </div>
+              <CmsItemToolbarHeader titulo="Preguntas actuales" btnTexto="Agregar pregunta" onAgregar={agregarItem} />
 
               <AdminListaToolbar
                 compacto
@@ -1730,6 +1728,7 @@ const AdminInformacionPaginaPrincipal = () => {
     resumenFooter,
     resumenEnlacesNavbar,
     resumenEnlacesFooter,
+    faqInicio,
   ]);
 
   const {

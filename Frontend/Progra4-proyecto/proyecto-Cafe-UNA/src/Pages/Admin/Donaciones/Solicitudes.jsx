@@ -304,7 +304,7 @@ function ModalDetalle({ solicitud, puedeResolver, onResolver, onDescargarFicha, 
                   <div className="flex flex-wrap gap-2">
                     {campos.fotos.map((foto, index) => (
                       <button
-                        key={`${foto.nombre || "foto"}-${index}`}
+                        key={foto.url || foto.Url || foto.id || foto.nombre || `foto-${foto.size || "item"}`}
                         type="button"
                         className="h-24 w-24 overflow-hidden rounded-2xl border border-slate-200 p-0"
                         onClick={() => setFotoVista(index)}

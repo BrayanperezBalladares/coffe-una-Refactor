@@ -489,6 +489,11 @@ const Navbar = () => {
         }, 240);
     }, [showCartDropdown, isCartClosing]);
 
+    const closeCartPanelRef = useRef(closeCartPanel);
+    useEffect(() => {
+        closeCartPanelRef.current = closeCartPanel;
+    });
+
     useEffect(() => {
         if (!showCartDropdown) {
             return;
@@ -496,13 +501,13 @@ const Navbar = () => {
 
         const handlePointerDown = (event) => {
             if (cartContainerRef.current && !cartContainerRef.current.contains(event.target)) {
-                closeCartPanel();
+                closeCartPanelRef.current();
             }
         };
 
         const handleEscapeKey = (event) => {
             if (event.key === 'Escape') {
-                closeCartPanel();
+                closeCartPanelRef.current();
             }
         };
 
@@ -513,7 +518,7 @@ const Navbar = () => {
             document.removeEventListener('mousedown', handlePointerDown);
             document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, [showCartDropdown, closeCartPanel]);
+    }, [showCartDropdown]);
 
     useEffect(() => {
         if (!showNotifications) {
@@ -945,10 +950,9 @@ const Navbar = () => {
                         <span className="cart-badge">{cartUnits}</span>
                     </button>
                     {showCartDropdown ? (
-                        <aside
+                        <dialog
+                            open
                             className={`dropdown dropdown--cart dropdown--cart-panel ${isCartClosing ? 'is-closing' : 'is-open'}`}
-                            role="dialog"
-                            aria-modal="true"
                             aria-label={tCartResumen}
                             onClick={(event) => event.stopPropagation()}
                         >
@@ -1071,7 +1075,7 @@ const Navbar = () => {
                                     </div>
                                 </>
                             )}
-                        </aside>
+                        </dialog>
                     ) : null}
                 </div>
 
@@ -1348,11 +1352,10 @@ const Navbar = () => {
                             onClick={closeMobileMenu}
                             onTouchMove={(event) => event.preventDefault()}
                         />
-                        <aside
+                        <dialog
+                            open
                             id="navbar-mobile-menu"
                             className="navbar__mobile-panel"
-                            role="dialog"
-                            aria-modal="true"
                             aria-label={"Men\u00fa de navegaci\u00f3n"}
                         >
                             <header className="navbar__mobile-header">
@@ -1537,7 +1540,7 @@ const Navbar = () => {
                                     </div>
                                 </div>
                             ) : null}
-                        </aside>
+                        </dialog>
                     </div>,
                     document.body,
                 )

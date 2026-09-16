@@ -77,7 +77,7 @@ export default function AdminVentasPresenciales() {
   const [clienteNombre, setClienteNombre] = useState("");
   const [clienteCorreo, setClienteCorreo] = useState("");
   const [enviarCorreo, setEnviarCorreo] = useState(false);
-  const [notas, setNotas] = useState("");
+  const notas = "";
 
   // Estados de proceso y UI
   const [isSaving, setIsSaving] = useState(false);
@@ -131,8 +131,8 @@ export default function AdminVentasPresenciales() {
         if (!activo) return;
         const puntosActivos = (puntosData || []).filter((p) => p.activo !== false);
         setPuntos(puntosActivos);
-        if (puntosActivos.length > 0 && !ubicacionCodigo) {
-          setUbicacionCodigo(puntosActivos[0].code);
+        if (puntosActivos.length > 0) {
+          setUbicacionCodigo((prev) => prev || puntosActivos[0].code);
         }
         setProductos(Array.isArray(catalogo) ? catalogo : catalogo?.data || []);
       })
@@ -313,7 +313,6 @@ export default function AdminVentasPresenciales() {
     setClienteNombre("");
     setClienteCorreo("");
     setEnviarCorreo(false);
-    setNotas("");
     setFormError("");
   };
 
@@ -1014,8 +1013,8 @@ export default function AdminVentasPresenciales() {
                         <span>Cant. / Detalle</span>
                         <span className="text-right">Subtotal</span>
                       </div>
-                      {resumenVenta.items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-baseline text-xs py-0.5">
+                      {resumenVenta.items.map((it) => (
+                        <div key={it.productId || it.id || `${it.productoNombre}-${it.precioUnitario}`} className="flex justify-between items-baseline text-xs py-0.5">
                           <div className="min-w-0 pr-2">
                             <span className="font-bold text-slate-900 mr-1.5">{it.cantidad}×</span>
                             <span className="text-slate-700 font-medium">{it.productoNombre}</span>
@@ -1079,6 +1078,7 @@ export default function AdminVentasPresenciales() {
                       value={correoResumenInput}
                       onChange={(e) => setCorreoResumenInput(e.target.value)}
                       placeholder="cliente@correo.com"
+                      aria-label="Correo electrónico del cliente"
                       className="flex-1 h-9 rounded-full border border-slate-300 bg-white px-3 text-xs text-slate-900 outline-none focus:border-black"
                     />
                     <button

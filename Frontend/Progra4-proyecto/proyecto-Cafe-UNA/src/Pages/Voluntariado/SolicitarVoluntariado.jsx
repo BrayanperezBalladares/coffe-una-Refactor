@@ -20,6 +20,7 @@ import { format, isBefore, startOfDay } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import BackToHomeLink from "../../Components/BackToHomeLink/BackToHomeLink";
 import AvisoSedeFinca from "../../Components/AvisoSedeFinca/AvisoSedeFinca";
+import { FormConfirmacionExito } from "../../Components/FormConfirmacionExito/FormConfirmacionExito";
 import { NumericInput } from "../../Components/NumericInput/NumericInput";
 import { HOME_SCROLL_SECTIONS } from "../../lib/homeScrollTarget";
 import PageLoading from "../../Components/PageLoading/PageLoading";
@@ -209,7 +210,6 @@ function SolicitarVoluntariado() {
   const [errorApi, setErrorApi] = useState(null);
   const [consultandoCedula, setConsultandoCedula] = useState(false);
   const [avisoCedula, setAvisoCedula] = useState(null);
-  const [nombreAutocargado, setNombreAutocargado] = useState(false);
   const [sedeFinca, setSedeFinca] = useState(() => sedeDesdeHomeLocation(null));
 
   const {
@@ -911,12 +911,13 @@ function SolicitarVoluntariado() {
 
                   <div className="form-grid--4cols">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-identificacion">
                         {esNacionalCr ? tCedula : tIdentificacion}{" "}
                         <span className="req">*</span>
                       </label>
                       {esNacionalCr ? (
                         <NumericInput
+                          id="vol-identificacion"
                           name="identificacion"
                           placeholder="9 dígitos"
                           value={formulario.identificacion}
@@ -928,6 +929,7 @@ function SolicitarVoluntariado() {
                         />
                       ) : (
                         <input
+                          id="vol-identificacion"
                           type="text"
                           name="identificacion"
                           placeholder={tPasaporte}
@@ -941,7 +943,7 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-nombre">
                         {tNombre} <span className="req">*</span>
                       </label>
                       <input id="vol-nombre"
@@ -1098,13 +1100,14 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo full mt-4">
-                      <label>
+                      <label htmlFor="vol-documento-grupo">
                         {tDocIntegrantes} <span className="req">*</span>
                       </label>
                       <div className="documento-upload-wrapper">
                         {!documentoGrupo ? (
                           <label className="documento-upload-dropzone">
                             <input
+                              id="vol-documento-grupo"
                               type="file"
                               accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
                               onChange={handleDocumentoChange}
@@ -1206,6 +1209,7 @@ function SolicitarVoluntariado() {
                         type="text"
                         name="tipoOtro"
                         placeholder="Describa el tipo de voluntariado en el que desea participar"
+                        aria-label="Descripción del tipo de voluntariado"
                         value={formulario.tipoOtro}
                         onChange={handleChange}
                       />
@@ -1431,18 +1435,12 @@ function SolicitarVoluntariado() {
               </div>
             </form>
           ) : (
-            <div className="confirmacion">
-              <div className="confirmacion__icono">
-                <Check size={28} strokeWidth={2.2} aria-hidden="true" />
-              </div>
-              <h2><ST>Solicitud enviada correctamente</ST></h2>
-              <p>
-                <ST>Tu solicitud de voluntariado fue recibida y está siendo revisada por el equipo de Café UNA. Recibirás información en tu correo electrónico.</ST>
-              </p>
-              <button type="button" className="btn-enviar" onClick={() => setEnviado(false)}>
-                <ST>Realizar otra solicitud</ST>
-              </button>
-            </div>
+            <FormConfirmacionExito
+              titulo="Solicitud enviada correctamente"
+              mensaje="Tu solicitud de voluntariado fue recibida y está siendo revisada por el equipo de Café UNA. Recibirás información en tu correo electrónico."
+              btnTexto="Realizar otra solicitud"
+              onReset={() => setEnviado(false)}
+            />
           )}
         </section>
       </main>

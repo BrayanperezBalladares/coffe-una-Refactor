@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   Eye,
@@ -85,8 +85,8 @@ function SolicitudFormModal({
   const [proveedorId, setProveedorId] = useState("");
   const [fechaEstimadaEntrega, setFechaEstimadaEntrega] = useState("");
   const [notas, setNotas] = useState("");
-  const [filas, setFilas] = useState([{ productoId: "", cantidad: "" }]);
-  const [pdf, setPdf] = useState(null);
+  const [filas, setFilas] = useState(() => [{ id: "fila-init", productoId: "", cantidad: "" }]);
+  const pdfRef = useRef(null);
   const [validationError, setValidationError] = useState("");
   const [nuevoProveedor, setNuevoProveedor] = useState("");
   const [creandoProveedor, setCreandoProveedor] = useState(false);
@@ -96,17 +96,6 @@ function SolicitudFormModal({
   const tCreando = useTraducir("Creando…");
   const tAgregarProveedor = useTraducir("Agregar proveedor");
   const tCantidad = useTraducir("Cantidad");
-
-  useEffect(() => {
-    if (!open) return;
-    setProveedorId("");
-    setFechaEstimadaEntrega("");
-    setNotas("");
-    setFilas([{ productoId: "", cantidad: "" }]);
-    setPdf(null);
-    setValidationError("");
-    setNuevoProveedor("");
-  }, [open]);
 
   if (!open) return null;
 
@@ -145,6 +134,7 @@ function SolicitudFormModal({
       });
       return;
     }
+    const pdf = pdfRef.current;
     if (pdf) {
       if (pdf.type && pdf.type !== "application/pdf" && !pdf.name?.toLowerCase().endsWith(".pdf")) {
         setValidationError("La proforma debe ser un PDF.");
@@ -246,18 +236,19 @@ function SolicitudFormModal({
               <button
                 type="button"
                 className="inline-flex min-h-[var(--control-height)] items-center gap-1 rounded-full border border-slate-200 px-3 text-[length:var(--text-body)] font-semibold"
-                onClick={() => setFilas((c) => [...c, { productoId: "", cantidad: "" }])}
+                onClick={() => setFilas((c) => [...c, { id: `fila-${Date.now()}-${c.length}`, productoId: "", cantidad: "" }])}
               >
                 <Plus className="size-4" /> <ST>Agregar ítem</ST>
               </button>
             </div>
             {filas.map((fila, index) => (
-              <div key={`fila-${index}`} className="grid gap-2 sm:grid-cols-[1fr_8rem_auto]">
+              <div key={fila.id} className="grid gap-2 sm:grid-cols-[1fr_8rem_auto]">
                 <select
                   name={index === 0 ? "productoId" : undefined}
                   className={fieldClass}
                   value={fila.productoId}
                   onChange={(e) => setFila(index, "productoId", e.target.value)}
+                  aria-label={t("Producto")}
                 >
                   <option value="">{tProducto}</option>
                   {productos.map((p) => (
@@ -270,6 +261,7 @@ function SolicitudFormModal({
                   placeholder={tCantidad}
                   value={fila.cantidad}
                   onChange={(e) => setFila(index, "cantidad", e.target.value)}
+                  aria-label={t("Cantidad")}
                 />
                 <button
                   type="button"
@@ -293,7 +285,9 @@ function SolicitudFormModal({
                 type="file"
                 accept="application/pdf,.pdf"
                 className="w-full text-[length:var(--text-body)] file:mr-3 file:rounded-full file:border-0 file:bg-slate-900 file:px-3 file:py-1 file:text-white"
-                onChange={(e) => setPdf(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  pdfRef.current = e.target.files?.[0] || null;
+                }}
               />
             </span>
           </label>
@@ -399,8 +393,8 @@ function DetalleModal({ open, solicitud, onClose }) {
             <div>
               <p className="mb-2 font-semibold text-slate-900"><ST>Historial de estados</ST></p>
               <ul className="space-y-1 rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                {solicitud.historialEstados.map((h, i) => (
-                  <li key={`${h.estado}-${h.fecha || i}`}>
+                {solicitud.historialEstados.map((h) => (
+                  <li key={`${solicitud.id || "sol"}-${h.estado}-${h.fecha || ""}-${h.comentario || ""}`}>
                     <ST>{h.estado}</ST> · {formatFecha(h.fecha)}
                   </li>
                 ))}
@@ -719,6 +713,7 @@ export default function AdminSolicitudesCompra() {
         </div>
 
         <SolicitudFormModal
+          key={formOpen ? "open" : "closed"}
           open={formOpen}
           onClose={() => setFormOpen(false)}
           onSave={handleCrear}

@@ -550,26 +550,28 @@ function ModalDetalle({ solicitud, onGuardar, onCerrar }) {
 function ModalEditar({ solicitud, onGuardar, onCerrar }) {
   useAdminModalLock(true);
   const { idioma } = useIdioma();
-  const partesNombre = partirNombreCompleto(solicitud.nombre);
-  const periodo = partirPeriodo(solicitud.dias);
-  const formBase = () => ({
-    estado: normalizarEstado(solicitud.estado),
-    nombre: partesNombre.nombre,
-    primerApellido: partesNombre.primerApellido,
-    segundoApellido: partesNombre.segundoApellido,
-    email: solicitud.email || "",
-    telefono: solicitud.telefono || "",
-    tipoVoluntariado: solicitud.tipoVoluntariado || "",
-    identificacion: solicitud.identificacion || "",
-    institucion: solicitud.institucion || "",
-    pais: solicitud.pais || "",
-    horario: solicitud.horario || "",
-    fechaInicio: periodo.fechaInicio,
-    fechaFin: periodo.fechaFin,
-    modalidad: solicitud.modalidad || "individual",
-    cantidadParticipantes: solicitud.cantidadParticipantes || 1,
-    observacionesAdmin: solicitud.observacionesAdmin || "",
-  });
+  const formBase = useCallback(() => {
+    const partesNombre = partirNombreCompleto(solicitud.nombre);
+    const periodo = partirPeriodo(solicitud.dias);
+    return {
+      estado: normalizarEstado(solicitud.estado),
+      nombre: partesNombre.nombre,
+      primerApellido: partesNombre.primerApellido,
+      segundoApellido: partesNombre.segundoApellido,
+      email: solicitud.email || "",
+      telefono: solicitud.telefono || "",
+      tipoVoluntariado: solicitud.tipoVoluntariado || "",
+      identificacion: solicitud.identificacion || "",
+      institucion: solicitud.institucion || "",
+      pais: solicitud.pais || "",
+      horario: solicitud.horario || "",
+      fechaInicio: periodo.fechaInicio,
+      fechaFin: periodo.fechaFin,
+      modalidad: solicitud.modalidad || "individual",
+      cantidadParticipantes: solicitud.cantidadParticipantes || 1,
+      observacionesAdmin: solicitud.observacionesAdmin || "",
+    };
+  }, [solicitud]);
   const [form, setForm] = useState(formBase);
   const [guardando, setGuardando] = useState(false);
 
@@ -585,7 +587,7 @@ function ModalEditar({ solicitud, onGuardar, onCerrar }) {
     return () => {
       cancelado = true;
     };
-  }, [solicitud, idioma]);
+  }, [formBase, idioma]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;

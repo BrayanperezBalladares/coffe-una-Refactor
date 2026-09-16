@@ -528,8 +528,8 @@ export default function HistorialVentas({
                 </div>
               </dl>
               <ul className="mt-4 space-y-2 text-[length:var(--text-body)]">
-                {(detalle.items || []).map((item, index) => (
-                  <li key={`${item.nombre}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                {(detalle.items || []).map((item) => (
+                  <li key={item.id || item.productoId || `${item.nombre}-${item.precioUnitario}-${item.cantidad}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
                     <div className="flex justify-between gap-3">
                       <span className="font-medium no-underline"><ST>{item.nombre}</ST></span>
                       <span className="font-semibold">{formatCRC(item.subtotal)}</span>

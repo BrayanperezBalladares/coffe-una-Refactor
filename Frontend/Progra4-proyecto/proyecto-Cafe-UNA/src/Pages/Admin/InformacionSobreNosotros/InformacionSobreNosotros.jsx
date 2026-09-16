@@ -199,7 +199,9 @@ function ModalTexto({ tipo, data, onCerrar, onGuardar, guardando }) {
   );
 }
 
-function ModalFoto({ onCerrar, onGuardar, categorias = [], inicial = null, guardando = false }) {
+const EMPTY_CATEGORIAS = [];
+
+function ModalFoto({ onCerrar, onGuardar, categorias = EMPTY_CATEGORIAS, inicial = null, guardando = false }) {
   const esEdicion = Boolean(inicial);
   const tEditar = useTraducir("Editar");
   const tNuevaFoto = useTraducir("Nueva foto");

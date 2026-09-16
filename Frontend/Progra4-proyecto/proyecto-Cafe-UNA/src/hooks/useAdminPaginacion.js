@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 export const ADMIN_PAGE_SIZE = 10;
+const EMPTY_ITEMS = [];
 
 /**
  * Firma estable del listado para no resetear la página en cada render
@@ -19,31 +20,29 @@ function firmaItems(items) {
   return `${items.length}:${idDe(primero)}:${idDe(ultimo)}`;
 }
 
-export function useAdminPaginacion(items = [], pageSize = ADMIN_PAGE_SIZE) {
+export function useAdminPaginacion(items = EMPTY_ITEMS, pageSize = ADMIN_PAGE_SIZE) {
   const [page, setPage] = useState(1);
+  const firma = firmaItems(items);
+  const [prevFirma, setPrevFirma] = useState(() => firma);
+  const [prevPageSize, setPrevPageSize] = useState(pageSize);
+
+  if (firma !== prevFirma || pageSize !== prevPageSize) {
+    setPrevFirma(firma);
+    setPrevPageSize(pageSize);
+    setPage(1);
+  }
+
   const total = Array.isArray(items) ? items.length : 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const firma = useMemo(() => firmaItems(items), [items]);
-  const metaAnterior = useRef({ firma, pageSize });
-
-  useEffect(() => {
-    const prev = metaAnterior.current;
-    if (prev.firma === firma && prev.pageSize === pageSize) return;
-    metaAnterior.current = { firma, pageSize };
-    setPage(1);
-  }, [firma, pageSize]);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  const safePage = Math.min(Math.max(1, page), totalPages);
 
   const pageItems = useMemo(() => {
-    const start = (page - 1) * pageSize;
+    const start = (safePage - 1) * pageSize;
     return (items || []).slice(start, start + pageSize);
-  }, [items, page, pageSize]);
+  }, [items, safePage, pageSize]);
 
   return {
-    page,
+    page: safePage,
     setPage,
     pageItems,
     total,

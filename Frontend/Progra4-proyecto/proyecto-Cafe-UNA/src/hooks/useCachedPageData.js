@@ -49,7 +49,7 @@ export function useCachedPageData(cacheKey, fetcher) {
   useEffect(() => {
     let activo = true;
 
-    async function load() {
+    function load() {
       if (hadFreshCache.current && cachedInitial.current) {
         fetcher()
           .then((fresh) => {
@@ -62,22 +62,23 @@ export function useCachedPageData(cacheKey, fetcher) {
 
       if (!activo) return;
       setStatus("loading");
-      try {
-        const fresh = await fetcher();
-        if (!activo) return;
-        applyFresh(fresh);
-      } catch (err) {
-        if (!activo) return;
-        const stale = readStalePageCache(cacheKey);
-        if (stale) {
-          cachedInitial.current = stale;
-          setData(stale);
-          setStatus("ready");
-          return;
-        }
-        setError(err?.message || "No se pudo cargar la página.");
-        setStatus("error");
-      }
+      fetcher()
+        .then((fresh) => {
+          if (!activo) return;
+          applyFresh(fresh);
+        })
+        .catch((err) => {
+          if (!activo) return;
+          const stale = readStalePageCache(cacheKey);
+          if (stale) {
+            cachedInitial.current = stale;
+            setData(stale);
+            setStatus("ready");
+            return;
+          }
+          setError(err?.message || "No se pudo cargar la página.");
+          setStatus("error");
+        });
     }
 
     load();

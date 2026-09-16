@@ -252,8 +252,8 @@ export default function HistorialComprasCliente() {
                 <div className="flex justify-between border-b border-slate-100 py-2"><dt className="text-slate-500"><ST>Estado</ST></dt><dd><ST>{detalle.estado}</ST></dd></div>
               </dl>
               <ul className="mt-4 space-y-2 text-sm">
-                {(detalle.items || []).map((item, index) => (
-                  <li key={`${item.nombre}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                {(detalle.items || []).map((item) => (
+                  <li key={item.id || item.productoId || `${item.nombre}-${item.precioUnitario}-${item.cantidad}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
                     <div className="flex justify-between gap-3"><span className="font-medium">{item.nombre}</span><span className="font-semibold">{formatCRC(item.subtotal)}</span></div>
                     <p className="mt-1 text-xs text-slate-500">{item.cantidad} × {formatCRC(item.precioUnitario)}</p>
                   </li>

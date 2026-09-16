@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { categoriasUnicas, filtrarPorCategoria } from '../../lib/categorias';
 import { normalizeImageUrl } from '../../lib/imageUtils';
@@ -49,8 +49,10 @@ function GalleryCaptionLightbox({ title }) {
   return <figcaption className="gallery-lightbox__caption">{titulo}</figcaption>;
 }
 
+const EMPTY_ITEMS = [];
+
 const Gallery = ({
-  items = [],
+  items = EMPTY_ITEMS,
   pageSize = DEFAULT_PAGE_SIZE,
   title = 'Galer\u00eda de fotos',
   ariaLabel = 'Galer\u00eda de fotos',
@@ -59,6 +61,12 @@ const Gallery = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [activeIndex, setActiveIndex] = useState(null);
   const [categoria, setCategoria] = useState('todas');
+  const [prevItems, setPrevItems] = useState(items);
+  if (items !== prevItems) {
+    setPrevItems(items);
+    setCurrentPage(1);
+    setActiveIndex(null);
+  }
   const tituloUi = useTraducir(title || '');
   const ariaUi = useTraducir(ariaLabel || title || 'Galería de fotos');
   const vacioUi = useTraducir('No hay fotos en esta categoría.');
@@ -101,23 +109,23 @@ const Gallery = ({
     });
   }, [pageItems.length]);
 
+  const handlersRef = useRef({ closeLightbox, showPrevious, showNext });
   useEffect(() => {
-    setCurrentPage(1);
-    setActiveIndex(null);
-  }, [categoria, items]);
+    handlersRef.current = { closeLightbox, showPrevious, showNext };
+  });
 
   useEffect(() => {
     if (activeIndex === null) return undefined;
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') closeLightbox();
-      if (event.key === 'ArrowLeft') showPrevious();
-      if (event.key === 'ArrowRight') showNext();
+      if (event.key === 'Escape') handlersRef.current.closeLightbox();
+      if (event.key === 'ArrowLeft') handlersRef.current.showPrevious();
+      if (event.key === 'ArrowRight') handlersRef.current.showNext();
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [activeIndex, closeLightbox, showNext, showPrevious]);
+  }, [activeIndex]);
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -127,6 +135,8 @@ const Gallery = ({
 
   const cambiarCategoria = (valor) => {
     setCategoria(valor);
+    setCurrentPage(1);
+    setActiveIndex(null);
   };
 
   if (items.length === 0) return null;
@@ -152,7 +162,7 @@ const Gallery = ({
 
           return (
             <figure
-              key={item.id ?? `${currentPage}-${index}`}
+              key={item.id || item.image || item.title || `${item.alt || 'img'}-${item.width || 'w'}`}
               className={getGalleryItemClassName(index, pageItems.length)}
             >
               <button
@@ -218,10 +228,9 @@ const Gallery = ({
       ) : null}
 
       {activeItem && activeImageUrl ? (
-        <div
+        <dialog
+          open
           className="gallery-lightbox"
-          role="dialog"
-          aria-modal="true"
           aria-label={activeItem.title || 'Vista ampliada de foto'}
         >
           <button
@@ -273,7 +282,7 @@ const Gallery = ({
               </button>
             ) : null}
           </div>
-        </div>
+        </dialog>
       ) : null}
     </section>
   );

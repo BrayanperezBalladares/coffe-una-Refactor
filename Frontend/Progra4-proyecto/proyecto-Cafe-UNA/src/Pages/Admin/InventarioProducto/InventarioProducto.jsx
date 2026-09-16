@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AdminLayout } from "../layouts/AdminLayout";
 import { AdminPageGate } from "../../../Components/AdminPageGate/AdminPageGate";
@@ -85,7 +85,7 @@ const AdminInventarioProducto = () => {
   const error = catalogState.error?.message || null;
   const { showLoading, loadingMessage } = useAdminPageGate('/admin/producto', !cargando);
 
-  const abrirStockDeProducto = (productId, nombre = "") => {
+  const abrirStockDeProducto = useCallback((productId, nombre = "") => {
     if (!puedeActualizarStock || !productId) return false;
     const producto = productos.find((item) => String(item.id) === String(productId));
     setProductoStockEditar(
@@ -102,28 +102,33 @@ const AdminInventarioProducto = () => {
       },
     );
     return true;
-  };
+  }, [puedeActualizarStock, productos]);
 
-  const abrirStockPendiente = () => {
+  const abrirStockPendiente = useCallback(() => {
     const pending = peekPendingStockProduct();
     if (!pending?.productId) return;
     if (abrirStockDeProducto(pending.productId, pending.nombre)) {
       window.setTimeout(() => clearPendingStockProduct(), 500);
     }
-  };
+  }, [abrirStockDeProducto]);
+
+  const abrirStockPendienteRef = useRef(abrirStockPendiente);
+  useEffect(() => {
+    abrirStockPendienteRef.current = abrirStockPendiente;
+  });
 
   useEffect(() => {
     abrirStockPendiente();
-  }, [puedeActualizarStock, productos]);
+  }, [abrirStockPendiente]);
 
   useEffect(() => {
     const onOpenStock = () => {
-      abrirStockPendiente();
+      abrirStockPendienteRef.current();
     };
 
     window.addEventListener(ADMIN_STOCK_PRODUCT_EVENT, onOpenStock);
     return () => window.removeEventListener(ADMIN_STOCK_PRODUCT_EVENT, onOpenStock);
-  }, [puedeActualizarStock, productos]);
+  }, []);
 
   const recargarCategorias = () =>
     obtenerCategorias(TIPO_CATEGORIA_PRODUCTO)

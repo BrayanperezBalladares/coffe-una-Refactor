@@ -4,9 +4,10 @@ export function __assign(target, ...sources) {
 
 export function __rest(source, exclude) {
   const target = {};
+  const excludeSet = new Set(exclude);
 
   for (const property in source) {
-    if (Object.prototype.hasOwnProperty.call(source, property) && !exclude.includes(property)) {
+    if (Object.prototype.hasOwnProperty.call(source, property) && !excludeSet.has(property)) {
       target[property] = source[property];
     }
   }

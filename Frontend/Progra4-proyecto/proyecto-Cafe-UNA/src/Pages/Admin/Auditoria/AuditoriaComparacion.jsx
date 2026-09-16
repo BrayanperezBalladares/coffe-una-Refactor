@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ST } from "../../../Components/T/ST";
 
 const ETIQUETAS_CAMPO = {
@@ -370,6 +371,7 @@ function resumenCambio({ accion, tabla, detalle, anteriores, nuevos, nombre, cam
 
 function PanelCampos({ titulo, datos, claves, cambiados, vacioTexto }) {
   const hayDatos = datos && typeof datos === "object" && claves.length > 0;
+  const cambiadosSet = useMemo(() => new Set(cambiados || []), [cambiados]);
   return (
     <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
       <p className="text-[length:var(--text-body)] font-semibold uppercase tracking-wide text-slate-500">
@@ -378,7 +380,7 @@ function PanelCampos({ titulo, datos, claves, cambiados, vacioTexto }) {
       {hayDatos ? (
         <dl className="mt-3 grid max-h-80 gap-2 overflow-auto pr-1">
           {claves.map((clave) => {
-            const cambio = cambiados.includes(clave);
+            const cambio = cambiadosSet.has(clave);
             return (
               <div
                 key={clave}

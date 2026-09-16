@@ -2,7 +2,7 @@
 
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Box,
   BookOpenText,
@@ -64,8 +64,10 @@ import {
   beginLogout,
   clearSession,
   getActiveSessionUser,
+  getSessionSnapshot,
   getStoredUser,
   SESSION_UPDATED_EVENT,
+  subscribeSession,
 } from "../../services/sessionService";
 import { ST } from "../T/ST";
 
@@ -82,7 +84,7 @@ const linkActivo = {
 };
 
 export function AppSidebar() {
-  const [user, setUser] = useState(() => getActiveSessionUser());
+  const user = useSyncExternalStore(subscribeSession, getSessionSnapshot, () => null);
   const { setOpenMobile } = useSidebar();
   const displayName = user?.name || user?.username || "Usuario";
   const displayEmail = user?.email || user?.correo || "";
@@ -168,17 +170,6 @@ export function AppSidebar() {
   const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
-    const syncUser = () => setUser(getActiveSessionUser());
-    syncUser();
-    window.addEventListener("storage", syncUser);
-    window.addEventListener(SESSION_UPDATED_EVENT, syncUser);
-    return () => {
-      window.removeEventListener("storage", syncUser);
-      window.removeEventListener(SESSION_UPDATED_EVENT, syncUser);
-    };
-  }, []);
-
-  useEffect(() => {
     const current = getActiveSessionUser();
     if (!current?.id) return undefined;
 
@@ -187,8 +178,7 @@ export function AppSidebar() {
       obtenerPerfil()
         .then((perfil) => {
           if (!activo || !perfil || !getStoredUser()) return;
-          const updated = applyPerfilToSession(perfil);
-          if (updated) setUser(updated);
+          applyPerfilToSession(perfil);
         })
         .catch(() => {});
     }, 400);

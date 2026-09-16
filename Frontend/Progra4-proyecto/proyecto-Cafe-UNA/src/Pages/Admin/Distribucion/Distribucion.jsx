@@ -38,6 +38,8 @@ import { t } from "../../../lib/t";
 import { useIdioma } from "../../../lib/useIdioma";
 import { asegurarCamposEnEspanol } from "../../../lib/traducir";
 
+const PAGE_SIZE = 20;
+
 const fieldClass =
   "min-h-[var(--control-height)] w-full rounded-full border border-slate-200 bg-slate-50 px-4 text-[length:var(--text-body)] text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-0";
 
@@ -80,7 +82,6 @@ export default function AdminDistribucion() {
   const [filtroDestino, setFiltroDestino] = useState("todos");
   const [histStatus, setHistStatus] = useState("idle");
   const [histError, setHistError] = useState("");
-  const pageSize = 20;
   const { idioma } = useIdioma();
 
   const stockDisponible = useMemo(() => {
@@ -169,7 +170,7 @@ export default function AdminDistribucion() {
         fechaHasta: fHasta || undefined,
         ubicacionDestino: fDestino !== "todos" ? fDestino : undefined,
         page: pageOverride,
-        pageSize,
+        pageSize: PAGE_SIZE,
       });
       setHistorial(data.items);
       setHistorialTotal(data.total);
@@ -218,11 +219,8 @@ export default function AdminDistribucion() {
     setHistStatus("loading");
     setHistError("");
     obtenerHistorialTransferencias({
-      fechaDesde: fechaDesde || undefined,
-      fechaHasta: fechaHasta || undefined,
-      ubicacionDestino: filtroDestino !== "todos" ? filtroDestino : undefined,
       page: 1,
-      pageSize,
+      pageSize: PAGE_SIZE,
     })
       .then((data) => {
         if (!activo) return;
@@ -250,7 +248,7 @@ export default function AdminDistribucion() {
     !puedeVer || (!loadingPos && histStatus !== "idle" && catalogStatus !== "idle");
   const { showLoading, loadingMessage } = useAdminPageGate("/admin/distribucion", ready);
 
-  const totalPages = Math.max(1, Math.ceil(historialTotal / pageSize));
+  const totalPages = Math.max(1, Math.ceil(historialTotal / PAGE_SIZE));
 
   const historialFiltrado = useMemo(() => {
     if (!busqueda.trim()) return historial;

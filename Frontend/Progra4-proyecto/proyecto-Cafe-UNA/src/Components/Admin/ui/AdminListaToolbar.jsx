@@ -88,6 +88,7 @@ export function AdminListaToolbar({
                     value={filtro.value}
                     onChange={(event) => filtro.onChange(event.target.value)}
                     className={inputFechaCls}
+                    aria-label={t(filtro.label)}
                   />
                 ) : (
                   <UiSelect

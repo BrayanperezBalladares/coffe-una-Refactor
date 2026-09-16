@@ -19,6 +19,7 @@ import {
 import { Calendar } from "@/Components/ui/calendar";
 import { AdminPageGate } from "../../../Components/AdminPageGate/AdminPageGate";
 import { AdminLayout } from "../layouts/AdminLayout";
+import { AdminCalendarPageHeader } from "../../../Components/Admin/ui/AdminCalendarPageHeader";
 import { ST } from "../../../Components/T/ST";
 import { useAdminPageGate } from "../../../hooks/useAdminPageGate";
 import { useTraducir } from "../../../hooks/useTraducir";
@@ -295,28 +296,12 @@ export default function AdminFechasRecepcionDonacion() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <CalendarDays className="size-6 text-slate-900" />
-                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                  <ST>{tTitulo}</ST>
-                </h1>
-              </div>
-              <p className="mt-1 max-w-3xl text-slate-600">
-                <ST>{tSub}</ST>
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={cargarFechas}
-              disabled={cargando}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 self-start"
-            >
-              <RefreshCw className={`size-4 ${cargando ? "animate-spin" : ""}`} />
-              <ST>Actualizar datos</ST>
-            </button>
-          </div>
+          <AdminCalendarPageHeader
+            title={tTitulo}
+            subtitle={tSub}
+            onRefresh={cargarFechas}
+            loading={cargando}
+          />
           <div className="mt-5 flex flex-wrap items-center gap-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-700 border border-slate-100">
             <div className="flex items-center gap-1.5">
               <span className="inline-block size-3.5 rounded-full border-2 border-slate-950 bg-white" />
@@ -459,9 +444,9 @@ export default function AdminFechasRecepcionDonacion() {
 
                 <div className="space-y-3 pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-800">
+                    <span className="block text-xs font-bold text-slate-800">
                       <ST>Horarios de recepción para esta fecha:</ST>
-                    </label>
+                    </span>
                     <span className="text-[11px] text-slate-500">
                       {horarios.length} configurado(s)
                     </span>
@@ -484,6 +469,7 @@ export default function AdminFechasRecepcionDonacion() {
                               type="button"
                               onClick={() => setHorarios((prev) => prev.filter((item) => item !== h))}
                               className="text-slate-400 hover:text-red-600 transition ml-0.5"
+                              aria-label={`Eliminar horario ${h}`}
                             >
                               <X className="size-3" />
                             </button>
@@ -535,6 +521,7 @@ export default function AdminFechasRecepcionDonacion() {
                         <input
                           type="text"
                           placeholder="Ej. 9:00 a. m. – 1:00 p. m."
+                          aria-label="Nuevo horario personalizado"
                           value={nuevoHorarioPersonalizado}
                           onChange={(e) => setNuevoHorarioPersonalizado(e.target.value)}
                           disabled={guardando}
@@ -555,10 +542,11 @@ export default function AdminFechasRecepcionDonacion() {
 
                 <div className="space-y-4 pt-2 border-t border-slate-100">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label htmlFor="fechas-observaciones" className="block text-xs font-semibold text-slate-700 mb-1">
                       <ST>Observaciones internas (opcional):</ST>
                     </label>
                     <textarea
+                      id="fechas-observaciones"
                       rows={2}
                       value={observaciones}
                       onChange={(e) => setObservaciones(e.target.value)}

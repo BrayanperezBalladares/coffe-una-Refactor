@@ -40,20 +40,6 @@ export function CentralStockEditor({
   const tGuardarStock = useTraducir("Guardar stock");
   const tProducto = useTraducir("Producto");
 
-  useEffect(() => {
-    if (!open) {
-      submitGuard.current = false;
-      return;
-    }
-    const next = initialValue(stockRecord);
-    if (lastSyncedStock.current === null || next !== lastSyncedStock.current) {
-      lastSyncedStock.current = next;
-      setValue(next);
-      setValidationError("");
-      setSubmitError("");
-    }
-  }, [open, stockRecord]);
-
   if (!open) return null;
 
   const message = validationError || submitError || error;

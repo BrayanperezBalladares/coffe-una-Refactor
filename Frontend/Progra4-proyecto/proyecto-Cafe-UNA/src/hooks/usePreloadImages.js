@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const MAX_WAIT_MS = 15000;
 const preloadedUrls = new Set();
@@ -58,12 +58,11 @@ function preloadOne(url) {
 
 /** Precarga un listado de imágenes en paralelo antes de mostrar la página. */
 export function usePreloadImages(urls) {
-  const key = urls.join('\0');
-  const [ready, setReady] = useState(() => areAllImagesPreloaded(urls) || !urls.length);
+  const key = (urls || []).filter(Boolean).join('\0');
+  const unique = useMemo(() => (key ? key.split('\0') : []), [key]);
+  const [ready, setReady] = useState(() => areAllImagesPreloaded(unique) || !unique.length);
 
   useEffect(() => {
-    const unique = [...new Set(urls.filter(Boolean))];
-
     if (!unique.length) {
       setReady(true);
       return undefined;
@@ -84,7 +83,7 @@ export function usePreloadImages(urls) {
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [unique]);
 
   return ready;
 }
@@ -123,7 +122,7 @@ export function useHomeVisualReady(imageUrls, enabled) {
     return () => {
       cancelled = true;
     };
-  }, [enabled, imageUrls.join('\0')]);
+  }, [enabled]);
 
   if (!enabled) return false;
   return imagesReady && fontsReady;

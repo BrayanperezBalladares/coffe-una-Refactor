@@ -110,11 +110,14 @@ function errorId(field) {
   return `producto-${field}-error`;
 }
 
+const EMPTY_PRODUCTS = [];
+const EMPTY_CATEGORIAS = [];
+
 export function ProductCatalogFormDrawer({
   open,
   initial,
-  products = [],
-  categorias = [],
+  products = EMPTY_PRODUCTS,
+  categorias = EMPTY_CATEGORIAS,
   onCategoriaCreada,
   onSave,
   onClose,

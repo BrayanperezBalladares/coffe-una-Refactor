@@ -466,18 +466,6 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
 
   const correoCambio = Boolean(inicial) && correoForm.trim().toLowerCase() !== correoOriginal;
 
-  useEffect(() => {
-    if (!inicial) {
-      setCorreoVerificado(false);
-      return;
-    }
-    setCorreoVerificado(!correoCambio);
-    if (!correoCambio) {
-      setPasswordCorreoUsuario("");
-      setErrorPasswordCorreo("");
-    }
-  }, [correoCambio, inicial]);
-
   async function handleSolicitarCodigoCorreo() {
     const correo = correoForm.trim().toLowerCase();
     if (!correo) {
@@ -590,8 +578,17 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(event) => {
-                field.handleChange(event.target.value);
-                setCorreoForm(event.target.value);
+                const nuevo = event.target.value;
+                field.handleChange(nuevo);
+                setCorreoForm(nuevo);
+                if (inicial) {
+                  const cambio = nuevo.trim().toLowerCase() !== correoOriginal;
+                  setCorreoVerificado(!cambio);
+                  if (!cambio) {
+                    setPasswordCorreoUsuario("");
+                    setErrorPasswordCorreo("");
+                  }
+                }
               }}
               required
               disabled={!inicial && pasoCreacion === "codigo"}
@@ -629,6 +626,7 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
               value={codigoVerificacion}
               onChange={(e) => setCodigoVerificacion(e.target.value)}
               placeholder={"C\u00f3digo de verificaci\u00f3n"}
+              aria-label="C\u00f3digo de verificaci\u00f3n"
             />
             <button
               type="button"
@@ -709,6 +707,7 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
                           }}
                           maxLength={MAX_PASSWORD}
                           placeholder={"Requerida si cambia la contraseña"}
+                          aria-label="Contrase\u00f1a actual"
                           aria-invalid={Boolean(fieldErrors.passwordActual)}
                         />
                         {fieldErrors.passwordActual ? (

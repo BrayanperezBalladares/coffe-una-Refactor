@@ -60,6 +60,8 @@ function iconoDeCategoria(nombre) {
   return Tag;
 }
 
+const EMPTY_PRODUCTS = [];
+
 const Products = () => {
   const {
     data,
@@ -69,7 +71,7 @@ const Products = () => {
     reload,
     loadingMessage,
   } = useCachedPublicPage('products', fetchProductsPageData);
-  const products = data?.products ?? [];
+  const products = data?.products ?? EMPTY_PRODUCTS;
   const productosTrad = useTraducirLista(products, CAMPOS_PRODUCTO);
   const nombrePorId = useMemo(() => {
     const map = new Map();
@@ -530,7 +532,7 @@ const Products = () => {
         </div>
 
         {filtrosAbiertos ? (
-          <div className="products-page__drawer" role="dialog" aria-modal="true" aria-label="Filtros">
+          <dialog open className="products-page__drawer border-0 p-0 m-0 bg-transparent w-full h-full max-w-none max-h-none" aria-modal="true" aria-label="Filtros">
             <button
               type="button"
               className="products-page__drawer-backdrop"
@@ -557,7 +559,7 @@ const Products = () => {
                 {asideNav}
               </div>
             </div>
-          </div>
+          </dialog>
         ) : null}
       </main>
     </PublicPageGate>

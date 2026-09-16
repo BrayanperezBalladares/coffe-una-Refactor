@@ -48,12 +48,12 @@ export function AdminModal({
         onWheel={(event) => event.preventDefault()}
         onTouchMove={(event) => event.preventDefault()}
       />
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby={labelledBy}
         className={cn(
-          "relative z-10 flex max-h-[92dvh] w-full min-h-0 min-w-0 max-w-full flex-col overflow-x-hidden overflow-hidden bg-white shadow-2xl",
+          "relative z-10 flex max-h-[92dvh] w-full min-h-0 min-w-0 max-w-full flex-col overflow-x-hidden overflow-hidden bg-white shadow-2xl border-0 p-0 text-inherit",
           "rounded-t-2xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl",
           maxWidth,
           className,
@@ -62,7 +62,7 @@ export function AdminModal({
         onClick={(event) => event.stopPropagation()}
       >
         {children}
-      </div>
+      </dialog>
     </div>,
     document.body,
   );

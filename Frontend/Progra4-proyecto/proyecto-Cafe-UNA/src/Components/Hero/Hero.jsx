@@ -47,30 +47,15 @@ function HeroActionLink({ href, className, children }) {
   );
 }
 
-const Hero = ({ data = {}, onBackgroundReady }) => {
+const EMPTY_HERO_DATA = {};
+
+const Hero = ({ data = EMPTY_HERO_DATA, onBackgroundReady }) => {
   const heroBase = useMemo(() => mapHero(data), [data]);
   const hero = useTraducirObjeto(heroBase, CAMPOS_HERO);
   const backgroundUrl = normalizeImageUrl(hero.backgroundImage, { width: 1920 });
-  const [bgReady, setBgReady] = useState(!backgroundUrl);
+  const [loadedUrl, setLoadedUrl] = useState("");
+  const bgReady = !backgroundUrl || loadedUrl === backgroundUrl;
   const imgRef = useRef(null);
-
-  const notifyReady = useCallback(() => {
-    setBgReady(true);
-    onBackgroundReady?.();
-  }, [onBackgroundReady]);
-
-  useEffect(() => {
-    setBgReady(!backgroundUrl);
-    if (!backgroundUrl) {
-      onBackgroundReady?.();
-      return;
-    }
-
-    const img = imgRef.current;
-    if (img?.complete && img.naturalWidth > 0) {
-      notifyReady();
-    }
-  }, [backgroundUrl, notifyReady, onBackgroundReady]);
 
   const handleBackgroundLoad = async (event) => {
     try {
@@ -80,11 +65,13 @@ const Hero = ({ data = {}, onBackgroundReady }) => {
     } catch {
       // ignore
     }
-    notifyReady();
+    setLoadedUrl(backgroundUrl);
+    onBackgroundReady?.();
   };
 
   const handleBackgroundError = () => {
-    notifyReady();
+    setLoadedUrl(backgroundUrl);
+    onBackgroundReady?.();
   };
 
   const showPrimary = Boolean(hero.primaryButtonText && hero.primaryButtonUrl);

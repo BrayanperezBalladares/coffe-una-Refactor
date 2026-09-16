@@ -468,6 +468,7 @@ export default function SolicitarVisita() {
                   <Field label="Identificación *">
                     <input
                       name="encargadoIdentificacion"
+                      aria-label="Identificación del encargado"
                       value={form.encargadoIdentificacion}
                       onChange={update}
                       onBlur={handleIdentificacionBlur}
@@ -551,6 +552,7 @@ export default function SolicitarVisita() {
                       <Field label="País de procedencia *">
                         <input
                           name="paisProcedencia"
+                          aria-label="Pa\u00eds de procedencia"
                           value={form.paisProcedencia}
                           onChange={update}
                           placeholder="País de procedencia"
@@ -559,6 +561,7 @@ export default function SolicitarVisita() {
                       <Field label="Provincia o Estado *">
                         <input
                           name="provincia"
+                          aria-label="Provincia o Estado"
                           value={form.provincia}
                           onChange={update}
                           placeholder="Provincia o Estado"
@@ -567,6 +570,7 @@ export default function SolicitarVisita() {
                       <Field label="Ciudad *">
                         <input
                           name="canton"
+                          aria-label="Ciudad"
                           value={form.canton}
                           onChange={update}
                           placeholder="Ciudad"
@@ -617,6 +621,7 @@ export default function SolicitarVisita() {
                   <Field label="Tipo de grupo *">
                     <input
                       name="tipoGrupo"
+                      aria-label="Tipo de grupo"
                       value={form.tipoGrupo}
                       onChange={update}
                       placeholder="Universidad, empresa, asociación…"

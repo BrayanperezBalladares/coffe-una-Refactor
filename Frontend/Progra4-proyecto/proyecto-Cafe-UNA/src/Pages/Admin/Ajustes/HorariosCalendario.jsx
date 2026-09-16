@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format, startOfDay, getDay } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { DayPicker } from "react-day-picker";
@@ -78,6 +78,10 @@ function tiposAGuardar(filtroTipo) {
  * Sábados y domingos no aparecen.
  */
 export function HorariosCalendario({ onMessage, onError }) {
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
   const { idioma } = useIdioma();
   const localeFecha = idioma === "en" ? enUS : es;
   const hoy = useMemo(() => startOfDay(new Date()), []);
@@ -148,10 +152,10 @@ export function HorariosCalendario({ onMessage, onError }) {
     try {
       const tipoApi = filtroTipo === "todos" ? undefined : filtroTipo;
       const data = await listarDisponibilidad(tipoApi);
-      setReglas(data.reglas || reglas);
+      setReglas((prev) => data.reglas || prev);
       setExcepciones(data.excepciones || []);
     } catch (err) {
-      onError?.(sanitizeUserFacingError(err?.message || "No se pudo cargar el horario."));
+      onErrorRef.current?.(sanitizeUserFacingError(err?.message || "No se pudo cargar el horario."));
     } finally {
       setCargando(false);
     }
@@ -164,12 +168,12 @@ export function HorariosCalendario({ onMessage, onError }) {
     listarDisponibilidad(tipoApi)
       .then((data) => {
         if (!activo) return;
-        setReglas(data.reglas || reglas);
+        setReglas((prev) => data.reglas || prev);
         setExcepciones(data.excepciones || []);
       })
       .catch((err) => {
         if (!activo) return;
-        onError?.(sanitizeUserFacingError(err?.message || "No se pudo cargar el horario."));
+        onErrorRef.current?.(sanitizeUserFacingError(err?.message || "No se pudo cargar el horario."));
       })
       .finally(() => {
         if (activo) setCargando(false);

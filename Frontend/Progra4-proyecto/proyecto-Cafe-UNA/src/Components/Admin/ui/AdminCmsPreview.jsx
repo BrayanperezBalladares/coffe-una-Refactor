@@ -303,6 +303,7 @@ function PreviewHomeSectionLive({ clave, form, tarjetasInicio = [] }) {
                 src={locationMapEmbedUrl}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
+                sandbox="allow-scripts"
               />
             </div>
           ) : locationImageUrl ? (
@@ -449,8 +450,8 @@ function PreviewNavbarLive({ form, enlaces = [] }) {
           </div>
 
           <div className="navbar__menu" aria-label="Vista previa de enlaces">
-            {links.length ? links.map((item, index) => (
-              <PreviewNavItem key={item.id ?? index} item={item} />
+            {links.length ? links.map((item) => (
+              <PreviewNavItem key={item.id || `${item.label || item.texto || "nav"}-${item.url || item.href || ""}`} item={item} />
             )) : (
               <span style={{ opacity: 0.5 }}>{"Los enlaces aparecer\u00e1n aqu\u00ed."}</span>
             )}
@@ -485,8 +486,8 @@ function PreviewFooterLive({ form, enlaces = [] }) {
           {explorar.length ? (
             <nav className="footer__column" aria-label="Explorar">
               <h2>Explorar</h2>
-              {explorar.map((item, index) => (
-                <PreviewNavItem key={item.id ?? index} item={item} />
+              {explorar.map((item) => (
+                <PreviewNavItem key={item.id || `${item.label || item.texto || "nav"}-${item.url || item.href || ""}`} item={item} />
               ))}
             </nav>
           ) : null}

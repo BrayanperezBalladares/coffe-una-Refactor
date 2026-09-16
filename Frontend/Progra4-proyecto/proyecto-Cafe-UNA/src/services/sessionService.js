@@ -120,3 +120,24 @@ export function updateSessionUser(partial) {
   if (!current) return null;
   return saveAuthenticatedUser({ ...current, ...partial });
 }
+
+let cachedUser = null;
+let cachedRaw = "__UNSET__";
+
+export function getSessionSnapshot() {
+  if (typeof window === "undefined" || loggingOut) return null;
+  const raw = localStorage.getItem(USER_STORAGE_KEY) || "";
+  if (raw === cachedRaw) return cachedUser;
+  cachedRaw = raw;
+  cachedUser = getActiveSessionUser();
+  return cachedUser;
+}
+
+export function subscribeSession(callback) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(SESSION_UPDATED_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SESSION_UPDATED_EVENT, callback);
+  };
+}

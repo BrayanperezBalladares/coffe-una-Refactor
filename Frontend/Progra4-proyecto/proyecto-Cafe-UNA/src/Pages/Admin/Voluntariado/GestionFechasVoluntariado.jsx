@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Calendar } from "@/Components/ui/calendar";
+import { AdminCalendarPageHeader } from "../../../Components/Admin/ui/AdminCalendarPageHeader";
 import { ST } from "../../../Components/T/ST";
 import { useTraducir } from "../../../hooks/useTraducir";
 import { useIdioma } from "../../../lib/useIdioma";
@@ -402,35 +403,18 @@ export function GestionFechasVoluntariado({ esSuperAdmin = false }) {
     <div className="space-y-6">
       {/* Encabezado principal */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <CalendarDays className="size-6 text-slate-900" />
-              <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                <ST>{tTitulo}</ST>
-              </h1>
-            </div>
-            <p className="mt-1 max-w-3xl text-slate-600">
-              <ST>{tSub}</ST>
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={cargarFechas}
-            disabled={cargando}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 self-start"
-          >
-            <RefreshCw className={`size-4 ${cargando ? "animate-spin" : ""}`} />
-            <ST>Actualizar datos</ST>
-          </button>
-        </div>
+        <AdminCalendarPageHeader
+          title={tTitulo}
+          subtitle={tSub}
+          onRefresh={cargarFechas}
+          loading={cargando}
+        />
 
         {/* Selector de Tipo de Voluntariado */}
         <div className="mt-6 pt-6 border-t border-slate-100">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+          <p className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             <ST>Seleccione el tipo de voluntariado a configurar:</ST>
-          </label>
+          </p>
 
           <div className="flex flex-wrap gap-2">
             {TIPOS_VOLUNTARIADO.map((tipo) => {
@@ -646,9 +630,9 @@ export function GestionFechasVoluntariado({ esSuperAdmin = false }) {
               {/* GESTIÓN DE HORARIOS / INTERVALOS DISPONIBLES */}
               <div className="space-y-3 pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800">
+                  <span className="block text-xs font-bold text-slate-800">
                     <ST>Horarios e intervalos disponibles para esta fecha:</ST>
-                  </label>
+                  </span>
                   <span className="text-[11px] text-slate-500">
                     {horarios.length} configurado(s)
                   </span>
@@ -722,6 +706,7 @@ export function GestionFechasVoluntariado({ esSuperAdmin = false }) {
                     <input
                       type="text"
                       placeholder="Ej. 9:00 a. m. – 1:00 p. m."
+                      aria-label="Nuevo horario personalizado"
                       value={nuevoHorarioPersonalizado}
                       onChange={(e) => setNuevoHorarioPersonalizado(e.target.value)}
                       disabled={guardando}
@@ -742,14 +727,16 @@ export function GestionFechasVoluntariado({ esSuperAdmin = false }) {
               {/* Cupo y Observaciones */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="vol-cupo-maximo" className="block text-xs font-semibold text-slate-700 mb-1">
                     <ST>Cupo máximo de voluntarios (opcional):</ST>
                   </label>
                   <input
+                    id="vol-cupo-maximo"
                     type="number"
                     min="1"
                     max="500"
                     placeholder="Ej. 20"
+                    aria-label="Cupo máximo de voluntarios"
                     value={cupoMaximo}
                     onChange={(e) => setCupoMaximo(e.target.value)}
                     disabled={guardando || esFechaPasada}
@@ -758,12 +745,14 @@ export function GestionFechasVoluntariado({ esSuperAdmin = false }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="vol-observaciones" className="block text-xs font-semibold text-slate-700 mb-1">
                     <ST>Observaciones internas / Nota (opcional):</ST>
                   </label>
                   <textarea
+                    id="vol-observaciones"
                     rows={2}
                     placeholder="Ej. Actividad especial de reforestación"
+                    aria-label="Observaciones internas / Nota"
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
                     disabled={guardando || esFechaPasada}
