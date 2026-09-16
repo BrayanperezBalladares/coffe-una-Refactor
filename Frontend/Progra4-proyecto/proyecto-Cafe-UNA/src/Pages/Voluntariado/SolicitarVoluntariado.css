@@ -321,6 +321,17 @@
   margin-bottom: 0;
 }
 
+.form-grid--3cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-grid--3cols:last-child {
+  margin-bottom: 0;
+}
+
 /* Fila de 4 columnas para Cédula, Nombre y Apellidos */
 .form-grid--4cols {
   display: grid;
@@ -672,6 +683,8 @@
   }
 
   .form-grid,
+  .form-grid--2cols,
+  .form-grid--3cols,
   .form-grid--4cols {
     grid-template-columns: 1fr;
   }
@@ -1323,5 +1336,108 @@
 
 .opcion-radio--sin-fechas {
   opacity: 0.7;
+}
+
+/* =========================
+   VISITAS ESPECÍFICO
+========================= */
+.visita-necesidades-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 18px;
+}
+
+.visita-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .visita-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.visita-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--fondo-soft);
+  border: 1px solid var(--borde-input);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.visita-checkbox-card:hover {
+  border-color: #c9bba8;
+  background: #f7f3ee;
+}
+
+.visita-checkbox-card--activa {
+  border-color: var(--accent-cafe);
+  background: #fdfaf6;
+  box-shadow: 0 2px 8px rgba(140, 83, 50, 0.08);
+}
+
+.visita-checkbox-card input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-cafe);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.visita-checkbox-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.visita-checkbox-card__info strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--texto-principal);
+}
+
+.visita-checkbox-card__info span {
+  font-size: 0.78rem;
+  color: var(--texto-secundario);
+  line-height: 1.4;
+}
+
+.visita-recomendaciones {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(140, 83, 50, 0.2);
+  background: #fcf9f5;
+}
+
+.visita-recomendaciones__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.visita-recomendaciones__header strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--negro-principal);
+}
+
+.visita-recomendaciones__list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--texto-secundario);
+  line-height: 1.5;
 }
 

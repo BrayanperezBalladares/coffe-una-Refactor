@@ -10,13 +10,16 @@ import {
   ClipboardList,
   Clock,
   Lock,
+  Sparkles,
   UserRound,
   Users,
 } from "lucide-react";
 
 import { Calendar } from "@/Components/ui/calendar";
 import PageLoading from "../../Components/PageLoading/PageLoading";
+import BackToHomeLink from "../../Components/BackToHomeLink/BackToHomeLink";
 import AvisoSedeFinca from "../../Components/AvisoSedeFinca/AvisoSedeFinca";
+import { HOME_SCROLL_SECTIONS } from "../../lib/homeScrollTarget";
 import { usePaintPublicPage } from "../../hooks/usePaintPublicPage";
 import { PROVINCIAS_CR, cantonesDeProvincia } from "../../lib/costaRicaDivisiones";
 import { sedeDesdeHomeLocation } from "../../lib/sedeFinca";
@@ -61,6 +64,10 @@ function esCedulaFisica(valor) {
   return digitos.length === 9 && digitos === String(valor ?? "").replace(/[\s-]/g, "");
 }
 
+function esAvisoCedulaInformativo(mensaje) {
+  return /cargad[oa]s?\s+autom[aá]ticamente/i.test(mensaje) || /datos cargados/i.test(mensaje);
+}
+
 function partesNombreCedula(datos) {
   return {
     nombre: String(datos?.nombre || datos?.Nombre || "").trim(),
@@ -87,14 +94,16 @@ function SectionCard({ icon: Icon, paso, title, hint, children }) {
             {paso}
           </span>
         ) : null}
-        <h4>
-          {paso != null ? (
-            <span className="sr-only">Paso {paso}. </span>
-          ) : null}
-          {title}
-        </h4>
+        <div className="section-card__title-group">
+          <h4>
+            {paso != null ? (
+              <span className="sr-only">Paso {paso}. </span>
+            ) : null}
+            {title}
+          </h4>
+          {hint ? <p className="section-card__hint">{hint}</p> : null}
+        </div>
         {Icon ? <Icon aria-hidden="true" className="section-card__icon-inline" size={20} /> : null}
-        {hint ? <span className="section-card__hint">{hint}</span> : null}
       </div>
       <div className="section-card__body">{children}</div>
     </section>
@@ -441,6 +450,8 @@ export default function SolicitarVisita() {
         inert={inert}
         ref={pageRef}
       >
+        <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
+
         <section className="voluntariado-section">
           <header className="voluntariado-header">
             <h1>Solicitud de visitas grupales</h1>
@@ -464,54 +475,72 @@ export default function SolicitarVisita() {
                 title="Información del encargado"
                 hint="Datos de la persona responsable de coordinar la visita."
               >
-                <div className="form-grid">
-                  <Field label="Identificación *">
-                    <input
-                      name="encargadoIdentificacion"
-                      aria-label="Identificación del encargado"
-                      value={form.encargadoIdentificacion}
-                      onChange={update}
-                      onBlur={handleIdentificacionBlur}
-                      placeholder="Ej: 1-1111-1111"
-                    />
-                    {consultandoCedula ? (
-                      <span className="text-xs text-slate-500 mt-1 block">Consultando cédula…</span>
-                    ) : null}
-                    {avisoCedula ? (
-                      <span
-                        className={`text-xs mt-1 block ${
-                          avisoCedula.includes("automáticamente") ? "text-emerald-700" : "text-amber-700"
-                        }`}
-                      >
-                        {avisoCedula}
-                      </span>
-                    ) : null}
+                <div className="form-grid--2cols">
+                  <Field label="Identificación (Cédula) *">
+                    <div className="campo-con-estado">
+                      <input
+                        name="encargadoIdentificacion"
+                        aria-label="Identificación del encargado"
+                        placeholder="101110111"
+                        value={form.encargadoIdentificacion}
+                        onChange={update}
+                        onBlur={handleIdentificacionBlur}
+                        maxLength={9}
+                      />
+                      {consultandoCedula ? (
+                        <span className="campo-estado-icono">
+                          <span className="cedula-loader" aria-hidden="true" />
+                        </span>
+                      ) : null}
+                    </div>
                   </Field>
                   <Field label="Nombre *">
                     <input
                       name="encargadoNombre"
+                      placeholder="Nombre"
                       value={form.encargadoNombre}
                       onChange={update}
+                      maxLength={80}
                     />
                   </Field>
-                  <Field label="Primer Apellido *">
+                </div>
+
+                <div className="form-grid--2cols">
+                  <Field label="Primer apellido *">
                     <input
                       name="encargadoPrimerApellido"
+                      placeholder="1° Apellido"
                       value={form.encargadoPrimerApellido}
                       onChange={update}
+                      maxLength={80}
                     />
                   </Field>
-                  <Field label="Segundo Apellido">
+                  <Field label="Segundo apellido">
                     <input
                       name="encargadoSegundoApellido"
+                      placeholder="2° Apellido"
                       value={form.encargadoSegundoApellido}
                       onChange={update}
+                      maxLength={80}
                     />
                   </Field>
+                </div>
+
+                {consultandoCedula && (
+                  <span className="mensaje-info">Consultando datos de la cédula...</span>
+                )}
+                {!consultandoCedula && avisoCedula && (
+                  <span className={esAvisoCedulaInformativo(avisoCedula) ? "mensaje-info" : "mensaje-error"}>
+                    {avisoCedula}
+                  </span>
+                )}
+
+                <div className="form-grid--2cols">
                   <Field label="Correo electrónico *">
                     <input
                       type="email"
                       name="encargadoEmail"
+                      placeholder="ejemplo@correo.com"
                       value={form.encargadoEmail}
                       onChange={update}
                     />
@@ -519,15 +548,21 @@ export default function SolicitarVisita() {
                   <Field label="Teléfono *">
                     <input
                       name="encargadoTelefono"
+                      placeholder="88888888"
                       value={form.encargadoTelefono}
                       onChange={update}
                     />
                   </Field>
-                  <Field label="Institución">
+                </div>
+
+                <div className="campo full">
+                  <Field label="Institución o empresa (opcional)">
                     <input
                       name="encargadoInstitucion"
+                      placeholder="Universidad, colegio, empresa u organización"
                       value={form.encargadoInstitucion}
                       onChange={update}
+                      maxLength={120}
                     />
                   </Field>
                 </div>
@@ -539,85 +574,94 @@ export default function SolicitarVisita() {
                 title="Información del grupo"
                 hint="Las visitas grupales requieren al menos dos personas."
               >
-                <div className="form-grid">
+                <div className="form-grid--2cols">
                   <Field label="Tipo de visitante *">
-                    <select name="tipoVisitante" value={form.tipoVisitante} onChange={update}>
+                    <select
+                      name="tipoVisitante"
+                      aria-label="Tipo de visitante"
+                      value={form.tipoVisitante}
+                      onChange={update}
+                    >
                       <option value="Nacional">Nacional</option>
                       <option value="Internacional">Internacional</option>
                     </select>
                   </Field>
-
-                  {form.tipoVisitante === "Internacional" ? (
-                    <>
-                      <Field label="País de procedencia *">
-                        <input
-                          name="paisProcedencia"
-                          aria-label="Pa\u00eds de procedencia"
-                          value={form.paisProcedencia}
-                          onChange={update}
-                          placeholder="País de procedencia"
-                        />
-                      </Field>
-                      <Field label="Provincia o Estado *">
-                        <input
-                          name="provincia"
-                          aria-label="Provincia o Estado"
-                          value={form.provincia}
-                          onChange={update}
-                          placeholder="Provincia o Estado"
-                        />
-                      </Field>
-                      <Field label="Ciudad *">
-                        <input
-                          name="canton"
-                          aria-label="Ciudad"
-                          value={form.canton}
-                          onChange={update}
-                          placeholder="Ciudad"
-                        />
-                      </Field>
-                    </>
-                  ) : (
-                    <>
-                      <Field label="Provincia *">
-                        <select name="provincia" value={form.provincia} onChange={update}>
-                          <option value="">Seleccioná una provincia</option>
-                          {PROVINCIAS_CR.map((prov) => (
-                            <option key={prov} value={prov}>
-                              {prov}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="Cantón *">
-                        <select
-                          name="canton"
-                          value={form.canton}
-                          onChange={update}
-                          disabled={!form.provincia}
-                        >
-                          <option value="">
-                            {form.provincia ? "Seleccioná un cantón" : "Primero seleccioná una provincia"}
-                          </option>
-                          {cantonesDeProvincia(form.provincia).map((can) => (
-                            <option key={can} value={can}>
-                              {can}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </>
-                  )}
 
                   <Field label="Cantidad de visitantes *">
                     <input
                       min="2"
                       type="number"
                       name="cantidadVisitantes"
+                      placeholder="Mínimo 2 personas"
                       value={form.cantidadVisitantes}
                       onChange={update}
                     />
                   </Field>
+                </div>
+
+                {form.tipoVisitante === "Internacional" ? (
+                  <div className="form-grid--3cols">
+                    <Field label="País de procedencia *">
+                      <input
+                        name="paisProcedencia"
+                        aria-label="País de procedencia"
+                        value={form.paisProcedencia}
+                        onChange={update}
+                        placeholder="País de origen"
+                      />
+                    </Field>
+                    <Field label="Provincia o Estado *">
+                      <input
+                        name="provincia"
+                        aria-label="Provincia o Estado"
+                        value={form.provincia}
+                        onChange={update}
+                        placeholder="Estado / Provincia"
+                      />
+                    </Field>
+                    <Field label="Ciudad *">
+                      <input
+                        name="canton"
+                        aria-label="Ciudad"
+                        value={form.canton}
+                        onChange={update}
+                        placeholder="Ciudad"
+                      />
+                    </Field>
+                  </div>
+                ) : (
+                  <div className="form-grid--2cols">
+                    <Field label="Provincia *">
+                      <select name="provincia" value={form.provincia} onChange={update}>
+                        <option value="">Seleccioná una provincia</option>
+                        {PROVINCIAS_CR.map((prov) => (
+                          <option key={prov} value={prov}>
+                            {prov}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Cantón *">
+                      <select
+                        name="canton"
+                        value={form.canton}
+                        onChange={update}
+                        disabled={!form.provincia}
+                      >
+                        <option value="">
+                          {form.provincia ? "Seleccioná un cantón" : "Primero seleccioná una provincia"}
+                        </option>
+                        {cantonesDeProvincia(form.provincia).map((can) => (
+                          <option key={can} value={can}>
+                            {can}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                )}
+
+                <div className="form-grid--2cols">
                   <Field label="Tipo de grupo *">
                     <input
                       name="tipoGrupo"
@@ -630,6 +674,7 @@ export default function SolicitarVisita() {
                   <Field label="Motivo de la visita *">
                     <input
                       name="motivoVisita"
+                      placeholder="Ej: Gira de campo agronómica, recorrido de sostenibilidad…"
                       value={form.motivoVisita}
                       onChange={update}
                     />
@@ -637,7 +682,7 @@ export default function SolicitarVisita() {
                 </div>
               </SectionCard>
 
-              {/* Sección de Horarios Homologada a Voluntariado */}
+              {/* Sección de Horarios Homologada */}
               <SectionCard
                 paso={3}
                 icon={CalendarDays}
@@ -646,7 +691,9 @@ export default function SolicitarVisita() {
               >
                 {availabilityStatus === "loading" ? (
                   <div className="voluntariado-aviso-bloque">
-                    <div className="size-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mb-2" />
+                    <div className="voluntariado-aviso-bloque__icono-wrap">
+                      <Clock className="voluntariado-aviso-bloque__icono size-7 animate-spin" />
+                    </div>
                     <p className="voluntariado-aviso-bloque__texto">
                       Cargando fechas y horarios disponibles…
                     </p>
@@ -657,22 +704,24 @@ export default function SolicitarVisita() {
                   </p>
                 ) : fechasHabilitadasDates.length === 0 ? (
                   <div className="voluntariado-aviso-bloque">
-                    <CalendarX2 className="voluntariado-aviso-bloque__icono size-8 text-amber-500" />
-                    <p className="voluntariado-aviso-bloque__titulo text-amber-900">
+                    <div className="voluntariado-aviso-bloque__icono-wrap">
+                      <CalendarX2 className="voluntariado-aviso-bloque__icono size-7" />
+                    </div>
+                    <p className="voluntariado-aviso-bloque__titulo">
                       No hay fechas y horarios habilitados
                     </p>
-                    <p className="voluntariado-aviso-bloque__texto text-amber-700">
+                    <p className="voluntariado-aviso-bloque__texto">
                       Actualmente no hay fechas habilitadas para visitas grupales. Por favor consultá más adelante.
                     </p>
                   </div>
                 ) : (
                   <div className="campo full flex flex-col items-center">
                     {fechaSeleccionada && (
-                      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-900 bg-white px-5 py-2 shadow-xs">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-900/20 bg-amber-50/70 px-5 py-2 shadow-xs">
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-900/60">
                           FECHA SELECCIONADA:
                         </span>
-                        <span className="text-xs font-bold text-slate-950 capitalize">
+                        <span className="text-xs font-bold text-amber-950 capitalize">
                           {format(fechaSeleccionada, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: es })}
                         </span>
                       </div>
@@ -695,47 +744,51 @@ export default function SolicitarVisita() {
                       />
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600 mt-4 pt-2">
+                    <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-stone-600 mt-4 pt-2">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-slate-950 bg-white font-bold text-slate-950 text-[11px]">
+                        <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-[#24140e] bg-white font-bold text-[#24140e] text-[11px]">
                           15
                         </span>
                         <span>Fecha disponible para visitas</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex size-5 items-center justify-center text-slate-400 opacity-40 text-[11px]">
+                        <span className="inline-flex size-5 items-center justify-center text-stone-400 opacity-40 text-[11px]">
                           15
                         </span>
                         <span>Fecha no disponible</span>
                       </div>
                     </div>
 
-                    <div className="w-full mt-6 pt-6 border-t border-slate-200">
+                    <div className="w-full mt-6 pt-6 border-t border-stone-200/80">
                       {!fechaSeleccionada ? (
                         <div className="voluntariado-aviso-bloque">
-                          <Clock className="voluntariado-aviso-bloque__icono size-8 text-slate-400" />
-                          <p className="voluntariado-aviso-bloque__titulo text-slate-800">
+                          <div className="voluntariado-aviso-bloque__icono-wrap">
+                            <Clock className="voluntariado-aviso-bloque__icono size-7" />
+                          </div>
+                          <p className="voluntariado-aviso-bloque__titulo">
                             Seleccioná una fecha en el calendario
                           </p>
-                          <p className="voluntariado-aviso-bloque__texto text-slate-600">
+                          <p className="voluntariado-aviso-bloque__texto">
                             Al seleccionar un día habilitado, se cargarán los turnos u horarios disponibles para esa fecha.
                           </p>
                         </div>
                       ) : slotsParaFechaSeleccionada.length === 0 ? (
                         <div className="voluntariado-aviso-bloque">
-                          <CalendarX2 className="voluntariado-aviso-bloque__icono size-8 text-amber-500" />
-                          <p className="voluntariado-aviso-bloque__titulo text-amber-900">
+                          <div className="voluntariado-aviso-bloque__icono-wrap">
+                            <CalendarX2 className="voluntariado-aviso-bloque__icono size-7" />
+                          </div>
+                          <p className="voluntariado-aviso-bloque__titulo">
                             Sin turnos para esta fecha
                           </p>
-                          <p className="voluntariado-aviso-bloque__texto text-amber-700">
+                          <p className="voluntariado-aviso-bloque__texto">
                             No hay turnos disponibles para el día seleccionado.
                           </p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-xs font-semibold text-slate-700 mb-3">
+                          <p className="text-xs font-semibold text-stone-700 mb-3">
                             Horarios disponibles para el{" "}
-                            <strong>
+                            <strong className="text-stone-900">
                               {format(fechaSeleccionada, "dd 'de' MMMM", { locale: es })}
                             </strong>:
                           </p>
@@ -775,7 +828,7 @@ export default function SolicitarVisita() {
                                     {franja}
                                   </span>
                                   {slot.nota ? (
-                                    <span className="text-xs text-slate-500 mt-1 block">
+                                    <span className="text-xs text-stone-500 mt-1 block">
                                       {slot.nota}
                                     </span>
                                   ) : null}
@@ -796,28 +849,62 @@ export default function SolicitarVisita() {
                 title="Necesidades y recomendaciones"
                 hint="Todas las visitas serán recibidas o acompañadas por personal del proyecto."
               >
-                <fieldset className="grid gap-3 sm:grid-cols-2">
-                  <legend className="mb-3 text-sm font-semibold text-slate-700">Necesidades del grupo</legend>
-                  {[
-                    ["requiereAccesibilidad", "Requerimientos de accesibilidad"],
-                    ["requiereParqueoBus", "Parqueo"],
-                  ].map(([name, label]) => (
-                    <label className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm font-medium" key={name}>
-                      <input type="checkbox" name={name} checked={form[name]} onChange={update} /> {label}
+                <fieldset className="visita-necesidades-fieldset">
+                  <legend className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-600">
+                    Necesidades del grupo
+                  </legend>
+                  <div className="visita-checkbox-grid">
+                    <label className={`visita-checkbox-card ${form.requiereAccesibilidad ? "visita-checkbox-card--activa" : ""}`}>
+                      <input
+                        type="checkbox"
+                        name="requiereAccesibilidad"
+                        checked={form.requiereAccesibilidad}
+                        onChange={update}
+                      />
+                      <div className="visita-checkbox-card__info">
+                        <strong>Requerimientos de accesibilidad</strong>
+                        <span>Apoyo para personas con movilidad reducida o necesidades especiales.</span>
+                      </div>
                     </label>
-                  ))}
+                    <label className={`visita-checkbox-card ${form.requiereParqueoBus ? "visita-checkbox-card--activa" : ""}`}>
+                      <input
+                        type="checkbox"
+                        name="requiereParqueoBus"
+                        aria-label="Parqueo"
+                        checked={form.requiereParqueoBus}
+                        onChange={update}
+                      />
+                      <div className="visita-checkbox-card__info">
+                        <strong>Parqueo</strong>
+                        <span>Habilitar espacio de parqueo y maniobra en la finca.</span>
+                      </div>
+                    </label>
+                  </div>
                 </fieldset>
-                <aside className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                  <p className="font-semibold text-slate-900">Recomendaciones para la visita</p>
-                  <ul className="mt-2 list-disc space-y-1 pl-5">
-                    <li>Usá vestimenta cómoda y apropiada para recorridos al aire libre.</li>
-                    <li>Llevá repelente si visitarán zonas con vegetación.</li>
-                    <li>Considerá protección solar e hidratación.</li>
+
+                <div className="visita-recomendaciones">
+                  <div className="visita-recomendaciones__header">
+                    <Sparkles size={16} className="text-amber-700" />
+                    <strong>Recomendaciones para el recorrido</strong>
+                  </div>
+                  <ul className="visita-recomendaciones__list">
+                    <li>Usá vestimenta cómoda y calzado cerrado apropiado para senderos al aire libre.</li>
+                    <li>Llevá repelente si visitarán zonas con vegetación densa o cultivo de café.</li>
+                    <li>Considerá protección solar e hidratación suficiente para el recorrido.</li>
                   </ul>
-                </aside>
-                <Field label="Observaciones">
-                  <textarea name="observaciones" value={form.observaciones} onChange={update} />
-                </Field>
+                </div>
+
+                <div className="campo full">
+                  <Field label="Observaciones o solicitudes especiales">
+                    <textarea
+                      name="observaciones"
+                      placeholder="Detalles adicionales, temática de interés o requerimientos especiales…"
+                      rows={3}
+                      value={form.observaciones}
+                      onChange={update}
+                    />
+                  </Field>
+                </div>
               </SectionCard>
             </div>
 

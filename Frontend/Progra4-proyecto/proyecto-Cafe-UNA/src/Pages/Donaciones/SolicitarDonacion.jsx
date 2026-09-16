@@ -59,14 +59,16 @@ function SectionCard({ icon: Icon, paso, title, hint, children }) {
         <span className="section-card__paso" aria-hidden="true">
           {paso}
         </span>
-        <h4>
-          <span className="sr-only">
-            <ST>Paso</ST> {paso}.{" "}
-          </span>
-          {title}
-        </h4>
+        <div className="section-card__title-group">
+          <h4>
+            <span className="sr-only">
+              <ST>Paso</ST> {paso}.{" "}
+            </span>
+            {title}
+          </h4>
+          {hint ? <p className="section-card__hint">{hint}</p> : null}
+        </div>
         {Icon ? <Icon size={20} className="section-card__icon-inline" aria-hidden="true" /> : null}
-        {hint ? <span className="section-card__hint">{hint}</span> : null}
       </div>
       <div className="section-card__body">{children}</div>
     </div>
@@ -946,7 +948,7 @@ export default function SolicitarDonacion() {
                       {tQuien}<span className="req">*</span>
                     </p>
                     <div className="tipo-opciones">
-                      <label className="radio-card" htmlFor="don-identificacion">
+                      <label className="radio-card">
                         <input
                           type="radio"
                           name="tipoDonante"
@@ -971,7 +973,7 @@ export default function SolicitarDonacion() {
 
                   {esPersona ? (
                     <>
-                      <div className="form-grid--4cols">
+                      <div className="form-grid--2cols">
                         <div className="campo">
                           <label htmlFor="don-identificacion">
                             {tIdentificacion} <span className="req">*</span>
@@ -1003,6 +1005,9 @@ export default function SolicitarDonacion() {
                           />
                           {errores.nombre ? <span className="mensaje-error"><ST>{errores.nombre}</ST></span> : null}
                         </div>
+                      </div>
+
+                      <div className="form-grid--2cols">
                         <div className="campo">
                           <label htmlFor="don-primerApellido">
                             {tPrimerApellido} <span className="req">*</span>
@@ -1031,6 +1036,7 @@ export default function SolicitarDonacion() {
                           />
                         </div>
                       </div>
+
                       {consultandoCedula ? (
                         <span className="mensaje-info">Consultando datos de la cédula...</span>
                       ) : null}
@@ -1041,7 +1047,7 @@ export default function SolicitarDonacion() {
                       ) : null}
                     </>
                   ) : (
-                    <>
+                    <div className="form-grid--2cols">
                       <div className="campo">
                         <label htmlFor="don-nombre">
                           {tRazonSocial} <span className="req">*</span>
@@ -1073,10 +1079,10 @@ export default function SolicitarDonacion() {
                           <span className="mensaje-error"><ST>{errores.identificacion}</ST></span>
                         ) : null}
                       </div>
-                    </>
+                    </div>
                   )}
 
-                  <div className="form-grid">
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="don-correo">
                         {tCorreo} <span className="req">*</span>
@@ -1111,39 +1117,41 @@ export default function SolicitarDonacion() {
                 </SectionCard>
 
                 <SectionCard paso={2} icon={Package} title={tDetalles} hint={tDetallesHint}>
-                  <div className="campo">
-                    <label htmlFor="don-categoria">
-                      {tCategoria} <span className="req">*</span>
-                    </label>
-                    <select id="don-categoria" name="categoriaId" value={formulario.categoriaId} onChange={handleChange}>
-                      <option value="">{tSeleccione}</option>
-                      {necesidades.map((item) => (
-                        <option key={item.id} value={String(item.id)}>
-                          {item.titulo}
-                        </option>
-                      ))}
-                    </select>
-                    {errores.categoriaId ? <span className="mensaje-error"><ST>{errores.categoriaId}</ST></span> : null}
-                  </div>
-                  <div className="campo">
-                    <label htmlFor="don-material">
-                      {tMaterial} <span className="req">*</span>
-                    </label>
-                    <select
-                      id="don-material"
-                      name="materialId"
-                      value={formulario.materialId}
-                      onChange={handleChange}
-                      disabled={!formulario.categoriaId}
-                    >
-                      <option value="">{tSeleccione}</option>
-                      {materialesCategoria.map((item) => (
-                        <option key={item.id} value={String(item.id)}>
-                          {item.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    {errores.materialId ? <span className="mensaje-error"><ST>{errores.materialId}</ST></span> : null}
+                  <div className="form-grid--2cols">
+                    <div className="campo">
+                      <label htmlFor="don-categoria">
+                        {tCategoria} <span className="req">*</span>
+                      </label>
+                      <select id="don-categoria" name="categoriaId" value={formulario.categoriaId} onChange={handleChange}>
+                        <option value="">{tSeleccione}</option>
+                        {necesidades.map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.titulo}
+                          </option>
+                        ))}
+                      </select>
+                      {errores.categoriaId ? <span className="mensaje-error"><ST>{errores.categoriaId}</ST></span> : null}
+                    </div>
+                    <div className="campo">
+                      <label htmlFor="don-material">
+                        {tMaterial} <span className="req">*</span>
+                      </label>
+                      <select
+                        id="don-material"
+                        name="materialId"
+                        value={formulario.materialId}
+                        onChange={handleChange}
+                        disabled={!formulario.categoriaId}
+                      >
+                        <option value="">{tSeleccione}</option>
+                        {materialesCategoria.map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      {errores.materialId ? <span className="mensaje-error"><ST>{errores.materialId}</ST></span> : null}
+                    </div>
                   </div>
                   <div className="campo">
                     <label htmlFor="don-descripcion">
@@ -1161,7 +1169,7 @@ export default function SolicitarDonacion() {
                     </div>
                     {errores.descripcion ? <span className="mensaje-error"><ST>{errores.descripcion}</ST></span> : null}
                   </div>
-                  <div className="form-grid">
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="don-cantidadEstimada">
                         {tCantidad} <span className="req">*</span>
@@ -1232,7 +1240,9 @@ export default function SolicitarDonacion() {
                         agregarFotos(event.dataTransfer.files);
                       }}
                     >
-                      <UploadCloud size={28} aria-hidden="true" />
+                      <div className="donacion-dropzone__icon-wrap">
+                        <UploadCloud size={26} aria-hidden="true" />
+                      </div>
                       <p>{tFotosCta}</p>
                       <small>{tFotosHint}</small>
                     </div>
@@ -1280,7 +1290,7 @@ export default function SolicitarDonacion() {
                 </SectionCard>
 
                 <SectionCard paso={3} icon={MapPin} title={tUbicacion} hint={tUbicacionHint}>
-                  <div className="form-grid">
+                  <div className="form-grid--3cols">
                     <div className="campo">
                       <label htmlFor="don-provincia">
                         {tProvincia} <span className="req">*</span>
@@ -1375,33 +1385,37 @@ export default function SolicitarDonacion() {
                     <>
                       {cargandoFechasRecepcion ? (
                         <div className="voluntariado-aviso-bloque">
-                          <div className="size-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mb-2" />
+                          <div className="voluntariado-aviso-bloque__icono-wrap">
+                            <Clock className="voluntariado-aviso-bloque__icono size-7 animate-spin" />
+                          </div>
                           <p className="voluntariado-aviso-bloque__texto">
                             <ST>Consultando fechas de recepción disponibles...</ST>
                           </p>
                         </div>
                       ) : fechasRecepcionDates.length === 0 ? (
                         <div className="voluntariado-aviso-bloque">
-                          <CalendarX2 className="voluntariado-aviso-bloque__icono size-8 text-amber-500" />
-                          <p className="voluntariado-aviso-bloque__titulo text-amber-900">
+                          <div className="voluntariado-aviso-bloque__icono-wrap">
+                            <CalendarX2 className="voluntariado-aviso-bloque__icono size-7" />
+                          </div>
+                          <p className="voluntariado-aviso-bloque__titulo">
                             <ST>Sin fechas de recepción configuradas</ST>
                           </p>
-                          <p className="voluntariado-aviso-bloque__texto text-amber-700">
+                          <p className="voluntariado-aviso-bloque__texto">
                             <ST>Por ahora no hay días habilitados para entregar donaciones en la Finca Experimental Santa Lucía. Puede solicitar recolección o consultar más adelante.</ST>
                           </p>
                         </div>
                       ) : (
                         <div className="campo full flex flex-col items-center">
-                          <p className="campo-label self-start text-xs font-semibold text-slate-700">
+                          <p className="campo-label self-start text-xs font-semibold text-stone-700">
                             {tDiaEntregaEntrega}{" "}
                             <span className="req">*</span>
                           </p>
                           {fechaEntregaSeleccionada ? (
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-900 bg-white px-5 py-2 shadow-xs">
-                              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-900/20 bg-amber-50/70 px-5 py-2 shadow-xs">
+                              <span className="text-xs font-bold uppercase tracking-wider text-amber-900/60">
                                 <ST>FECHA SELECCIONADA:</ST>
                               </span>
-                              <span className="text-xs font-bold text-slate-950 capitalize">
+                              <span className="text-xs font-bold text-amber-950 capitalize">
                                 {format(fechaEntregaSeleccionada, "EEEE, dd 'de' MMMM 'de' yyyy", {
                                   locale: localeCalendario,
                                 })}
@@ -1429,15 +1443,15 @@ export default function SolicitarDonacion() {
                               captionLayout="dropdown"
                             />
                           </div>
-                          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600 mt-4 pt-2">
+                          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-stone-600 mt-4 pt-2">
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-slate-950 bg-white font-bold text-slate-950 text-[11px]">
+                              <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-[#24140e] bg-white font-bold text-[#24140e] text-[11px]">
                                 15
                               </span>
                               <span><ST>Fecha disponible para recibir donaciones</ST></span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex size-5 items-center justify-center text-slate-400 opacity-40 text-[11px]">
+                              <span className="inline-flex size-5 items-center justify-center text-stone-400 opacity-40 text-[11px]">
                                 15
                               </span>
                               <span><ST>Fecha no disponible</ST></span>
@@ -1453,7 +1467,9 @@ export default function SolicitarDonacion() {
 
                       {!formulario.fechaEntrega ? (
                         <div className="voluntariado-aviso-bloque mt-4">
-                          <CalendarDays className="voluntariado-aviso-bloque__icono size-8" />
+                          <div className="voluntariado-aviso-bloque__icono-wrap">
+                            <CalendarDays className="voluntariado-aviso-bloque__icono size-7" />
+                          </div>
                           <p className="voluntariado-aviso-bloque__titulo">
                             <ST>Seleccione una fecha en el calendario</ST>
                           </p>
@@ -1463,7 +1479,7 @@ export default function SolicitarDonacion() {
                         </div>
                       ) : (
                         <div className="campo full mt-4">
-                          <p className="text-xs font-semibold text-slate-700 mb-3">
+                          <p className="text-xs font-semibold text-stone-700 mb-3">
                             {tHorarios} <span className="req">*</span>
                           </p>
                           <div className="opciones-disponibilidad-grid">
