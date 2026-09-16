@@ -1,4 +1,3 @@
-import React from 'react';
 import { HeartHandshake, Compass, Users } from 'lucide-react';
 
 export const ESTILOS_INICIATIVA = {
