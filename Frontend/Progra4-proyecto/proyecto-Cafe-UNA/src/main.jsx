@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import { RouterProvider } from '@tanstack/react-router'
 import { router } from './router'
@@ -79,8 +80,21 @@ function SessionSync() {
   return <RouterProvider router={router} />;
 }
 
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <SessionSync />
+    <QueryClientProvider client={queryClient}>
+      <SessionSync />
+    </QueryClientProvider>
   </StrictMode>,
 )

@@ -60,6 +60,7 @@ export function useCachedPageData(cacheKey, fetcher) {
         return;
       }
 
+      if (!activo) return;
       setStatus("loading");
       try {
         const fresh = await fetcher();

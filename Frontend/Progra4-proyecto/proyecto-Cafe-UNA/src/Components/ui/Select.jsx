@@ -248,10 +248,20 @@ function UiSelectAdvanced({
               return (
                 <li
                   key={opcion.value}
-                  className="flex items-center justify-between gap-1 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                  role="option"
+                  aria-selected={isSelected}
+                  tabIndex={0}
+                  className="flex items-center justify-between gap-1 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer focus:outline-none focus:bg-accent focus:text-accent-foreground"
                   onClick={() => {
                     onChange?.(opcion.value);
                     setOpen(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onChange?.(opcion.value);
+                      setOpen(false);
+                    }
                   }}
                 >
                   <span className={cn("truncate", isSelected && "font-semibold")}>

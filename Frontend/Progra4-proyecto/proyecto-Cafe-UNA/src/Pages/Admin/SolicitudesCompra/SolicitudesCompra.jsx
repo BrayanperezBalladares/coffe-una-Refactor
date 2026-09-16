@@ -455,8 +455,38 @@ export default function AdminSolicitudesCompra() {
   };
 
   useEffect(() => {
-    if (puedeVer) load();
-    else setStatus("success");
+    let activo = true;
+    if (!puedeVer) {
+      setStatus("success");
+      return undefined;
+    }
+    setStatus("loading");
+    setLoadError("");
+    Promise.all([
+      obtenerSolicitudesCompra(),
+      obtenerProveedores({ incluirInactivos: false }),
+      obtenerCatalogoProductos(),
+    ])
+      .then(([lista, provs, catalogo]) => {
+        if (!activo) return;
+        setSolicitudes(lista);
+        setProveedores(provs);
+        setProductos(
+          (catalogo || []).filter((p) => String(p.estado || "") !== "Deshabilitado"),
+        );
+        setStatus("success");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setSolicitudes([]);
+        setStatus("error");
+        setLoadError(
+          error instanceof Error ? error.message : "No se pudieron cargar las solicitudes.",
+        );
+      });
+    return () => {
+      activo = false;
+    };
   }, [puedeVer]);
 
   const ready = !puedeVer || status !== "idle";

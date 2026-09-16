@@ -167,20 +167,23 @@ function comprimirFoto(file) {
     const objeto = URL.createObjectURL(file);
     const imagen = new Image();
     imagen.onload = () => {
-      const max = 720;
-      const escala = Math.min(1, max / Math.max(imagen.width, imagen.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(imagen.width * escala));
-      canvas.height = Math.max(1, Math.round(imagen.height * escala));
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(objeto);
-        reject(new Error("No se pudo procesar la imagen."));
-        return;
-      }
-      ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(objeto);
-      resolve(canvas.toDataURL("image/jpeg", 0.72));
+      try {
+        const max = 720;
+        const escala = Math.min(1, max / Math.max(imagen.width, imagen.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(imagen.width * escala));
+        canvas.height = Math.max(1, Math.round(imagen.height * escala));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("No se pudo procesar la imagen."));
+          return;
+        }
+        ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      } catch (err) {
+        reject(err);
+      }
     };
     imagen.onerror = () => {
       URL.revokeObjectURL(objeto);
@@ -319,7 +322,9 @@ export default function SolicitarDonacion() {
   const consultaCedulaRef = useRef({ digitos: "", enCurso: false });
   const fileInputRef = useRef(null);
   const fotosRef = useRef([]);
-  fotosRef.current = fotos;
+  useEffect(() => {
+    fotosRef.current = fotos;
+  }, [fotos]);
   const esPersona = formulario.tipoDonante === "persona";
   const pideRecoleccion = formulario.metodoEntrega === "recoleccion";
   const pideEntrega = formulario.metodoEntrega === "entrega";
@@ -936,7 +941,7 @@ export default function SolicitarDonacion() {
                       {tQuien}<span className="req">*</span>
                     </p>
                     <div className="tipo-opciones">
-                      <label className="radio-card">
+                      <label className="radio-card" htmlFor="don-identificacion">
                         <input
                           type="radio"
                           name="tipoDonante"
@@ -966,7 +971,7 @@ export default function SolicitarDonacion() {
                           <label>
                             {tIdentificacion} <span className="req">*</span>
                           </label>
-                          <NumericInput
+                          <NumericInput id="don-identificacion"
                             name="identificacion"
                             placeholder={tPhId}
                             value={formulario.identificacion}
@@ -980,10 +985,10 @@ export default function SolicitarDonacion() {
                           ) : null}
                         </div>
                         <div className="campo">
-                          <label>
+                          <label htmlFor="don-nombre">
                             {tNombre} <span className="req">*</span>
                           </label>
-                          <input
+                          <input id="don-nombre"
                             type="text"
                             name="nombre"
                             placeholder={consultandoCedula ? "Consultando..." : tPhNombre}
@@ -994,10 +999,10 @@ export default function SolicitarDonacion() {
                           {errores.nombre ? <span className="mensaje-error"><ST>{errores.nombre}</ST></span> : null}
                         </div>
                         <div className="campo">
-                          <label>
+                          <label htmlFor="don-primerApellido">
                             {tPrimerApellido} <span className="req">*</span>
                           </label>
-                          <input
+                          <input id="don-primerApellido"
                             type="text"
                             name="primerApellido"
                             placeholder={consultandoCedula ? "Consultando..." : tPh1}
@@ -1010,8 +1015,8 @@ export default function SolicitarDonacion() {
                           ) : null}
                         </div>
                         <div className="campo">
-                          <label>{tSegundoApellido}</label>
-                          <input
+                          <label htmlFor="don-segundoApellido">{tSegundoApellido}</label>
+                          <input id="don-segundoApellido"
                             type="text"
                             name="segundoApellido"
                             placeholder={consultandoCedula ? "Consultando..." : tPh2}
@@ -1033,10 +1038,10 @@ export default function SolicitarDonacion() {
                   ) : (
                     <>
                       <div className="campo">
-                        <label>
+                        <label htmlFor="don-nombre">
                           {tRazonSocial} <span className="req">*</span>
                         </label>
-                        <input
+                        <input id="don-nombre"
                           type="text"
                           name="nombre"
                           placeholder={tRazonSocial}
@@ -1047,10 +1052,10 @@ export default function SolicitarDonacion() {
                         {errores.nombre ? <span className="mensaje-error"><ST>{errores.nombre}</ST></span> : null}
                       </div>
                       <div className="campo">
-                        <label>
+                        <label htmlFor="don-identificacion">
                           {tIdentificacion} <span className="req">*</span>
                         </label>
-                        <input
+                        <input id="don-identificacion"
                           type="text"
                           name="identificacion"
                           placeholder={tPhId}
@@ -1068,10 +1073,10 @@ export default function SolicitarDonacion() {
 
                   <div className="form-grid">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-correo">
                         {tCorreo} <span className="req">*</span>
                       </label>
-                      <input
+                      <input id="don-correo"
                         type="email"
                         name="correo"
                         value={formulario.correo}
@@ -1081,7 +1086,7 @@ export default function SolicitarDonacion() {
                       {errores.correo ? <span className="mensaje-error"><ST>{errores.correo}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-descripcion">
                         {tTelefono} <span className="req">*</span>
                       </label>
                       <div className="campo-con-icono">
@@ -1137,7 +1142,7 @@ export default function SolicitarDonacion() {
                     <label>
                       {tDescripcion} <span className="req">*</span>
                     </label>
-                    <textarea
+                    <textarea id="don-descripcion"
                       name="descripcion"
                       rows={4}
                       value={formulario.descripcion}
@@ -1151,10 +1156,10 @@ export default function SolicitarDonacion() {
                   </div>
                   <div className="form-grid">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-cantidadEstimada">
                         {tCantidad} <span className="req">*</span>
                       </label>
-                      <input
+                      <input id="don-cantidadEstimada"
                         type="text"
                         name="cantidadEstimada"
                         value={formulario.cantidadEstimada}
@@ -1165,7 +1170,7 @@ export default function SolicitarDonacion() {
                       {errores.cantidadEstimada ? <span className="mensaje-error"><ST>{errores.cantidadEstimada}</ST></span> : null}
                     </div>
                     <div className="campo">
-                      <label>
+                      <label htmlFor="don-direccion">
                         {tEstado} <span className="req">*</span>
                       </label>
                       <select name="estadoArticulos" value={formulario.estadoArticulos} onChange={handleChange}>
@@ -1308,7 +1313,7 @@ export default function SolicitarDonacion() {
                     <label>
                       {tSeñas} <span className="req">*</span>
                     </label>
-                    <textarea
+                    <textarea id="don-direccion"
                       name="direccion"
                       rows={3}
                       value={formulario.direccion}
@@ -1325,7 +1330,7 @@ export default function SolicitarDonacion() {
                       {tMetodo} <span className="req">*</span>
                     </p>
                     <div className="donacion-entrega">
-                      <label className="donacion-entrega__card">
+                      <label className="donacion-entrega__card" htmlFor="don-fechaSolicitud">
                         <input
                           type="radio"
                           name="metodoEntrega"
@@ -1501,7 +1506,7 @@ export default function SolicitarDonacion() {
                 <SectionCard paso={5} icon={FileText} title={tDeclaracion} hint={tDeclaracionHint}>
                   <div className="campo">
                     <label>{tFecha}</label>
-                    <input
+                    <input id="don-fechaSolicitud"
                       type="date"
                       name="fechaSolicitud"
                       value={formulario.fechaSolicitud}

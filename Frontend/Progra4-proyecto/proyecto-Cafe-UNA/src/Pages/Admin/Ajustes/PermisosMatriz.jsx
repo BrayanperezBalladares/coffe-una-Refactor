@@ -195,21 +195,24 @@ export function PermisosMatriz({
                           </div>
                         </div>
                       </td>
-                      {(roles || []).map((rol) => {
-                        const activo = (matrizLocal[p.codigo] || []).includes(rol);
-                        return (
-                          <td
-                            key={`${p.codigo}-${rol}`}
-                            className="px-2 py-2 text-center align-middle"
-                          >
-                            <TogglePermiso
-                              activo={activo}
-                              onClick={() => onToggle(p.codigo, rol)}
-                              label={`${p.nombre} — ${rol}`}
-                            />
-                          </td>
-                        );
-                      })}
+                      {(() => {
+                        const permitidosSet = new Set(matrizLocal[p.codigo] || []);
+                        return (roles || []).map((rol) => {
+                          const activo = permitidosSet.has(rol);
+                          return (
+                            <td
+                              key={`${p.codigo}-${rol}`}
+                              className="px-2 py-2 text-center align-middle"
+                            >
+                              <TogglePermiso
+                                activo={activo}
+                                onClick={() => onToggle(p.codigo, rol)}
+                                label={`${p.nombre} — ${rol}`}
+                              />
+                            </td>
+                          );
+                        });
+                      })()}
                     </tr>
                   );
                 })}

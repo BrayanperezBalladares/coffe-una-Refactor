@@ -552,11 +552,12 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
   return (
     <form onSubmit={handleSubmit} className="usuarios-form space-y-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600"><ST>Nombre</ST></label>
+        <label htmlFor="usuario-form-nombre" className="mb-1 block text-xs font-medium text-slate-600"><ST>Nombre</ST></label>
         <form.Field name="nombre">
           {(field) => (
             <>
               <input
+                id="usuario-form-nombre"
                 name="nombre"
                 className={`${inputCls} ${fieldErrors.nombre ? "border-red-500 focus:border-red-500" : ""}`}
                 value={field.state.value}
@@ -578,10 +579,11 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
         </form.Field>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600"><ST>Correo</ST></label>
+        <label htmlFor="usuario-form-correo" className="mb-1 block text-xs font-medium text-slate-600"><ST>Correo</ST></label>
         <form.Field name="correo">
           {(field) => (
             <input
+              id="usuario-form-correo"
               name="correo"
               type="email"
               className={inputCls}
@@ -643,12 +645,13 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
       </div>
       {!inicial && pasoCreacion === "codigo" ? (
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">{"C\u00f3digo de verificaci\u00f3n"}</label>
+          <label htmlFor="usuario-form-codigo" className="mb-1 block text-xs font-medium text-slate-600">{"Código de verificación"}</label>
           <input
+            id="usuario-form-codigo"
             className={inputCls}
             value={codigoVerificacion}
             onChange={(e) => setCodigoVerificacion(e.target.value)}
-            placeholder={"6 d\u00edgitos"}
+            placeholder={"6 dígitos"}
             required
           />
         </div>
@@ -658,13 +661,14 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
           {!inicial || editandoPropioUsuario ? (
             <>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">
-                  {"Contrase\u00f1a"} {inicial && <span className="text-slate-400">(opcional)</span>}
+                <label htmlFor="usuario-form-password" className="mb-1 block text-xs font-medium text-slate-600">
+                  {"Contraseña"} {inicial && <span className="text-slate-400">(opcional)</span>}
                 </label>
                 <form.Field name="passwordHash">
                   {(field) => (
                     <>
                       <input
+                        id="usuario-form-password"
                         name="passwordHash"
                         type="password"
                         className={`${inputCls} ${fieldErrors.passwordHash ? "border-red-500 focus:border-red-500" : ""}`}
@@ -676,7 +680,7 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
                         }}
                         maxLength={MAX_PASSWORD}
                         required={!inicial}
-                        placeholder={inicial ? "Dejar vac\u00edo para no cambiar" : ""}
+                        placeholder={inicial ? "Dejar vacío para no cambiar" : ""}
                         aria-invalid={Boolean(fieldErrors.passwordHash)}
                       />
                       {fieldErrors.passwordHash ? (
@@ -688,11 +692,12 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
               </div>
               {inicial ? (
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">{"Contrase\u00f1a actual"}</label>
+                  <label htmlFor="usuario-form-password-actual" className="mb-1 block text-xs font-medium text-slate-600">{"Contraseña actual"}</label>
                   <form.Field name="passwordActual">
                     {(field) => (
                       <>
                         <input
+                          id="usuario-form-password-actual"
                           name="passwordActual"
                           type="password"
                           className={`${inputCls} ${fieldErrors.passwordActual ? "border-red-500 focus:border-red-500" : ""}`}
@@ -703,7 +708,7 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
                             field.handleChange(event.target.value.slice(0, MAX_PASSWORD));
                           }}
                           maxLength={MAX_PASSWORD}
-                          placeholder={"Requerida si cambia la contrase\u00f1a"}
+                          placeholder={"Requerida si cambia la contraseña"}
                           aria-invalid={Boolean(fieldErrors.passwordActual)}
                         />
                         {fieldErrors.passwordActual ? (
@@ -716,10 +721,10 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
               ) : null}
             </>
           ) : (
-            <p className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500"><ST>{"Solo puede cambiar su propia contrase\u00f1a."}</ST></p>
+            <p className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500"><ST>{"Solo puede cambiar su propia contraseña."}</ST></p>
           )}
           <div>
-            <label className="mb-2 block text-xs font-medium text-slate-600"><ST>Roles</ST></label>
+            <span className="mb-2 block text-xs font-medium text-slate-600"><ST>Roles</ST></span>
             {puedeEditarRoles ? (
               <form.Field name="roles">
                 {(field) => {
@@ -758,10 +763,12 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
                   return (
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2">
-                        {rolesVisibles.map((rol) => {
-                          const seleccionado = selectedRoles.includes(rol);
-                          const bloquearSuper =
-                            esRolSuperAdmin(rol) && seleccionado && editandoPropioUsuario;
+                        {(() => {
+                          const selectedRolesSet = new Set(selectedRoles);
+                          return rolesVisibles.map((rol) => {
+                            const seleccionado = selectedRolesSet.has(rol);
+                            const bloquearSuper =
+                              esRolSuperAdmin(rol) && seleccionado && editandoPropioUsuario;
                           return (
                             <button
                               key={rol}
@@ -781,8 +788,9 @@ function FormUsuario({ inicial, onCreado, onActualizado, onCancelar, cargando, s
                               <ST>{rol}</ST>
                             </button>
                           );
-                        })}
-                      </div>
+                        });
+                      })()}
+                    </div>
                       {teniaClienteAlAbrir ? (
                         <p className="text-xs text-amber-800">
                           <ST>Al quitar Cliente se borra la ficha y debe volver a registrarse para comprar.</ST>

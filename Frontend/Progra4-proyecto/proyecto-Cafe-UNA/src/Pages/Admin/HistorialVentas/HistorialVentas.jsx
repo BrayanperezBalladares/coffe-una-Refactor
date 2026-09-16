@@ -19,12 +19,14 @@ import { ST } from "../../../Components/T/ST";
 import { t } from "../../../lib/t";
 import { useTraducir } from "../../../hooks/useTraducir";
 
+const colonesFormatter = new Intl.NumberFormat("es-CR", {
+  style: "currency",
+  currency: "CRC",
+  maximumFractionDigits: 0,
+});
+
 function formatCRC(value) {
-  return new Intl.NumberFormat("es-CR", {
-    style: "currency",
-    currency: "CRC",
-    maximumFractionDigits: 0,
-  }).format(Number(value) || 0);
+  return colonesFormatter.format(Number(value) || 0);
 }
 
 function formatFecha(fecha) {

@@ -119,9 +119,35 @@ export default function AdminVentasPresenciales() {
   useEffect(() => {
     if (!puedeVer) {
       setReady(true);
-      return;
+      return undefined;
     }
-    loadBase();
+    let activo = true;
+    setLoadError("");
+    Promise.all([
+      obtenerPuntosVentaPresencial(),
+      obtenerCatalogoProductos(),
+    ])
+      .then(([puntosData, catalogo]) => {
+        if (!activo) return;
+        const puntosActivos = (puntosData || []).filter((p) => p.activo !== false);
+        setPuntos(puntosActivos);
+        if (puntosActivos.length > 0 && !ubicacionCodigo) {
+          setUbicacionCodigo(puntosActivos[0].code);
+        }
+        setProductos(Array.isArray(catalogo) ? catalogo : catalogo?.data || []);
+      })
+      .catch((err) => {
+        if (!activo) return;
+        setPuntos([]);
+        setProductos([]);
+        setLoadError(err instanceof Error ? err.message : "No se pudo cargar la información del punto de venta.");
+      })
+      .finally(() => {
+        if (activo) setReady(true);
+      });
+    return () => {
+      activo = false;
+    };
   }, [puedeVer]);
 
   // Cargar inventario del punto seleccionado
@@ -252,16 +278,21 @@ export default function AdminVentasPresenciales() {
 
   const modificarCantidadCarrito = (productoId, delta) => {
     setFormError("");
+    const itemActual = carrito.find((item) => String(item.productoId) === String(productoId));
+    if (itemActual && delta > 0) {
+      const stockDisp = Number(stockMap.get(String(productoId)) ?? itemActual.stockDisponible ?? 0);
+      if (itemActual.cantidad + delta > stockDisp) {
+        setFormError(`Stock máximo alcanzado para "${itemActual.productoNombre}". Disponible: ${stockDisp} unidades.`);
+        return;
+      }
+    }
     setCarrito((prev) => {
       return prev
         .map((item) => {
           if (String(item.productoId) !== String(productoId)) return item;
           const stockDisp = Number(stockMap.get(String(productoId)) ?? item.stockDisponible ?? 0);
           const nuevaCant = item.cantidad + delta;
-          if (nuevaCant > stockDisp) {
-            setFormError(`Stock máximo alcanzado para "${item.productoNombre}". Disponible: ${stockDisp} unidades.`);
-            return item;
-          }
+          if (nuevaCant > stockDisp) return item;
           if (nuevaCant <= 0) return null;
           return {
             ...item,
@@ -492,7 +523,7 @@ export default function AdminVentasPresenciales() {
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12 items-end">
               <div className="lg:col-span-6 space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <label htmlFor="pos-punto-venta-select" className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
                   <Store className="size-3.5 text-neutral-900" />
                   <ST>Punto de Venta</ST>
                 </label>
@@ -507,10 +538,10 @@ export default function AdminVentasPresenciales() {
               </div>
 
               <div className="lg:col-span-6 space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
                   <User className="size-3.5 text-neutral-900" />
                   <ST>Vendedor</ST>
-                </label>
+                </span>
                 <div className="min-h-[var(--control-height)] flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-800">
                   <span className="truncate">{nombreVendedor}</span>
                 </div>
@@ -794,7 +825,7 @@ export default function AdminVentasPresenciales() {
                   <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
                     {/* Método de Pago */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slate-700 flex items-center gap-1">
+                      <label htmlFor="pos-metodo-pago" className="font-semibold text-slate-700 flex items-center gap-1">
                         <CreditCard className="size-3 text-neutral-900" />
                         <ST>Método de Pago</ST>
                       </label>
@@ -810,10 +841,11 @@ export default function AdminVentasPresenciales() {
 
                     {/* Cliente (opcional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slate-700">
+                      <label htmlFor="pos-cliente-nombre" className="font-semibold text-slate-700">
                         <ST>Cliente (opcional)</ST>
                       </label>
                       <input
+                        id="pos-cliente-nombre"
                         type="text"
                         value={clienteNombre}
                         onChange={(e) => setClienteNombre(e.target.value)}
@@ -824,13 +856,14 @@ export default function AdminVentasPresenciales() {
 
                     {/* Correo Electrónico (opcional) para envío de comprobante */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slate-700 flex items-center justify-between">
+                      <label htmlFor="pos-cliente-correo" className="font-semibold text-slate-700 flex items-center justify-between">
                         <span className="flex items-center gap-1">
                           <Mail className="size-3 text-neutral-900" />
                           <ST>Correo para comprobante (opcional)</ST>
                         </span>
                       </label>
                       <input
+                        id="pos-cliente-correo"
                         type="email"
                         value={clienteCorreo}
                         onChange={(e) => {

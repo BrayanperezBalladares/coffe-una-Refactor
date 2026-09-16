@@ -300,7 +300,7 @@ function AccionesSolicitud({
 function ModalDetalle({ solicitud, onGuardar, onCerrar }) {
   useAdminModalLock(true);
   const { idioma } = useIdioma();
-  const [estado, setEstado] = useState(normalizarEstado(solicitud.estado));
+  const [estado, setEstado] = useState(() => normalizarEstado(solicitud.estado));
   const [observacionesAdmin, setObservacionesAdmin] = useState(solicitud.observacionesAdmin || "");
   const [guardando, setGuardando] = useState(false);
   const [descargandoDoc, setDescargandoDoc] = useState(false);
@@ -309,21 +309,26 @@ function ModalDetalle({ solicitud, onGuardar, onCerrar }) {
   const handleDescargarDoc = async () => {
     if (!solicitud?.id) return;
     setDescargandoDoc(true);
+    let url = null;
     try {
       const response = await descargarDocumentoIntegrantes(solicitud.id);
       const blob = new Blob([response.data || response]);
-      const url = window.URL.createObjectURL(blob);
+      url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = solicitud.documentoAdjunto || "integrantes-grupo.pdf";
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
       alert(t("No se pudo descargar el documento adjunto."));
     } finally {
+      if (url) {
+        try {
+          window.URL.revokeObjectURL(url);
+        } catch {}
+      }
       setDescargandoDoc(false);
     }
   };

@@ -34,7 +34,7 @@ export function CentralStockEditor({
   const [validationError, setValidationError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const submitGuard = useRef(false);
-  const lastSyncedStock = useRef(initialValue(stockRecord));
+  const lastSyncedStock = useRef(null);
   const tTitulo = useTraducir("Stock de Bodega Central");
   const tGuardando = useTraducir("Guardando...");
   const tGuardarStock = useTraducir("Guardar stock");
@@ -46,7 +46,7 @@ export function CentralStockEditor({
       return;
     }
     const next = initialValue(stockRecord);
-    if (next !== lastSyncedStock.current) {
+    if (lastSyncedStock.current === null || next !== lastSyncedStock.current) {
       lastSyncedStock.current = next;
       setValue(next);
       setValidationError("");

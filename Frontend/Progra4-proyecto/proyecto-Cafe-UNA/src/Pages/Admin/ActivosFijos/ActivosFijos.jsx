@@ -58,13 +58,15 @@ const CAMPOS_TEXTO_ACTIVO = [
   "descripcionProyecto",
 ];
 
+const colonesFormatter = new Intl.NumberFormat("es-CR", {
+  style: "currency",
+  currency: "CRC",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 function formatCRC(value) {
-  return new Intl.NumberFormat("es-CR", {
-    style: "currency",
-    currency: "CRC",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+  return colonesFormatter.format(Number(value) || 0);
 }
 
 function formatFecha(fecha) {
@@ -314,8 +316,28 @@ export default function AdminActivosFijos() {
   };
 
   useEffect(() => {
-    if (puedeVer) load();
-    else setStatus("success");
+    let activo = true;
+    if (!puedeVer) {
+      setStatus("success");
+      return undefined;
+    }
+    setStatus("loading");
+    setLoadError("");
+    obtenerActivosFijos({ incluirInactivos: true })
+      .then((data) => {
+        if (!activo) return;
+        setActivos(data);
+        setStatus("success");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setActivos([]);
+        setStatus("error");
+        setLoadError(error instanceof Error ? error.message : "No se pudieron cargar los activos.");
+      });
+    return () => {
+      activo = false;
+    };
   }, [puedeVer]);
 
   const ready = !puedeVer || status !== "idle";

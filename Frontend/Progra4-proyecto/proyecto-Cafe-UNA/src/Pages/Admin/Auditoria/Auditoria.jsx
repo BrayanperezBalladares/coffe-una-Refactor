@@ -242,10 +242,20 @@ function AdminAuditoria() {
     setCargando(true);
     setError("");
 
-    cargar()
+    obtenerAuditoria({
+      usuario: filtrosApi.usuario === "todos" ? "" : filtrosApi.usuario,
+      accion: filtrosApi.accion,
+      modulo: filtrosApi.modulo,
+      desde: filtrosApi.desde,
+      hasta: filtrosApi.hasta,
+    })
+      .then((data) => {
+        if (!activo) return;
+        setRegistros(Array.isArray(data) ? data.map(mapRegistro) : []);
+      })
       .catch((err) => {
         if (!activo) return;
-        setError(err?.message || "No se pudo cargar la auditor\u00eda.");
+        setError(err?.message || "No se pudo cargar la auditoría.");
         setRegistros([]);
       })
       .finally(() => {

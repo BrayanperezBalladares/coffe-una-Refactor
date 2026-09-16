@@ -368,7 +368,9 @@ const Navbar = () => {
     }, [user, loadSolicitudesUsuario]);
 
     const isMobileMenuOpenRef = useRef(false);
-    isMobileMenuOpenRef.current = isMobileMenuOpen;
+    useEffect(() => {
+        isMobileMenuOpenRef.current = isMobileMenuOpen;
+    }, [isMobileMenuOpen]);
 
     const syncScrolledState = useCallback(() => {
         if (isMobileMenuOpenRef.current) return;
@@ -931,16 +933,17 @@ const Navbar = () => {
 
             <div className="navbar__actions">
                 <LanguageSwitcher compact className="navbar__lang" />
-                <div className="navbar__cart" ref={cartContainerRef} onClick={handleCartClick}>
+                <div className="navbar__cart" ref={cartContainerRef}>
                     <button
                         type="button"
+                        onClick={handleCartClick}
                         className="navbar__icon-button navbar__cart-button"
                         aria-label="Ver carrito de compras"
                         title="Carrito"
                     >
                         <ShoppingCart size={24} strokeWidth={2} aria-hidden="true" />
+                        <span className="cart-badge">{cartUnits}</span>
                     </button>
-                    <span className="cart-badge">{cartUnits}</span>
                     {showCartDropdown ? (
                         <aside
                             className={`dropdown dropdown--cart dropdown--cart-panel ${isCartClosing ? 'is-closing' : 'is-open'}`}
@@ -1076,19 +1079,19 @@ const Navbar = () => {
                     <div
                         className="navbar__notifications"
                         ref={notificationsRef}
-                        onClick={handleNotificationsClick}
                     >
                         <button
                             type="button"
+                            onClick={handleNotificationsClick}
                             className="navbar__icon-button navbar__notifications-button"
                             aria-label={labelNotificaciones}
                             title={labelNotificaciones}
                         >
                             <Bell size={25} strokeWidth={2.2} aria-hidden="true" />
+                            {notificationsCount > 0 ? (
+                                <span className="notifications-badge">{notificationsCount}</span>
+                            ) : null}
                         </button>
-                        {notificationsCount > 0 ? (
-                            <span className="notifications-badge">{notificationsCount}</span>
-                        ) : null}
                         {showNotifications ? (
                             <aside className="dropdown dropdown--notifications" aria-label={labelNotificaciones}>
                                 <header className="notifications-header">
@@ -1270,11 +1273,12 @@ const Navbar = () => {
                     </div>
                 ) : null}
 
-                <div className="navbar__user" ref={userMenuRef} onClick={handleIconClick}>
+                <div className="navbar__user" ref={userMenuRef}>
                     <button
                         type="button"
+                        onClick={handleIconClick}
                         className="navbar__icon-button navbar__user-button"
-                        aria-label={user ? 'Abrir men\u00fa de usuario' : tIniciarSesion}
+                        aria-label={user ? 'Abrir menú de usuario' : tIniciarSesion}
                         title={user ? tMiCuenta : tIniciarSesion}
                     >
                         <User size={24} strokeWidth={2} aria-hidden="true" />

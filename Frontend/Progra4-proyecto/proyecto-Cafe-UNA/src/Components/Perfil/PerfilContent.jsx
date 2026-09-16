@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Camera, ChevronRight, Eye, EyeOff, HandCoins, IdCard, KeyRound, Mail, UserRound, X } from "lucide-react";
 import {
@@ -98,16 +98,19 @@ function claseRolPerfil(rol) {
   return "perfil-hero__role--usuario";
 }
 
-function PerfilPasswordField({ label, value, onChange, visible, onToggle, autoFocus = false, error = "" }) {
+function PerfilPasswordField({ id, label, value, onChange, visible, onToggle, autoFocus = false, error = "" }) {
+  const generatedId = useId();
+  const inputId = id || generatedId;
   const Icon = visible ? Eye : EyeOff;
   const tOcultar = useTraducir("Ocultar contraseña");
   const tMostrar = useTraducir("Mostrar contraseña");
 
   return (
-    <label className="perfil-field perfil-password-field">
-      <span><ST>{label}</ST></span>
+    <div className="perfil-field perfil-password-field">
+      <label htmlFor={inputId}><ST>{label}</ST></label>
       <div className="perfil-password-field__input-wrap">
         <input
+          id={inputId}
           type={visible ? "text" : "password"}
           value={value}
           onChange={onChange}
@@ -127,7 +130,7 @@ function PerfilPasswordField({ label, value, onChange, visible, onToggle, autoFo
         </button>
       </div>
       {error ? <p className="perfil-field-error"><ST>{error}</ST></p> : null}
-    </label>
+    </div>
   );
 }
 
@@ -165,11 +168,11 @@ function ImageUrlModal({
     : (isAdmin ? tVistaPreviaBannerAdmin : tVistaPreviaBanner);
 
   return (
-    <div className="perfil-modal" role="dialog" aria-modal="true">
+    <div className="perfil-modal" role="dialog" aria-modal="true" aria-labelledby="perfil-modal-title">
       <button type="button" className="perfil-modal__backdrop" aria-label={tCerrar} onClick={onClose} />
       <div className={`perfil-modal__card perfil-modal__card--image ${isAvatar ? "perfil-modal__card--avatar" : "perfil-modal__card--banner"}`}>
         <header className="perfil-modal__header">
-          <h3>{isAvatar ? tCambiarFoto : tCambiarBanner}</h3>
+          <h3 id="perfil-modal-title">{isAvatar ? tCambiarFoto : tCambiarBanner}</h3>
           <button type="button" className="perfil-modal__close" onClick={onClose} aria-label={tCerrar}>
             <X size={18} />
           </button>
@@ -286,7 +289,7 @@ export function PerfilContent({ variant = "standalone" }) {
     step: "view",
   });
   const [nombreError, setNombreError] = useState("");
-  const [clienteForm, setClienteForm] = useState(buildClienteFormFromPerfil(null));
+  const [clienteForm, setClienteForm] = useState(() => buildClienteFormFromPerfil(null));
   const [clienteError, setClienteError] = useState("");
   const [passwordErrors, setPasswordErrors] = useState({
     passwordActual: "",
@@ -370,13 +373,52 @@ export function PerfilContent({ variant = "standalone" }) {
   }
 
   useEffect(() => {
+    let activo = true;
+
     if (!sessionUserId) {
       setCargando(false);
-      setError("Inicie sesi\u00f3n para ver su perfil.");
-      return;
+      setError("Inicie sesión para ver su perfil.");
+      return undefined;
     }
 
-    cargarPerfil();
+    setCargando(true);
+    setError("");
+    clearPerfilCache();
+
+    obtenerPerfil()
+      .then(async (data) => {
+        if (!activo) return;
+        setPerfil(data);
+        setClienteForm(buildClienteFormFromPerfil(data));
+        setForm({
+          nombre: data?.nombre || "",
+          correo: data?.correo || "",
+          fotoPerfilUrl: data?.fotoPerfilUrl || "",
+          fotoBannerUrl: data?.fotoBannerUrl || "",
+          fotoPerfilPosicion: data?.fotoPerfilPosicion || "",
+          fotoBannerPosicion: data?.fotoBannerPosicion || "",
+        });
+        applyPerfilToSession(data);
+
+        try {
+          const don = await obtenerMisSolicitudesDonacion();
+          if (activo) setDonaciones(don);
+        } catch {
+          if (activo) setDonaciones([]);
+        }
+      })
+      .catch((err) => {
+        if (activo) {
+          setError(sanitizeUserFacingError(err?.message || "No se pudo cargar el perfil."));
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+    };
   }, [sessionUserId]);
 
   useEffect(() => {

@@ -848,7 +848,7 @@ function SolicitarVoluntariado() {
                   {tComo}<span className="req">*</span>
                 </p>
                 <div className="tipo-opciones">
-                  <label className="radio-card">
+                  <label className="radio-card" htmlFor="vol-nombre">
                     <input
                       type="radio"
                       name="modalidad"
@@ -944,7 +944,7 @@ function SolicitarVoluntariado() {
                       <label>
                         {tNombre} <span className="req">*</span>
                       </label>
-                      <input
+                      <input id="vol-nombre"
                         type="text"
                         name="nombre"
                         placeholder={consultandoCedula ? "Consultando..." : tPhNombre}
@@ -956,10 +956,10 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-primerApellido">
                         {tPrimerApellido} <span className="req">*</span>
                       </label>
-                      <input
+                      <input id="vol-primerApellido"
                         type="text"
                         name="primerApellido"
                         placeholder={consultandoCedula ? "Consultando..." : tPh1}
@@ -971,8 +971,8 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo">
-                      <label>{tSegundoApellido}</label>
-                      <input
+                      <label htmlFor="vol-segundoApellido">{tSegundoApellido}</label>
+                      <input id="vol-segundoApellido"
                         type="text"
                         name="segundoApellido"
                         placeholder={consultandoCedula ? "Consultando..." : tPh2}
@@ -1000,10 +1000,10 @@ function SolicitarVoluntariado() {
 
                   <div className="form-grid">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-institucion">
                         {tInstitucion}<span className="req">*</span>
                       </label>
-                      <input
+                      <input id="vol-institucion"
                         type="text"
                         name="institucion"
                         placeholder={tPhInstitucion}
@@ -1018,10 +1018,10 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-pais">
                         {tPais}<span className="req">*</span>
                       </label>
-                      <input
+                      <input id="vol-pais"
                         type="text"
                         name="pais"
                         placeholder={tPhPais}
@@ -1042,10 +1042,10 @@ function SolicitarVoluntariado() {
                 >
                   <div className="form-grid">
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-correo">
                         {tCorreo}<span className="req">*</span>
                       </label>
-                      <input
+                      <input id="vol-correo"
                         type="email"
                         name="correo"
                         placeholder="correo@ejemplo.com"
@@ -1056,10 +1056,10 @@ function SolicitarVoluntariado() {
                     </div>
 
                     <div className="campo">
-                      <label>
+                      <label htmlFor="vol-telefono">
                         {tTelefono}<span className="req">*</span>
                       </label>
-                      <NumericInput
+                      <NumericInput id="vol-telefono"
                         name="telefono"
                         placeholder="88888888"
                         maxLength={8}
@@ -1082,10 +1082,10 @@ function SolicitarVoluntariado() {
                   >
                     <div className="form-grid">
                       <div className="campo">
-                        <label>
+                        <label htmlFor="vol-cantidadParticipantes">
                           {tCantParticipantes} <span className="req">*</span>
                         </label>
-                        <NumericInput
+                        <NumericInput id="vol-cantidadParticipantes"
                           name="cantidadParticipantes"
                           placeholder={tPhCantidad}
                           value={formulario.cantidadParticipantes}

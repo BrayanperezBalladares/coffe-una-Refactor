@@ -158,8 +158,25 @@ export function HorariosCalendario({ onMessage, onError }) {
   };
 
   useEffect(() => {
-    void cargar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let activo = true;
+    setCargando(true);
+    const tipoApi = filtroTipo === "todos" ? undefined : filtroTipo;
+    listarDisponibilidad(tipoApi)
+      .then((data) => {
+        if (!activo) return;
+        setReglas(data.reglas || reglas);
+        setExcepciones(data.excepciones || []);
+      })
+      .catch((err) => {
+        if (!activo) return;
+        onError?.(sanitizeUserFacingError(err?.message || "No se pudo cargar el horario."));
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+    return () => {
+      activo = false;
+    };
   }, [filtroTipo]);
 
   useEffect(() => {
@@ -221,9 +238,7 @@ export function HorariosCalendario({ onMessage, onError }) {
     setErrorHoras("");
     try {
       if (modo === "normal") {
-        for (const tipoGuarda of tipos) {
-          await eliminarExcepcionPorFecha(tipoGuarda, fecha);
-        }
+        await Promise.all(tipos.map((tipoGuarda) => eliminarExcepcionPorFecha(tipoGuarda, fecha)));
         onMessage?.(
           t(
             filtroTipo === "todos"
@@ -232,16 +247,18 @@ export function HorariosCalendario({ onMessage, onError }) {
           ),
         );
       } else if (modo === "cerrado") {
-        for (const tipoGuarda of tipos) {
-          await guardarExcepcionHorario({
-            tipo: tipoGuarda,
-            fecha,
-            disponible: false,
-            horaInicio: "",
-            horaFin: "",
-            nota: "",
-          });
-        }
+        await Promise.all(
+          tipos.map((tipoGuarda) =>
+            guardarExcepcionHorario({
+              tipo: tipoGuarda,
+              fecha,
+              disponible: false,
+              horaInicio: "",
+              horaFin: "",
+              nota: "",
+            }),
+          ),
+        );
         onMessage?.(
           t(
             filtroTipo === "todos"
@@ -275,16 +292,18 @@ export function HorariosCalendario({ onMessage, onError }) {
           setGuardando(false);
           return;
         }
-        for (const tipoGuarda of tipos) {
-          await guardarExcepcionHorario({
-            tipo: tipoGuarda,
-            fecha,
-            disponible: true,
-            horaInicio: desde,
-            horaFin: hasta,
-            nota: "",
-          });
-        }
+        await Promise.all(
+          tipos.map((tipoGuarda) =>
+            guardarExcepcionHorario({
+              tipo: tipoGuarda,
+              fecha,
+              disponible: true,
+              horaInicio: desde,
+              horaFin: hasta,
+              nota: "",
+            }),
+          ),
+        );
         onMessage?.(t(`Horario especial guardado: ${desde} – ${hasta}.`));
       }
       await cargar();

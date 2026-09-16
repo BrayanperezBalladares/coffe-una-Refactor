@@ -39,8 +39,11 @@ export function useTraducirObjeto(obj, campos) {
   const camposKey = Array.isArray(campos) ? campos.join("|") : "";
   const camposRef = useRef(campos);
   const objRef = useRef(obj);
-  camposRef.current = campos;
-  objRef.current = obj;
+
+  useEffect(() => {
+    camposRef.current = campos;
+    objRef.current = obj;
+  });
 
   const firma = useMemo(() => {
     if (!obj || !camposKey) return "";
@@ -83,8 +86,11 @@ export function useTraducirLista(lista, campos) {
   const camposKey = Array.isArray(campos) ? campos.join("|") : "";
   const camposRef = useRef(campos);
   const listaRef = useRef(lista);
-  camposRef.current = campos;
-  listaRef.current = lista;
+
+  useEffect(() => {
+    camposRef.current = campos;
+    listaRef.current = lista;
+  });
 
   const firma = useMemo(() => {
     if (!Array.isArray(lista) || !camposKey) return "";

@@ -376,23 +376,25 @@ function GaleriaInlineEditor({ galleryInicial, onRecargar, puedeEliminar }) {
     if (!items.length || reparacionHecha.current) return undefined;
     let cancelado = false;
     (async () => {
-      let cambio = false;
-      for (const item of items) {
-        if (!item?.id || typeof item.title !== "string" || !item.title.trim()) continue;
-        const titleEs = await asegurarCamposEnEspanol({ title: item.title }, ["title"]);
-        const nuevo = String(titleEs.title || "").trim();
-        if (!nuevo || nuevo === item.title.trim()) continue;
-        try {
-          await actualizarGaleriaItem(item.id, {
-            title: nuevo,
-            image: item.image,
-            categoria: item.categoria || "",
-          });
-          cambio = true;
-        } catch {
-          /* ignore item */
-        }
-      }
+      const resultados = await Promise.all(
+        items.map(async (item) => {
+          if (!item?.id || typeof item.title !== "string" || !item.title.trim()) return false;
+          try {
+            const titleEs = await asegurarCamposEnEspanol({ title: item.title }, ["title"]);
+            const nuevo = String(titleEs.title || "").trim();
+            if (!nuevo || nuevo === item.title.trim()) return false;
+            await actualizarGaleriaItem(item.id, {
+              title: nuevo,
+              image: item.image,
+              categoria: item.categoria || "",
+            });
+            return true;
+          } catch {
+            return false;
+          }
+        }),
+      );
+      const cambio = resultados.some(Boolean);
       reparacionHecha.current = true;
       if (!cancelado && cambio) await onRecargar();
     })();

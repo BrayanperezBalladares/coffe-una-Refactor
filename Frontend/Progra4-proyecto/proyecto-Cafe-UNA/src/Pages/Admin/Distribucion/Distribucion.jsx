@@ -186,9 +186,64 @@ export default function AdminDistribucion() {
   };
 
   useEffect(() => {
-    if (!puedeVer) return;
-    loadCatalogoYStock();
-    loadHistorial(1);
+    if (!puedeVer) return undefined;
+    let activo = true;
+
+    setCatalogStatus("loading");
+    setCatalogError("");
+    Promise.all([
+      obtenerCatalogoProductos(),
+      obtenerStockPorUbicacion("BODEGA_CENTRAL"),
+    ])
+      .then(([catalogo, stock]) => {
+        if (!activo) return;
+        setProductos((catalogo || []).filter((p) => String(p.estado || "") !== "Deshabilitado"));
+        const map = new Map();
+        for (const row of stock || []) {
+          map.set(String(row.productId), Number(row.stock) || 0);
+        }
+        setStockCentral(map);
+        setCatalogStatus("success");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setProductos([]);
+        setStockCentral(new Map());
+        setCatalogStatus("error");
+        setCatalogError(
+          error instanceof Error ? error.message : "No se pudo cargar el catálogo o el stock.",
+        );
+      });
+
+    setHistStatus("loading");
+    setHistError("");
+    obtenerHistorialTransferencias({
+      fechaDesde: fechaDesde || undefined,
+      fechaHasta: fechaHasta || undefined,
+      ubicacionDestino: filtroDestino !== "todos" ? filtroDestino : undefined,
+      page: 1,
+      pageSize,
+    })
+      .then((data) => {
+        if (!activo) return;
+        setHistorial(data.items);
+        setHistorialTotal(data.total);
+        setPage(data.page);
+        setHistStatus("success");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setHistorial([]);
+        setHistorialTotal(0);
+        setHistStatus("error");
+        setHistError(
+          error instanceof Error ? error.message : "No se pudo cargar el historial.",
+        );
+      });
+
+    return () => {
+      activo = false;
+    };
   }, [puedeVer]);
 
   const ready =
