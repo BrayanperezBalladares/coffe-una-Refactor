@@ -379,10 +379,7 @@
 }
 
 .navbar__cart-button,
-.navbar__user-button {
-  pointer-events: none;
-}
-
+.navbar__user-button,
 .navbar__notifications-button {
   pointer-events: auto;
 }
