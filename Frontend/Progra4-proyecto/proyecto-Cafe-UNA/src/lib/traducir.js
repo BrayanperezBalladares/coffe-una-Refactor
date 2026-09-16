@@ -218,6 +218,9 @@ const DICCIONARIO = {
   "Sumá tu energía a nuestra misión": "Add your energy to our mission",
   "Formá parte del equipo de voluntarios que sostiene las actividades del Café UNA. Tu tiempo y dedicación dejan huella.":
     "Join the volunteer team that sustains Café UNA activities. Your time and dedication leave a mark.",
+  "Hacer una donación": "Make a donation",
+  "Agendar una visita": "Book a visit",
+  "Sumarme como voluntario": "Join as a volunteer",
 
   // Productos / UI
   "Categoría": "Category",
