@@ -8,8 +8,11 @@ import {
   Check,
   Clock,
   FileText,
+  GraduationCap,
+  HeartHandshake,
   Lock,
   Mail,
+  Sparkles,
   Sprout,
   Trash2,
   UploadCloud,
@@ -50,6 +53,15 @@ import { useIdioma } from "../../lib/useIdioma";
 import { ST } from "../../Components/T/ST";
 import "./SolicitarVoluntariado.css";
 
+function getTipoIcon(tipo) {
+  const t = String(tipo || "").toLowerCase();
+  if (t.includes("apoyo")) return HeartHandshake;
+  if (t.includes("capacitaci")) return GraduationCap;
+  if (t.includes("investigaci")) return FileText;
+  if (t.includes("limpieza") || t.includes("mantenimiento")) return Sparkles;
+  return Sprout;
+}
+
 function SectionCard({ icon: Icon, paso, title, hint, children }) {
   return (
     <div className="section-card">
@@ -59,16 +71,18 @@ function SectionCard({ icon: Icon, paso, title, hint, children }) {
             {paso}
           </span>
         ) : null}
-        <h4>
-          {paso != null ? (
-            <span className="sr-only">
-              <ST>Paso</ST> {paso}.{" "}
-            </span>
-          ) : null}
-          {title}
-        </h4>
+        <div className="section-card__title-group">
+          <h4>
+            {paso != null ? (
+              <span className="sr-only">
+                <ST>Paso</ST> {paso}.{" "}
+              </span>
+            ) : null}
+            {title}
+          </h4>
+          {hint ? <p className="section-card__hint">{hint}</p> : null}
+        </div>
         {Icon ? <Icon size={20} className="section-card__icon-inline" aria-hidden="true" /> : null}
-        {hint ? <span className="section-card__hint">{hint}</span> : null}
       </div>
       <div className="section-card__body">{children}</div>
     </div>
@@ -174,14 +188,14 @@ function SolicitarVoluntariado() {
   const tCorreo = useTraducir("Correo electrónico");
   const tTelefono = useTraducir("Número de teléfono");
 
-  const tPaso1 = useTraducir("1. Tipo de voluntariado");
-  const tPaso1Hint = useTraducir("Seleccione el área o modalidad de voluntariado en la que desea participar");
+  const tPaso1 = useTraducir("Tipo de voluntariado");
+  const tPaso1Hint = useTraducir("Seleccione el área o modalidad en la que desea participar");
 
-  const tPaso2 = useTraducir("2. Fechas disponibles");
-  const tPaso2Hint = useTraducir("Seleccione una de las fechas habilitadas en el calendario para este voluntariado");
+  const tPaso2 = useTraducir("Fechas disponibles");
+  const tPaso2Hint = useTraducir("Seleccione una de las fechas habilitadas en el calendario");
 
-  const tPaso3 = useTraducir("3. Horario disponible");
-  const tPaso3Hint = useTraducir("Seleccione el horario o turno configurado para la fecha elegida");
+  const tPaso3 = useTraducir("Horario disponible");
+  const tPaso3Hint = useTraducir("Seleccione el turno configurado para la fecha elegida");
 
   const tLoginMsg = useTraducir("Debe iniciar sesión para enviar su solicitud de voluntariado.");
   const tLoginLink = useTraducir("Iniciar sesión →");
@@ -848,7 +862,7 @@ function SolicitarVoluntariado() {
                   {tComo}<span className="req">*</span>
                 </p>
                 <div className="tipo-opciones">
-                  <label className="radio-card" htmlFor="vol-nombre">
+                  <label className="radio-card">
                     <input
                       type="radio"
                       name="modalidad"
@@ -909,7 +923,7 @@ function SolicitarVoluntariado() {
                     )}
                   </div>
 
-                  <div className="form-grid--4cols">
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="vol-identificacion">
                         {esNacionalCr ? tCedula : tIdentificacion}{" "}
@@ -956,7 +970,9 @@ function SolicitarVoluntariado() {
                         disabled={!formulario.esNacional}
                       />
                     </div>
+                  </div>
 
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="vol-primerApellido">
                         {tPrimerApellido} <span className="req">*</span>
@@ -1000,7 +1016,7 @@ function SolicitarVoluntariado() {
                     </span>
                   )}
 
-                  <div className="form-grid">
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="vol-institucion">
                         {tInstitucion}<span className="req">*</span>
@@ -1042,7 +1058,7 @@ function SolicitarVoluntariado() {
                   icon={Mail}
                   title={esGrupal ? tContactoResp : tContacto}
                 >
-                  <div className="form-grid">
+                  <div className="form-grid--2cols">
                     <div className="campo">
                       <label htmlFor="vol-correo">
                         {tCorreo}<span className="req">*</span>
@@ -1166,6 +1182,7 @@ function SolicitarVoluntariado() {
                       );
                       const tieneFechas = count > 0;
                       const esSeleccionado = formulario.tipo === tipo;
+                      const TipoIcon = getTipoIcon(tipo);
 
                       return (
                         <label
@@ -1181,19 +1198,26 @@ function SolicitarVoluntariado() {
                             checked={esSeleccionado}
                             onChange={() => handleTipoVoluntariado(tipo)}
                           />
-                          <span className="opcion-radio__indicador" />
-                          <div className="opcion-radio__meta">
-                            <span className="font-semibold text-slate-900">
-                              <ST>{tipo}</ST>
-                            </span>
+                          <div className="opcion-radio__left">
+                            <span className="opcion-radio__indicador" />
+                            <div className="opcion-radio__icon-box">
+                              <TipoIcon size={18} className="opcion-radio__icon" aria-hidden="true" />
+                            </div>
+                            <div className="opcion-radio__meta">
+                              <span className="opcion-radio__titulo">
+                                <ST>{tipo}</ST>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="opcion-radio__right">
                             {tieneFechas ? (
                               <span className="opcion-radio__badge-disponible">
-                                <CalendarDays className="size-3" />
+                                <CalendarDays className="size-3.5" />
                                 <span>{count} {count === 1 ? "fecha disponible" : "fechas disponibles"}</span>
                               </span>
                             ) : (
                               <span className="opcion-radio__badge-nodisponible">
-                                <CalendarX2 className="size-3" />
+                                <CalendarX2 className="size-3.5" />
                                 <span><ST>Sin fechas disponibles</ST></span>
                               </span>
                             )}
@@ -1244,12 +1268,14 @@ function SolicitarVoluntariado() {
                 >
                   {!formulario.tipo ? (
                     <div className="voluntariado-aviso-bloque">
-                      <Sprout className="voluntariado-aviso-bloque__icono size-8" />
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <Sprout className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
                       <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Seleccione primero el tipo de voluntariado</ST>
+                        <ST>Elegí primero el tipo de voluntariado</ST>
                       </p>
                       <p className="voluntariado-aviso-bloque__texto">
-                        <ST>El calendario se habilitará automáticamente presentando única y exclusivamente las fechas disponibles configuradas para la modalidad seleccionada.</ST>
+                        <ST>El calendario se habilitará automáticamente con las fechas disponibles para la modalidad seleccionada.</ST>
                       </p>
                     </div>
                   ) : cargandoFechas ? (
@@ -1331,22 +1357,26 @@ function SolicitarVoluntariado() {
                 >
                   {!formulario.tipo ? (
                     <div className="voluntariado-aviso-bloque">
-                      <Clock className="voluntariado-aviso-bloque__icono size-8" />
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <Clock className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
                       <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Paso pendiente: Seleccione tipo de voluntariado</ST>
+                        <ST>Paso pendiente: tipo de voluntariado</ST>
                       </p>
                       <p className="voluntariado-aviso-bloque__texto">
-                        <ST>Debe completar los pasos anteriores para visualizar los horarios.</ST>
+                        <ST>Completá los pasos anteriores para visualizar los horarios disponibles.</ST>
                       </p>
                     </div>
                   ) : !formulario.fechaVoluntariado ? (
                     <div className="voluntariado-aviso-bloque">
-                      <CalendarDays className="voluntariado-aviso-bloque__icono size-8" />
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <CalendarDays className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
                       <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Seleccione una fecha en el calendario</ST>
+                        <ST>Seleccioná una fecha en el calendario</ST>
                       </p>
                       <p className="voluntariado-aviso-bloque__texto">
-                        <ST>Al seleccionar un día habilitado, se cargarán exclusivamente los horarios o turnos disponibles para esa fecha.</ST>
+                        <ST>Al elegir un día, se cargarán los horarios o turnos configurados para esa fecha.</ST>
                       </p>
                     </div>
                   ) : (
