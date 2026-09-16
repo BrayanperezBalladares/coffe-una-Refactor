@@ -1,6 +1,4 @@
 import React from 'react';
-import { ST } from '../../../Components/T/ST';
-import { etiquetaCategoriaProducto } from '../../../lib/categorias';
 import { ProductItem } from './types';
 
 interface HeaderProps {
@@ -18,7 +16,7 @@ export const ProductHeader: React.FC<HeaderProps> = ({
   estaAgotado,
   tAgotado,
 }) => {
-  const etiquetaRaw = etiquetaCategoriaProducto(product);
+  const subcategoria = display.subcategoria || product.subcategoria;
 
   return (
     <header className="product-detail-page__header">
@@ -43,17 +41,8 @@ export const ProductHeader: React.FC<HeaderProps> = ({
 
       <h1 className="product-detail-page__title">{display.nombre}</h1>
 
-      {product.peso && etiquetaRaw ? (
-        <p className="product-detail-page__meta-subtitle">
-          <ST>{etiquetaRaw}</ST>
-          {` · ${product.peso}`}
-        </p>
-      ) : product.peso ? (
-        <p className="product-detail-page__meta-subtitle">{product.peso}</p>
-      ) : etiquetaRaw ? (
-        <p className="product-detail-page__meta-subtitle">
-          <ST>{etiquetaRaw}</ST>
-        </p>
+      {subcategoria ? (
+        <p className="product-detail-page__meta-subtitle">{subcategoria}</p>
       ) : null}
     </header>
   );

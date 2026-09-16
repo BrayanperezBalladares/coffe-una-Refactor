@@ -31,7 +31,7 @@ export const ProductAccordions: React.FC<AccordionsProps> = ({
   tUnidades,
   tAgotado,
 }) => {
-  const [specsAbiertas, setSpecsAbiertas] = useState(true);
+  const [specsAbiertas, setSpecsAbiertas] = useState(false);
   const [posAbierto, setPosAbierto] = useState(true);
   const [envioAbierto, setEnvioAbierto] = useState(false);
 
