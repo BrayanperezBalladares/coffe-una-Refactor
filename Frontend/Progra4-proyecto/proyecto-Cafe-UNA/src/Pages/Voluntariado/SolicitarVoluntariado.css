@@ -36,10 +36,10 @@
 }
 
 .voluntariado-page > .page-back-link {
-  max-width: 1100px;
+  max-width: 760px;
   width: 100%;
-  margin: 0 auto 20px;
-  padding: 0 24px;
+  margin: 0 auto 16px;
+  padding: 0 16px;
 }
 
 /* =========================
@@ -48,14 +48,14 @@
 
 .voluntariado-section {
   width: 100%;
-  max-width: 1100px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
 }
 
 .voluntariado-header {
-  margin: 0 auto 32px;
-  max-width: 720px;
+  margin: 0 auto 24px;
+  max-width: 620px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,18 +95,18 @@
 }
 
 .voluntariado-header h1 {
-  font-size: clamp(26px, 3.5vw, 36px);
-  line-height: 1.2;
-  margin: 0 0 10px;
+  font-size: clamp(22px, 2.8vw, 30px);
+  line-height: 1.25;
+  margin: 0 0 8px;
   color: var(--texto-principal);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .voluntariado-header p {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--texto-secundario);
-  line-height: 1.6;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -117,9 +117,9 @@
 .formulario-card {
   background: #ffffff;
   border-radius: var(--radius-ui);
-  padding: 36px;
+  padding: 24px 28px;
   border: 1px solid var(--borde-input);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.04);
 }
 
 /* =========================
@@ -223,13 +223,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--negro-principal);
   color: #fff;
-  font-size: var(--text-body);
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
 }
@@ -238,7 +238,7 @@
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: var(--text-subtitle);
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--texto-principal);
   letter-spacing: -0.01em;
@@ -259,8 +259,8 @@
   display: block;
   grid-column: 1 / -1;
   margin-top: 0;
-  margin-left: 36px;
-  font-size: var(--text-body);
+  margin-left: 32px;
+  font-size: 0.8125rem;
   color: var(--texto-secundario);
   font-weight: 400;
 }
@@ -329,9 +329,10 @@
 .participante-item input {
   width: 100%;
   border: 1px solid var(--borde-input);
-  padding: 11px 14px;
-  border-radius: var(--radius-ui);
-  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  min-height: 38px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   background: #ffffff;
   color: var(--texto-principal);

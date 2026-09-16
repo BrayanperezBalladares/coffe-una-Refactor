@@ -380,7 +380,7 @@ const Navbar = () => {
             const lockedY = Math.abs(Number.parseInt(top, 10) || 0);
             scrollY = lockedY || scrollY;
         }
-        setIsScrolled(scrollY > 10);
+        setIsScrolled(scrollY > 50);
     }, []);
 
     useEffect(() => {

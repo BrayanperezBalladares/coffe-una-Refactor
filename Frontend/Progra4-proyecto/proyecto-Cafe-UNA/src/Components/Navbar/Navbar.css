@@ -8,14 +8,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.25rem;
+  height: var(--navbar-height, 68px);
+  padding: 0 1.5rem;
   border-radius: 0 !important;
   transition:
-    background-color 0.45s ease,
-    border-color 0.45s ease,
-    box-shadow 0.45s ease,
-    backdrop-filter 0.45s ease,
-    -webkit-backdrop-filter 0.45s ease;
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    -webkit-backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .navbar__start {
@@ -30,10 +31,10 @@
   display: none;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: var(--ui-btn-radius);
   background: transparent;
@@ -41,7 +42,7 @@
   cursor: pointer;
   padding: 0;
   flex: 0 0 auto;
-  transition: color 0.45s ease, background-color 0.45s ease, filter 0.45s ease;
+  transition: color 0.3s ease, background-color 0.3s ease, filter 0.3s ease;
 }
 
 .navbar__menu-toggle:hover {
@@ -58,22 +59,22 @@
 }
 
 .navbar--solid {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(41, 31, 20, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 0 0 transparent;
 }
 
 .navbar--scrolled.navbar--solid {
-  box-shadow: 0 10px 28px rgba(26, 15, 10, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .navbar--transparent {
-  background: rgba(32, 32, 32, 0.22);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 14, 10, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 0 0 transparent;
 }
 
@@ -82,22 +83,22 @@
   align-items: center;
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 240px;
+  max-width: 200px;
   text-decoration: none;
 }
 
 .navbar__brand-logos {
   position: relative;
   display: block;
-  height: 52px;
-  width: min(240px, 52vw);
-  max-width: 240px;
+  height: 40px;
+  width: min(200px, 46vw);
+  max-width: 200px;
 }
 
 .navbar__brand-logo {
-  height: 52px !important;
+  height: 40px !important;
   width: auto !important;
-  max-width: 240px;
+  max-width: 200px;
   object-fit: contain;
   display: block;
 }
@@ -105,10 +106,10 @@
 .navbar__brand-logos .navbar__brand-logo {
   position: absolute;
   inset: 0 auto 0 0;
-  max-height: 52px;
+  max-height: 40px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .navbar__brand-logos .navbar__brand-logo.is-visible {
@@ -117,11 +118,11 @@
 }
 
 .navbar__brand-text {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #2a1d14;
-  transition: color 0.45s ease, text-shadow 0.45s ease;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .navbar--transparent .navbar__brand-text {
@@ -132,12 +133,12 @@
 .navbar__menu {
   display: flex;
   align-items: center;
-  gap: 1.4rem;
+  gap: 1.15rem;
   margin: 0;
   padding: 0;
   list-style: none;
   font-family: var(--sans);
-  font-size: var(--text-body);
+  font-size: 0.9rem;
   font-weight: 600;
 }
 

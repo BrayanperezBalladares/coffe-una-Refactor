@@ -4,9 +4,9 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 100svh;
+  min-height: clamp(520px, 80vh, 700px);
   margin: 0;
-  padding: calc(var(--navbar-height) + 2rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4rem);
+  padding: calc(var(--navbar-height) + 1.25rem) clamp(1.5rem, 4vw, 3.5rem) clamp(2rem, 5vh, 3.25rem);
   overflow: hidden;
   background: linear-gradient(135deg, #4d2b1f 0%, #1f120c 100%);
   color: #fff;
@@ -49,9 +49,9 @@
   pointer-events: none;
   background: linear-gradient(
     105deg,
-    rgba(8, 5, 2, 0.72) 0%,
-    rgba(8, 5, 2, 0.48) 48%,
-    rgba(8, 5, 2, 0.32) 100%
+    rgba(14, 9, 6, 0.64) 0%,
+    rgba(14, 9, 6, 0.40) 50%,
+    rgba(14, 9, 6, 0.20) 100%
   );
 }
 
@@ -66,8 +66,8 @@
   display: grid;
   justify-items: start;
   align-content: center;
-  gap: 1.1rem;
-  width: min(100%, 520px);
+  gap: 1rem;
+  width: min(100%, 500px);
   text-align: left;
 }
 
@@ -75,7 +75,7 @@
   display: inline-flex;
   align-items: center;
   margin: 0;
-  padding: 0.45rem 0.9rem;
+  padding: 0.35rem 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
@@ -92,10 +92,10 @@
   padding: 0;
   width: 100%;
   max-width: 28rem;
-  font-size: clamp(2.35rem, 4.2vw, 3.65rem);
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
   font-weight: 800;
   color: #fff;
-  line-height: 1.08;
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
@@ -133,10 +133,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3rem;
-  padding: 0.85rem 1.65rem;
+  min-height: 2.65rem;
+  padding: 0.6rem 1.4rem;
   border-radius: var(--ui-btn-radius) !important;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;

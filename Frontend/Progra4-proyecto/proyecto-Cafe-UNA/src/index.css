@@ -7,28 +7,28 @@
 
 @custom-variant dark (&:is(.dark *));
 :root {
-  --navbar-height: 84px;
-  --ui-radius: 16px;
+  --navbar-height: 68px;
+  --ui-radius: 12px;
   --ui-btn-radius: 999px;
-  /* Tipografía: solo 3 tamaños en UI (base 18px como antes) */
-  --text-title: clamp(1.65rem, 2.2vw, 2rem);
-  --text-subtitle: 1.05rem;
-  --text-body: 1rem;
-  /* Controles: un solo tamaño para botones, inputs, chips */
-  --control-height: 44px;
-  --control-pad-x: 1rem;
+  /* Tipografía y escalas calibradas a estándar web moderno */
+  --text-title: clamp(1.35rem, 1.8vw, 1.75rem);
+  --text-subtitle: 1rem;
+  --text-body: 0.9375rem;
+  /* Controles: altura y espaciados equilibrados */
+  --control-height: 40px;
+  --control-pad-x: 0.85rem;
   --text: #5c4038;
   --text-h: #2a1612;
   --bg: #fafafa;
   --border: oklch(0.922 0 0);
-  --shadow: rgba(33, 28, 22, 0.12) 0 12px 30px;
+  --shadow: rgba(33, 28, 22, 0.08) 0 8px 24px;
   --sans: 'Geist Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --heading: 'Geist Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
-  font: 18px/1.6 var(--sans);
+  font: 16px/1.55 var(--sans);
   color: var(--text);
   background: var(--bg);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
