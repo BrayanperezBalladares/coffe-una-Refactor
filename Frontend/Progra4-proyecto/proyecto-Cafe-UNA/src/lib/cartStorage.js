@@ -26,7 +26,15 @@ function notifyCartFeedback(detail) {
 }
 
 export function addProductToCart(product, quantity = 1) {
-  const stockDisponible = Number(product.stock) || 0;
+  const posStock = Array.isArray(product?.puntosVenta)
+    ? product.puntosVenta.reduce((sum, p) => sum + (Number(p?.stock) || 0), 0)
+    : 0;
+  const stockDisponible = Math.max(
+    Number(product?.stockTotal) || 0,
+    Number(product?.stock) || 0,
+    Number(product?.stockDisponible) || 0,
+    posStock,
+  );
   const parsedCart = getStoredCart();
   const existingProductIndex = parsedCart.findIndex((item) => item.id === product.id);
   const unidadesEnCarrito = existingProductIndex >= 0

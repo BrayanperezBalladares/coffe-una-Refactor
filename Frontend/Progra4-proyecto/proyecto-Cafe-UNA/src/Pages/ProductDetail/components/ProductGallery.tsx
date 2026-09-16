@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, Search, Store, Truck } from 'lucide-react';
+import { Coffee, Search } from 'lucide-react';
 import OptimizedImage from '../../../Components/OptimizedImage/OptimizedImage';
 import { ProductItem } from './types';
 
@@ -81,30 +81,6 @@ export const ProductGallery: React.FC<GalleryProps> = ({
           ))}
         </div>
       ) : null}
-    </div>
-
-    <div className="product-detail-page__trust-badges">
-      <div className="product-detail-page__trust-item">
-        <Coffee size={18} className="product-detail-page__trust-icon" aria-hidden="true" />
-        <div>
-          <strong>Café de Especialidad UNA</strong>
-          <span>Calidad certificada y tueste artesanal</span>
-        </div>
-      </div>
-      <div className="product-detail-page__trust-item">
-        <Store size={18} className="product-detail-page__trust-icon" aria-hidden="true" />
-        <div>
-          <strong>Retiro en Cafeterías UNA</strong>
-          <span>Disponible en sedes universitarias</span>
-        </div>
-      </div>
-      <div className="product-detail-page__trust-item">
-        <Truck size={18} className="product-detail-page__trust-icon" aria-hidden="true" />
-        <div>
-          <strong>Envíos Nacionales</strong>
-          <span>Entrega segura a todo Costa Rica</span>
-        </div>
-      </div>
     </div>
   </div>
 );

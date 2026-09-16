@@ -117,54 +117,64 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const imagen = imagenPrincipalProducto(product);
 
   return (
-    <article className="product-card" aria-label={displayName}>
+    <article
+      className={`product-card${estaAgotado ? ' is-sold-out' : ''}`}
+      aria-label={displayName}
+    >
       <Link
         to="/productos/$productId"
         params={{ productId: String(product.id) }}
-        className="product-card__link"
-      >
-        <div className="product-card__media">
-          {imagen ? (
-            <OptimizedImage
-              src={imagen}
-              alt={displayName}
-              width={480}
-              height={480}
-              className="product-card__img"
-            />
-          ) : (
-            <div className="product-card__no-img" aria-hidden="true">
-              <Coffee size={36} />
-            </div>
-          )}
+        className="product-card__link-overlay"
+        aria-label={`Ver detalle de ${displayName}`}
+      />
 
+      <div className="product-card__media">
+        {imagen ? (
+          <OptimizedImage
+            src={imagen}
+            alt={displayName}
+            width={480}
+            height={480}
+            className="product-card__image"
+          />
+        ) : (
+          <div className="product-card__placeholder" aria-hidden="true">
+            <Coffee size={36} className="text-stone-400" />
+          </div>
+        )}
+
+        <div className="product-card__badges">
           {product.categoria ? (
-            <span className="product-card__category-badge">{product.categoria}</span>
-          ) : null}
+            <span className="product-card__badge product-card__badge--cat">
+              {product.categoria}
+            </span>
+          ) : <span />}
 
           <span
-            className={`product-card__status-badge ${
-              estaAgotado ? 'is-out' : 'is-in'
+            className={`product-card__badge ${
+              estaAgotado ? 'product-card__badge--soldout' : 'product-card__badge--stock'
             }`}
           >
-            <span className="product-card__status-dot" aria-hidden="true" />
+            <span className="product-card__dot" aria-hidden="true" />
             {estaAgotado ? tSinStock : tDisponible}
           </span>
         </div>
+      </div>
 
-        <div className="product-card__content">
-          <h2 className="product-card__title">{displayName}</h2>
+      <div className="product-card__content">
+        {product.subcategoria ? (
+          <span className="product-card__subcat">{product.subcategoria}</span>
+        ) : null}
 
-          {product.subcategoria ? (
-            <p className="product-card__meta">{product.subcategoria}</p>
-          ) : null}
+        <h2 className="product-card__title">{displayName}</h2>
 
-          <div className="product-card__footer">
-            <div className="product-card__price-box">
-              <span className="product-card__price">{formatPriceCRC(precioFinal)}</span>
-              <span className="product-card__vat">IVA incl.</span>
-            </div>
+        <div className="product-card__footer">
+          <div className="product-card__price-box">
+            <span className="product-card__price">{formatPriceCRC(precioFinal)}</span>
+            <span className="product-card__iva">IVA incl.</span>
+          </div>
 
+          <div className="product-card__actions">
             <button
               type="button"
               className="product-card__add-btn"
@@ -177,7 +187,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </button>
           </div>
         </div>
-      </Link>
+      </div>
     </article>
   );
 };
@@ -530,12 +540,25 @@ export const Products: React.FC = () => {
   const handleQuickAdd = (event: React.MouseEvent<HTMLButtonElement>, product: ProductItem) => {
     event.preventDefault();
     event.stopPropagation();
+    const disp = clasificarDisponibilidad(product);
+    const stockEfectivo = Math.max(
+      Number(disp?.stock) || 0,
+      Number(product?.stockTotal) || 0,
+      Number(product?.stock) || 0,
+      Number(product?.stockDisponible) || 0,
+      disp?.codigo !== 'agotado' ? 10 : 0,
+    );
+
     addProductToCart({
+      ...product,
       id: product.id,
       nombre: product.nombre,
       price: Number(product.precioNormal ?? product.price ?? 0) || 0,
       priceWithoutIva: Number(product.precioNormal ?? product.price ?? 0) || 0,
       units: 1,
+      stock: stockEfectivo,
+      stockTotal: stockEfectivo,
+      stockDisponible: stockEfectivo,
       image: imagenPrincipalProducto(product),
       category: product.categoria,
     });

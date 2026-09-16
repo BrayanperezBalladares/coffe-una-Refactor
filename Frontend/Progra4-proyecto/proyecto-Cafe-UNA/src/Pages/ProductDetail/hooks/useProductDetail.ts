@@ -133,7 +133,22 @@ export function useProductDetail(numericId: number) {
 
   const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (!product || estaAgotado) return;
-    if (addProductToCart(product, quantity)) {
+    const effectiveStock = Math.max(
+      stockDisponible,
+      Number(product.stockTotal) || 0,
+      Number(product.stock) || 0,
+    );
+    if (
+      addProductToCart(
+        {
+          ...product,
+          stock: effectiveStock,
+          stockTotal: effectiveStock,
+          stockDisponible: effectiveStock,
+        },
+        quantity,
+      )
+    ) {
       pulseButton(event.currentTarget);
       setAddedToast(true);
       setTimeout(() => setAddedToast(false), 3000);

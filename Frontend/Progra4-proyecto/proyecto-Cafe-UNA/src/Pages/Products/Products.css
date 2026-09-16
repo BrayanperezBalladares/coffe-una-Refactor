@@ -1,4 +1,4 @@
-﻿/* Café UNA — Catálogo de Productos Moderno */
+/* Café UNA — Catálogo de Productos Moderno */
 
 .site-main:has(.products-page),
 #center.site-main:has(.products-page) {
@@ -386,6 +386,10 @@
   height: 6px;
   border-radius: 50%;
   background: #16a34a;
+}
+
+.product-card__badge--soldout .product-card__dot {
+  background: #dc2626;
 }
 
 /* Contenido de la Tarjeta */
