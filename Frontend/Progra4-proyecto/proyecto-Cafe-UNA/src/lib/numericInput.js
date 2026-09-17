@@ -24,10 +24,17 @@ const TECLAS_CONTROL = new Set([
   "ArrowDown",
   "Home",
   "End",
+  "Shift",
+  "Control",
+  "Alt",
+  "Meta",
+  "CapsLock",
+  "AltGraph",
 ]);
 
 export function esTeclaNumericaPermitida(key, { decimal = false, valorActual = "" } = {}) {
-  if (TECLAS_CONTROL.has(key)) return true;
+  if (typeof key !== "string") return true;
+  if (key.length > 1 || TECLAS_CONTROL.has(key)) return true;
   if (/^\d$/.test(key)) return true;
   if (decimal && (key === "." || key === ",")) {
     return !String(valorActual).includes(".");

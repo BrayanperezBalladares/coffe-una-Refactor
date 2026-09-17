@@ -22,5 +22,8 @@ describe("numericInput", () => {
     expect(esTeclaNumericaPermitida("Backspace")).toBe(true);
     expect(esTeclaNumericaPermitida(".", { decimal: true, valorActual: "1" })).toBe(true);
     expect(esTeclaNumericaPermitida(".", { decimal: true, valorActual: "1.2" })).toBe(false);
+    expect(esTeclaNumericaPermitida("Unidentified")).toBe(true);
+    expect(esTeclaNumericaPermitida("Process")).toBe(true);
+    expect(esTeclaNumericaPermitida("Shift")).toBe(true);
   });
 });

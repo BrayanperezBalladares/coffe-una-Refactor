@@ -11,8 +11,6 @@ export function NumericInput({
   onChange,
   name,
   onKeyDown,
-  onPaste,
-  onBeforeInput,
   ...rest
 }) {
   const sanitize = (raw) => {
@@ -23,23 +21,27 @@ export function NumericInput({
     return next;
   };
 
-  const emitir = (raw, event) => {
+  const handleKeyDown = (event) => {
+    onKeyDown?.(event);
+    if (event.defaultPrevented) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (
+      event.key &&
+      event.key.length === 1 &&
+      !esTeclaNumericaPermitida(event.key, { decimal, valorActual: value })
+    ) {
+      event.preventDefault();
+    }
+  };
+
+  const handleChange = (event) => {
     if (!onChange) return;
-    const next = sanitize(raw);
-    const target = {
-      ...(event?.target || {}),
-      name: name ?? event?.target?.name,
-      value: next,
-    };
-    onChange({
-      ...event,
-      target,
-      currentTarget: {
-        ...(event?.currentTarget || {}),
-        name: name ?? event?.currentTarget?.name,
-        value: next,
-      },
-    });
+    const raw = event?.target?.value ?? "";
+    const sanitized = sanitize(raw);
+    if (event.target) {
+      event.target.value = sanitized;
+    }
+    onChange(event);
   };
 
   return (
@@ -50,31 +52,10 @@ export function NumericInput({
       inputMode={decimal ? "decimal" : "numeric"}
       pattern={decimal ? "[0-9]*[.,]?[0-9]*" : "[0-9]*"}
       autoComplete="off"
+      maxLength={maxLength}
       value={value ?? ""}
-      onBeforeInput={(event) => {
-        onBeforeInput?.(event);
-        if (event.defaultPrevented || event.data == null) return;
-        if (decimal) {
-          if (/[^\d.,]/.test(event.data)) event.preventDefault();
-        } else if (/\D/.test(event.data)) {
-          event.preventDefault();
-        }
-      }}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented) return;
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
-        if (!esTeclaNumericaPermitida(event.key, { decimal, valorActual: value })) {
-          event.preventDefault();
-        }
-      }}
-      onPaste={(event) => {
-        onPaste?.(event);
-        if (event.defaultPrevented) return;
-        event.preventDefault();
-        emitir(event.clipboardData.getData("text"), event);
-      }}
-      onChange={(event) => emitir(event.target.value, event)}
+      onKeyDown={handleKeyDown}
+      onChange={handleChange}
     />
   );
 }

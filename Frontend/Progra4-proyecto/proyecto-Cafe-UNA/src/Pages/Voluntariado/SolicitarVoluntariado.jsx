@@ -224,6 +224,7 @@ function SolicitarVoluntariado() {
   const [errorApi, setErrorApi] = useState(null);
   const [consultandoCedula, setConsultandoCedula] = useState(false);
   const [avisoCedula, setAvisoCedula] = useState(null);
+  const [nombreAutocargado, setNombreAutocargado] = useState(false);
   const [sedeFinca, setSedeFinca] = useState(() => sedeDesdeHomeLocation(null));
 
   const {

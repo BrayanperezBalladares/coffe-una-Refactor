@@ -476,16 +476,16 @@ export default function SolicitarVisita() {
                 hint="Datos de la persona responsable de coordinar la visita."
               >
                 <div className="form-grid--2cols">
-                  <Field label="Identificación (Cédula) *">
+                  <Field label={form.tipoVisitante === "Internacional" ? "Identificación (Pasaporte / ID) *" : "Identificación (Cédula) *"}>
                     <div className="campo-con-estado">
                       <input
                         name="encargadoIdentificacion"
                         aria-label="Identificación del encargado"
-                        placeholder="101110111"
+                        placeholder={form.tipoVisitante === "Internacional" ? "Pasaporte o ID" : "101110111"}
                         value={form.encargadoIdentificacion}
                         onChange={update}
                         onBlur={handleIdentificacionBlur}
-                        maxLength={9}
+                        maxLength={form.tipoVisitante === "Internacional" ? 30 : 9}
                       />
                       {consultandoCedula ? (
                         <span className="campo-estado-icono">
