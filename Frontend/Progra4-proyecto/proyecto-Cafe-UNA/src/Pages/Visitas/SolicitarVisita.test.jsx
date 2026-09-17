@@ -177,7 +177,7 @@ describe("SolicitarVisita", () => {
     expect(screen.getByText(/datos cargados automáticamente/i)).toBeInTheDocument();
   });
 
-  it("handles international visitor mode with free text fields", async () => {
+  it("handles international visitor mode with simplified country selection", async () => {
     crearSolicitudVisitaMock.mockResolvedValueOnce({ id: "99", estado: "Pendiente" });
     render(<SolicitarVisita />);
 
@@ -186,8 +186,8 @@ describe("SolicitarVisita", () => {
     });
 
     expect(screen.getByLabelText(/país de procedencia \*/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/provincia o estado \*/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/ciudad \*/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/provincia o estado/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/ciudad/i)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/^identificación/i), { target: { value: "PASSPORT-123" } });
     fireEvent.change(screen.getByLabelText(/^nombre \*/i), { target: { value: "John" } });
@@ -195,8 +195,6 @@ describe("SolicitarVisita", () => {
     fireEvent.change(screen.getByLabelText(/^correo electrónico/i), { target: { value: "john@example.com" } });
     fireEvent.change(screen.getByLabelText(/^teléfono/i), { target: { value: "+1-555-0199" } });
     fireEvent.change(screen.getByLabelText(/país de procedencia \*/i), { target: { value: "Estados Unidos" } });
-    fireEvent.change(screen.getByLabelText(/provincia o estado \*/i), { target: { value: "California" } });
-    fireEvent.change(screen.getByLabelText(/ciudad \*/i), { target: { value: "San Francisco" } });
     fireEvent.change(screen.getByLabelText(/cantidad de visitantes/i), { target: { value: "3" } });
     fireEvent.change(screen.getByLabelText(/tipo de grupo/i), { target: { value: "Investigadores" } });
 
@@ -214,7 +212,7 @@ describe("SolicitarVisita", () => {
         encargadoIdentificacion: "PASSPORT-123",
         tipoVisitante: "Internacional",
         paisProcedencia: "Estados Unidos",
-        ciudadProvincia: "California, San Francisco",
+        ciudadProvincia: "Estados Unidos",
       }),
     );
   });

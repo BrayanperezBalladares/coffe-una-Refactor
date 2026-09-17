@@ -17,6 +17,7 @@ import {
 
 import { Calendar } from "@/Components/ui/calendar";
 import { CountryCombobox } from "@/Components/ui/CountryCombobox";
+import { cn } from "@/lib/utils";
 import PageLoading from "../../Components/PageLoading/PageLoading";
 import BackToHomeLink from "../../Components/BackToHomeLink/BackToHomeLink";
 import AvisoSedeFinca from "../../Components/AvisoSedeFinca/AvisoSedeFinca";
@@ -387,10 +388,6 @@ export default function SolicitarVisita() {
         setError("Indicá el país de procedencia del grupo internacional.");
         return;
       }
-      if (!form.provincia.trim() || !form.canton.trim()) {
-        setError("Completá los campos obligatorios antes de enviar la solicitud.");
-        return;
-      }
     }
 
     if (!form.cantidadVisitantes || Number(form.cantidadVisitantes) < 2) {
@@ -416,10 +413,13 @@ export default function SolicitarVisita() {
       .filter(Boolean)
       .join(" ");
 
-    const ciudadProvincia = [form.provincia, form.canton]
-      .map((parte) => String(parte || "").trim())
-      .filter(Boolean)
-      .join(", ");
+    const ciudadProvincia =
+      form.tipoVisitante === "Internacional"
+        ? form.paisProcedencia.trim()
+        : [form.provincia, form.canton]
+            .map((parte) => String(parte || "").trim())
+            .filter(Boolean)
+            .join(", ");
 
     const paisProcedencia =
       form.tipoVisitante === "Internacional"
@@ -476,6 +476,72 @@ export default function SolicitarVisita() {
                 title="Información del encargado"
                 hint="Datos de la persona responsable de coordinar la visita."
               >
+                <div className="campo full">
+                  <p className="campo-label font-medium mb-2 text-foreground/90">
+                    ¿El encargado es costarricense o residente? <span className="req text-destructive">*</span>
+                  </p>
+                  <div className="tipo-opciones flex gap-4">
+                    <label className={cn(
+                      "radio-card flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border transition-colors",
+                      form.tipoVisitante === "Nacional" ? "border-primary bg-primary/5 font-semibold text-primary" : "border-border hover:bg-accent/40"
+                    )}>
+                      <input
+                        type="radio"
+                        name="tipoVisitanteRadio"
+                        value="Nacional"
+                        checked={form.tipoVisitante === "Nacional"}
+                        onChange={() => update({ target: { name: "tipoVisitante", value: "Nacional", type: "text" } })}
+                        className="accent-primary"
+                      />
+                      <span>Costarricense / Nacional</span>
+                    </label>
+                    <label className={cn(
+                      "radio-card flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border transition-colors",
+                      form.tipoVisitante === "Internacional" ? "border-primary bg-primary/5 font-semibold text-primary" : "border-border hover:bg-accent/40"
+                    )}>
+                      <input
+                        type="radio"
+                        name="tipoVisitanteRadio"
+                        value="Internacional"
+                        checked={form.tipoVisitante === "Internacional"}
+                        onChange={() => update({ target: { name: "tipoVisitante", value: "Internacional", type: "text" } })}
+                        className="accent-primary"
+                      />
+                      <span>Internacional / Extranjero</span>
+                    </label>
+                  </div>
+                  <select
+                    name="tipoVisitante"
+                    aria-label="Tipo de visitante"
+                    value={form.tipoVisitante}
+                    onChange={update}
+                    className="sr-only"
+                    tabIndex={-1}
+                  >
+                    <option value="Nacional">Nacional</option>
+                    <option value="Internacional">Internacional</option>
+                  </select>
+                </div>
+
+                {form.tipoVisitante === "Internacional" && (
+                  <div className="campo full">
+                    <Field label="País de procedencia *">
+                      <CountryCombobox
+                        id="vis-pais"
+                        name="paisProcedencia"
+                        value={form.paisProcedencia}
+                        onChange={(nuevoPais) => {
+                          setForm((prev) => ({ ...prev, paisProcedencia: nuevoPais }));
+                          setError("");
+                        }}
+                        ariaLabel="País de procedencia *"
+                        placeholder="Seleccioná tu país..."
+                        error={Boolean(error && !form.paisProcedencia.trim())}
+                      />
+                    </Field>
+                  </div>
+                )}
+
                 <div className="form-grid--2cols">
                   <Field label={form.tipoVisitante === "Internacional" ? "Identificación (Pasaporte / ID) *" : "Identificación (Cédula) *"}>
                     <div className="campo-con-estado">
@@ -576,18 +642,6 @@ export default function SolicitarVisita() {
                 hint="Las visitas grupales requieren al menos dos personas."
               >
                 <div className="form-grid--2cols">
-                  <Field label="Tipo de visitante *">
-                    <select
-                      name="tipoVisitante"
-                      aria-label="Tipo de visitante"
-                      value={form.tipoVisitante}
-                      onChange={update}
-                    >
-                      <option value="Nacional">Nacional</option>
-                      <option value="Internacional">Internacional</option>
-                    </select>
-                  </Field>
-
                   <Field label="Cantidad de visitantes *">
                     <input
                       min="2"
@@ -598,44 +652,19 @@ export default function SolicitarVisita() {
                       onChange={update}
                     />
                   </Field>
+
+                  <Field label="Tipo de grupo *">
+                    <input
+                      name="tipoGrupo"
+                      aria-label="Tipo de grupo"
+                      value={form.tipoGrupo}
+                      onChange={update}
+                      placeholder="Universidad, empresa, asociación…"
+                    />
+                  </Field>
                 </div>
 
-                {form.tipoVisitante === "Internacional" ? (
-                  <div className="form-grid--3cols">
-                    <Field label="País de procedencia *">
-                      <CountryCombobox
-                        id="vis-pais"
-                        name="paisProcedencia"
-                        value={form.paisProcedencia}
-                        onChange={(nuevoPais) => {
-                          setForm((prev) => ({ ...prev, paisProcedencia: nuevoPais }));
-                          setError("");
-                        }}
-                        ariaLabel="País de procedencia *"
-                        placeholder="Seleccioná tu país..."
-                        error={Boolean(error && !form.paisProcedencia.trim())}
-                      />
-                    </Field>
-                    <Field label="Provincia o Estado *">
-                      <input
-                        name="provincia"
-                        aria-label="Provincia o Estado"
-                        value={form.provincia}
-                        onChange={update}
-                        placeholder="Estado / Provincia"
-                      />
-                    </Field>
-                    <Field label="Ciudad *">
-                      <input
-                        name="canton"
-                        aria-label="Ciudad"
-                        value={form.canton}
-                        onChange={update}
-                        placeholder="Ciudad"
-                      />
-                    </Field>
-                  </div>
-                ) : (
+                {form.tipoVisitante === "Nacional" && (
                   <div className="form-grid--2cols">
                     <Field label="Provincia *">
                       <select name="provincia" value={form.provincia} onChange={update}>
@@ -667,16 +696,7 @@ export default function SolicitarVisita() {
                   </div>
                 )}
 
-                <div className="form-grid--2cols">
-                  <Field label="Tipo de grupo *">
-                    <input
-                      name="tipoGrupo"
-                      aria-label="Tipo de grupo"
-                      value={form.tipoGrupo}
-                      onChange={update}
-                      placeholder="Universidad, empresa, asociación…"
-                    />
-                  </Field>
+                <div className="campo full">
                   <Field label="Motivo de la visita *">
                     <input
                       name="motivoVisita"
