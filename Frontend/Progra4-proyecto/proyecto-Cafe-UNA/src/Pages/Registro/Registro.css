@@ -282,7 +282,30 @@
   font-size: var(--text-body);
 }
 
+.country-combobox-root button[role="combobox"] {
+  min-height: var(--control-height);
+  font-size: var(--text-body);
+}
+
+.country-combobox-root ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-combobox-root ul::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.country-combobox-root ul::-webkit-scrollbar-thumb {
+  background: rgba(120, 53, 15, 0.2);
+  border-radius: 999px;
+}
+
+.country-combobox-root ul::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 53, 15, 0.4);
+}
+
 .registro-page .login-footer {
   margin: 1.25rem 0 0;
   text-align: center;
 }
+

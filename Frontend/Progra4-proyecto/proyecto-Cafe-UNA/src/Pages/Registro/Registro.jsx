@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import { ST } from '../../Components/T/ST';
 import { useTraducir } from '../../hooks/useTraducir';
 import { sanitizeUserFacingError, MAX_PASSWORD } from '../../lib/formLimits';
 import { queueFocusFormError } from '../../lib/formFocus';
 import { normalizeImageUrl } from '../../lib/imageUtils';
-import { rolesDeUsuario } from '../../lib/permisos';
 import {
   completarCliente,
   limpiarIntentRegistroCliente,
@@ -21,7 +20,10 @@ import {
   getActiveSessionUser,
   saveAuthenticatedUser,
 } from '../../services/sessionService';
-import { UiSelect } from '../../Components/ui/Select';
+import { Input } from '../../Components/ui/input';
+import { Button } from '../../Components/ui/button';
+import { CountryCombobox } from '../../Components/ui/CountryCombobox';
+import { cn } from '../../lib/utils';
 import '../Login/Login.css';
 import './Registro.css';
 
@@ -96,8 +98,8 @@ function PasswordField({
   const tMostrar = useTraducir('Mostrar contraseña');
 
   return (
-    <div className="login-password-wrapper">
-      <input
+    <div className="login-password-wrapper relative flex items-center">
+      <Input
         id={id}
         name={id}
         type={visible ? 'text' : 'password'}
@@ -106,17 +108,20 @@ function PasswordField({
         value={value}
         onChange={onChange}
         maxLength={maxLength}
-        className={ariaInvalid ? 'input-error' : ''}
+        className={cn(
+          'pr-10 transition-all duration-200',
+          ariaInvalid ? 'border-red-500 focus-visible:ring-red-400' : ''
+        )}
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
       />
       <button
         type="button"
-        className="login-password-toggle"
+        className="login-password-toggle absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
         onClick={onToggle}
         aria-label={visible ? tOcultar : tMostrar}
       >
-        <Icon className="login-password-icon" aria-hidden="true" />
+        <Icon className="login-password-icon h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -148,6 +153,7 @@ function validarTelefono(valor, obligatorio = true) {
 const emptyErrors = () => ({
   esNacional: '',
   tipoDocumento: '',
+  pais: '',
   nombre: '',
   apellido1: '',
   apellido2: '',
@@ -181,16 +187,15 @@ const Registro = () => {
   const tPersona = useTraducir('Persona natural');
   const tEmpresa = useTraducir('Persona jurídica');
   const tNombre = useTraducir('Nombre');
-  const tApellido1 = useTraducir('Apellido 1');
-  const tApellido2 = useTraducir('Apellido 2');
-  const tCedula = useTraducir('Cédula');
-  const tEsNacional = useTraducir('¿Es nacional de Costa Rica?');
-  const tSi = useTraducir('Sí');
-  const tNo = useTraducir('No');
-  const tTipoDocumento = useTraducir('Tipo de documento');
+  const tApellido1 = useTraducir('Primer apellido');
+  const tApellido2 = useTraducir('Segundo apellido');
+  const tCedula = useTraducir('Cédula nacional');
   const tDimex = useTraducir('DIMEX');
   const tPasaporte = useTraducir('Pasaporte');
+  const tPais = useTraducir('País de procedencia');
+  const tTipoDocumento = useTraducir('Tipo de identificación');
   const tConsultandoCedula = useTraducir('Consultando cédula...');
+  const tConsultandoDimex = useTraducir('Consultando DIMEX...');
   const tDatosCargados = useTraducir('Datos cargados automáticamente. Podés editarlos si hace falta.');
   const tRazonSocial = useTraducir('Razón social');
   const tNombreComercial = useTraducir('Nombre comercial');
@@ -201,7 +206,7 @@ const Registro = () => {
   const tCorreo = useTraducir('Correo');
   const tPassword = useTraducir('Contraseña');
   const tConfirm = useTraducir('Confirmar contraseña');
-  const tTelefono = useTraducir('Teléfono');
+  const tTelefono = useTraducir('Teléfono móvil');
   const tTerminos = useTraducir('Acepto los términos y condiciones');
   const tPrivacidad = useTraducir('Acepto las políticas de privacidad');
   const tEnviar = useTraducir(upgradeMode ? 'Ingresar como cliente' : 'Crear cuenta de cliente');
@@ -209,7 +214,6 @@ const Registro = () => {
   const tOpcional = useTraducir('(opcional)');
   const tYaCliente = useTraducir('Tu cuenta ya puede comprar.');
   const tIrCheckout = useTraducir('Ir al checkout');
-  const tLogin = useTraducir('Ya tengo cuenta');
 
   const [tipo, setTipo] = useState('persona');
   const [logoUrl, setLogoUrl] = useState('');
@@ -221,9 +225,11 @@ const Registro = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState(emptyErrors);
   const consultaCedulaRef = useRef({ digitos: '', enCurso: false });
+
   const [form, setForm] = useState({
     esNacional: 'si',
     tipoDocumento: 'cedula',
+    pais: 'Costa Rica',
     nombre: '',
     apellido1: '',
     apellido2: '',
@@ -242,8 +248,9 @@ const Registro = () => {
     aceptoPrivacidad: false,
   });
 
-  const esNacionalCr = form.esNacional === 'si';
-  const labelIdentificacion = esNacionalCr
+  const esNacionalCr = form.tipoDocumento === 'cedula';
+
+  const labelIdentificacion = form.tipoDocumento === 'cedula'
     ? tCedula
     : form.tipoDocumento === 'dimex'
       ? tDimex
@@ -274,8 +281,11 @@ const Registro = () => {
     }
   }, [sessionUser, navigate]);
 
-  const consultarDatosCedula = useCallback(async (digitos, { forzar = false } = {}) => {
-    if (!esNacionalCr || digitos.length !== 9) return;
+  // Consulta y autocompletado automático de Cédula y DIMEX
+  const consultarDatosIdentificacion = useCallback(async (digitos, tipoDoc, { forzar = false } = {}) => {
+    const esCedula = tipoDoc === 'cedula' && digitos.length === 9;
+    const esDimex = tipoDoc === 'dimex' && (digitos.length >= 10 && digitos.length <= 12);
+    if (!esCedula && !esDimex) return;
     if (consultaCedulaRef.current.enCurso) return;
     if (!forzar && consultaCedulaRef.current.digitos === digitos) return;
 
@@ -291,7 +301,11 @@ const Registro = () => {
 
       if (!nombre && !apellido1) {
         consultaCedulaRef.current = { digitos: '', enCurso: false };
-        setAvisoCedula('No se encontraron datos para esta cédula. Completá los datos manualmente.');
+        setAvisoCedula(
+          tipoDoc === 'dimex'
+            ? 'No se encontraron datos automáticos para este DIMEX. Podés completar los campos manualmente.'
+            : 'No se encontraron datos para esta cédula. Podés completarlos manualmente.'
+        );
         return;
       }
 
@@ -299,9 +313,9 @@ const Registro = () => {
       setForm((prev) => ({
         ...prev,
         identificacion: digitos,
-        nombre,
-        apellido1,
-        apellido2,
+        nombre: nombre || prev.nombre,
+        apellido1: apellido1 || prev.apellido1,
+        apellido2: apellido2 || prev.apellido2,
       }));
       setAvisoCedula(tDatosCargados);
       setErrors((prev) => ({
@@ -313,55 +327,62 @@ const Registro = () => {
       }));
     } catch (error) {
       consultaCedulaRef.current = { digitos: '', enCurso: false };
-      const mensajeBase = error?.message?.trim() || 'No se pudo consultar la cédula.';
+      const mensajeBase = error?.message?.trim() || 'No se pudo consultar el documento.';
       const yaIndicaManual = /manualmente|completar/i.test(mensajeBase);
       setAvisoCedula(
         yaIndicaManual
           ? mensajeBase
-          : `${mensajeBase} Completá los datos manualmente.`,
+          : `${mensajeBase} Podés completar los datos manualmente.`
       );
     } finally {
       setConsultandoCedula(false);
     }
-  }, [esNacionalCr, tDatosCargados]);
+  }, [tDatosCargados]);
 
+  // Disparar autocompletado cuando la cédula o DIMEX están completos
   useEffect(() => {
-    if (tipo !== 'persona' || !esNacionalCr) return undefined;
-    const digitos = normalizarCedulaCr(form.identificacion);
-    if (digitos.length !== 9) return undefined;
+    if (tipo !== 'persona') return undefined;
+    const tipoDoc = form.tipoDocumento;
+    if (tipoDoc !== 'cedula' && tipoDoc !== 'dimex') return undefined;
+
+    const digitos = tipoDoc === 'cedula'
+      ? normalizarCedulaCr(form.identificacion)
+      : form.identificacion.replace(/\D/g, '');
+
+    const esValidoParaConsulta =
+      (tipoDoc === 'cedula' && digitos.length === 9) ||
+      (tipoDoc === 'dimex' && (digitos.length === 11 || digitos.length === 12));
+
+    if (!esValidoParaConsulta) return undefined;
     if (consultaCedulaRef.current.enCurso) return undefined;
     if (consultaCedulaRef.current.digitos === digitos) return undefined;
 
     const timeoutId = window.setTimeout(() => {
-      consultarDatosCedula(digitos);
+      consultarDatosIdentificacion(digitos, tipoDoc);
     }, 350);
     return () => window.clearTimeout(timeoutId);
-  }, [form.identificacion, tipo, esNacionalCr, consultarDatosCedula]);
+  }, [form.identificacion, form.tipoDocumento, tipo, consultarDatosIdentificacion]);
 
-  const setEsNacional = (valor) => {
-    const nacional = valor === 'si';
+  const handleTipoDocumentoChange = (tipoDoc) => {
+    const esNac = tipoDoc === 'cedula';
     setForm((prev) => ({
       ...prev,
-      esNacional: valor,
-      tipoDocumento: nacional ? 'cedula' : 'dimex',
+      tipoDocumento: tipoDoc,
+      esNacional: esNac ? 'si' : 'no',
+      pais: esNac ? 'Costa Rica' : prev.pais === 'Costa Rica' ? '' : prev.pais,
       identificacion: '',
       nombre: '',
       apellido1: '',
       apellido2: '',
     }));
-    setErrors(emptyErrors());
+    setErrors((prev) => ({
+      ...prev,
+      tipoDocumento: '',
+      identificacion: '',
+      pais: '',
+    }));
     setAvisoCedula('');
     consultaCedulaRef.current = { digitos: '', enCurso: false };
-  };
-
-  const setTipoDocumentoExtranjero = (valor) => {
-    setForm((prev) => ({
-      ...prev,
-      tipoDocumento: valor,
-      identificacion: '',
-    }));
-    setErrors((prev) => ({ ...prev, tipoDocumento: '', identificacion: '' }));
-    setAvisoCedula('');
   };
 
   const setField = (key, value) => {
@@ -378,16 +399,21 @@ const Registro = () => {
     const next = emptyErrors();
 
     if (tipo === 'persona') {
-      if (form.esNacional !== 'si' && form.esNacional !== 'no') {
-        next.esNacional = 'Indicá si sos nacional de Costa Rica.';
-      }
-      if (!esNacionalCr && form.tipoDocumento !== 'dimex' && form.tipoDocumento !== 'pasaporte') {
-        next.tipoDocumento = 'Elegí DIMEX o pasaporte.';
+      if (form.tipoDocumento !== 'cedula' && form.tipoDocumento !== 'dimex' && form.tipoDocumento !== 'pasaporte') {
+        next.tipoDocumento = 'Elegí un tipo de identificación válido.';
       }
 
+      // Validación de País si es extranjero
+      if (!esNacionalCr) {
+        if (!form.pais?.trim()) {
+          next.pais = 'Seleccioná tu país de procedencia.';
+        }
+      }
+
+      // Validación del número de documento
       if (!form.identificacion.trim()) {
-        next.identificacion = `El ${labelIdentificacion.toLowerCase()} es obligatorio.`;
-      } else if (esNacionalCr) {
+        next.identificacion = `El número de ${labelIdentificacion.toLowerCase()} es obligatorio.`;
+      } else if (form.tipoDocumento === 'cedula') {
         const digitos = normalizarCedulaCr(form.identificacion);
         if (digitos.length !== 9) {
           next.identificacion = 'La cédula costarricense debe tener 9 dígitos.';
@@ -398,24 +424,30 @@ const Registro = () => {
           next.identificacion = 'El DIMEX debe tener entre 10 y 12 dígitos.';
         }
       } else if (!/^[A-Za-z0-9]{5,20}$/.test(form.identificacion.trim())) {
-        next.identificacion = 'El pasaporte no tiene un formato válido.';
+        next.identificacion = 'El pasaporte no tiene un formato válido (5 a 20 caracteres alfanuméricos).';
       }
 
-      if (!form.nombre.trim()) next.nombre = 'El nombre es obligatorio.';
-      else if (!NOMBRE_RE.test(form.nombre.trim())) {
+      // Nombres y apellidos
+      if (!form.nombre.trim()) {
+        next.nombre = 'El nombre es obligatorio.';
+      } else if (!NOMBRE_RE.test(form.nombre.trim())) {
         next.nombre = 'El nombre solo puede incluir letras y espacios.';
       }
-      if (!form.apellido1.trim()) next.apellido1 = 'El apellido 1 es obligatorio.';
-      else if (!NOMBRE_RE.test(form.apellido1.trim())) {
-        next.apellido1 = 'El apellido 1 solo puede incluir letras y espacios.';
+
+      if (!form.apellido1.trim()) {
+        next.apellido1 = 'El primer apellido es obligatorio.';
+      } else if (!NOMBRE_RE.test(form.apellido1.trim())) {
+        next.apellido1 = 'El apellido solo puede incluir letras y espacios.';
       }
+
       if (esNacionalCr) {
-        if (!form.apellido2.trim()) next.apellido2 = 'El apellido 2 es obligatorio.';
-        else if (!NOMBRE_RE.test(form.apellido2.trim())) {
-          next.apellido2 = 'El apellido 2 solo puede incluir letras y espacios.';
+        if (!form.apellido2.trim()) {
+          next.apellido2 = 'El segundo apellido es obligatorio para cédula nacional.';
+        } else if (!NOMBRE_RE.test(form.apellido2.trim())) {
+          next.apellido2 = 'El apellido solo puede incluir letras y espacios.';
         }
       } else if (form.apellido2.trim() && !NOMBRE_RE.test(form.apellido2.trim())) {
-        next.apellido2 = 'El apellido 2 solo puede incluir letras y espacios.';
+        next.apellido2 = 'El apellido solo puede incluir letras y espacios.';
       }
     } else {
       if (!form.razonSocial.trim()) next.razonSocial = 'La razón social es obligatoria.';
@@ -455,14 +487,11 @@ const Registro = () => {
     if (!form.aceptoTerminos || !form.aceptoPrivacidad) return false;
     if (!form.telefono.trim()) return false;
     if (tipo === 'persona') {
-      if (!form.esNacional) return false;
-      if (!esNacionalCr && form.tipoDocumento !== 'dimex' && form.tipoDocumento !== 'pasaporte') {
-        return false;
-      }
       if (!form.identificacion.trim() || !form.nombre.trim() || !form.apellido1.trim()) {
         return false;
       }
       if (esNacionalCr && !form.apellido2.trim()) return false;
+      if (!esNacionalCr && !form.pais?.trim()) return false;
     }
     if (tipo === 'empresa') {
       if (
@@ -491,11 +520,12 @@ const Registro = () => {
     };
     if (tipo === 'persona') {
       payload.esNacional = form.esNacional;
-      payload.tipoDocumento = esNacionalCr ? 'cedula' : form.tipoDocumento;
+      payload.tipoDocumento = form.tipoDocumento;
+      payload.pais = form.tipoDocumento === 'cedula' ? 'Costa Rica' : form.pais.trim();
       payload.nombre = form.nombre.trim();
       payload.apellido1 = form.apellido1.trim();
       if (form.apellido2.trim()) payload.apellido2 = form.apellido2.trim();
-      payload.identificacion = esNacionalCr || form.tipoDocumento === 'dimex'
+      payload.identificacion = form.tipoDocumento === 'cedula' || form.tipoDocumento === 'dimex'
         ? form.identificacion.replace(/\D/g, '')
         : form.identificacion.trim().toUpperCase();
     } else {
@@ -560,9 +590,13 @@ const Registro = () => {
         </Link>
         <div className="login-card registro-card">
           <p className="login-success"><ST>{tYaCliente}</ST></p>
-          <button type="button" className="login-button" onClick={() => navigate({ to: '/checkout' })}>
+          <Button
+            type="button"
+            className="w-full bg-[#1e2a22] hover:bg-[#2a3a30] text-amber-50 h-11"
+            onClick={() => navigate({ to: '/checkout' })}
+          >
             <ST>{tIrCheckout}</ST>
-          </button>
+          </Button>
         </div>
       </main>
     );
@@ -583,11 +617,14 @@ const Registro = () => {
           </>
         ) : null}
       </label>
-      <input
+      <Input
         id={key}
         name={key}
         value={form[key]}
-        className={errors[key] ? 'input-error' : ''}
+        className={cn(
+          'transition-all duration-200',
+          errors[key] ? 'border-red-500 focus-visible:ring-red-400' : ''
+        )}
         aria-invalid={Boolean(errors[key])}
         aria-describedby={errors[key] ? `${key}-error` : undefined}
         onChange={(ev) => setField(key, ev.target.value)}
@@ -609,17 +646,6 @@ const Registro = () => {
     },
   });
 
-  const campoDigitos = (key, label, max, extra = {}) => field(key, label, {
-    ...extra,
-    input: {
-      inputMode: 'numeric',
-      autoComplete: 'off',
-      maxLength: max,
-      onChange: (ev) => setField(key, soloDigitos(ev.target.value, max)),
-      ...(extra.input || {}),
-    },
-  });
-
   const campoTelefono = (key, label, extra = {}) => field(key, label, {
     ...extra,
     input: {
@@ -630,7 +656,6 @@ const Registro = () => {
       ...(extra.input || {}),
     },
   });
-
 
   return (
     <main className="login-page registro-page">
@@ -647,12 +672,18 @@ const Registro = () => {
         </div>
         <p className="registro-subtitle"><ST>{tSubtitulo}</ST></p>
 
-        <div className="registro-tipo" role="tablist" aria-label="Tipo de cliente">
+        {/* Tipo de cliente: Persona vs Empresa con botones accesibles */}
+        <div className="registro-tipo flex rounded-lg p-1 bg-muted/60 border border-border/80 mb-5" role="tablist" aria-label="Tipo de cliente">
           <button
             type="button"
             role="tab"
             aria-selected={tipo === 'persona'}
-            className={`registro-tipo__btn${tipo === 'persona' ? ' is-active' : ''}`}
+            className={cn(
+              'flex-1 py-2 px-3 text-xs sm:text-sm font-semibold rounded-md transition-all duration-200 cursor-pointer select-none text-center',
+              tipo === 'persona'
+                ? 'bg-[#1e2a22] text-[#f7f4ee] shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5'
+            )}
             onClick={() => {
               setTipo('persona');
               setErrors(emptyErrors());
@@ -665,7 +696,12 @@ const Registro = () => {
             type="button"
             role="tab"
             aria-selected={tipo === 'empresa'}
-            className={`registro-tipo__btn${tipo === 'empresa' ? ' is-active' : ''}`}
+            className={cn(
+              'flex-1 py-2 px-3 text-xs sm:text-sm font-semibold rounded-md transition-all duration-200 cursor-pointer select-none text-center',
+              tipo === 'empresa'
+                ? 'bg-[#1e2a22] text-[#f7f4ee] shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5'
+            )}
             onClick={() => {
               setTipo('empresa');
               setErrors(emptyErrors());
@@ -680,75 +716,90 @@ const Registro = () => {
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           {tipo === 'persona' ? (
             <>
+              {/* Selector de Tipo de Documento: Cédula, DIMEX o Pasaporte */}
               <div className="login-field">
-                <span className="registro-label"><ST>{tEsNacional}</ST></span>
-                <div className="registro-radio-row" role="radiogroup" aria-label={tEsNacional}>
-                  <label className={`registro-radio${form.esNacional === 'si' ? ' is-active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="esNacional"
-                      value="si"
-                      checked={form.esNacional === 'si'}
-                      onChange={() => setEsNacional('si')}
-                    />
-                    <span className="registro-radio__text"><ST>{tSi}</ST></span>
-                  </label>
-                  <label className={`registro-radio${form.esNacional === 'no' ? ' is-active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="esNacional"
-                      value="no"
-                      checked={form.esNacional === 'no'}
-                      onChange={() => setEsNacional('no')}
-                    />
-                    <span className="registro-radio__text"><ST>{tNo}</ST></span>
-                  </label>
+                <label id="tipo-doc-label" className="registro-label mb-1.5 block">
+                  <ST>{tTipoDocumento}</ST>
+                </label>
+                <div
+                  className="grid grid-cols-3 gap-2"
+                  role="radiogroup"
+                  aria-labelledby="tipo-doc-label"
+                >
+                  {[
+                    { id: 'cedula', label: tCedula, sublabel: 'Nacional' },
+                    { id: 'dimex', label: tDimex, sublabel: 'Residente' },
+                    { id: 'pasaporte', label: tPasaporte, sublabel: 'Extranjero' },
+                  ].map((doc) => {
+                    const isSelected = form.tipoDocumento === doc.id;
+                    return (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => handleTipoDocumentoChange(doc.id)}
+                        className={cn(
+                          'flex flex-col items-center justify-center py-2 px-1.5 rounded-lg border text-center transition-all duration-200 cursor-pointer select-none',
+                          isSelected
+                            ? 'border-amber-700/80 bg-amber-500/10 text-amber-950 dark:text-amber-100 font-semibold shadow-xs ring-1 ring-amber-700/40'
+                            : 'border-border bg-background/70 hover:bg-accent/40 text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        <span className="text-xs sm:text-sm">{doc.label}</span>
+                        <span className="text-[10px] text-muted-foreground font-normal">{doc.sublabel}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                {errors.esNacional ? (
-                  <p className="login-field-error"><ST>{errors.esNacional}</ST></p>
+                {errors.tipoDocumento ? (
+                  <p className="login-field-error"><ST>{errors.tipoDocumento}</ST></p>
                 ) : null}
               </div>
 
-              <div className={`registro-grid${!esNacionalCr ? '' : ' registro-grid--full'}`}>
-                {!esNacionalCr ? (
-                  <div className="login-field">
-                    <label htmlFor="tipoDocumento"><ST>{tTipoDocumento}</ST></label>
-                    <UiSelect
-                      id="tipoDocumento"
-                      ariaLabel={tTipoDocumento}
-                      className={`registro-ui-select${errors.tipoDocumento ? ' is-error' : ''}`}
-                      value={form.tipoDocumento}
-                      onChange={setTipoDocumentoExtranjero}
-                      options={[
-                        { value: 'dimex', label: tDimex },
-                        { value: 'pasaporte', label: tPasaporte },
-                      ]}
-                    />
-                    {errors.tipoDocumento ? (
-                      <p className="login-field-error"><ST>{errors.tipoDocumento}</ST></p>
-                    ) : null}
-                  </div>
-                ) : null}
+              {/* País de procedencia (para extranjeros DIMEX o Pasaporte) con Combobox y búsqueda en vivo */}
+              {!esNacionalCr ? (
+                <div className="login-field animate-in fade-in-50 duration-200">
+                  <label htmlFor="pais">
+                    <ST>{tPais}</ST>
+                  </label>
+                  <CountryCombobox
+                    id="pais"
+                    name="pais"
+                    value={form.pais}
+                    onChange={(paisSeleccionado) => setField('pais', paisSeleccionado)}
+                    error={Boolean(errors.pais)}
+                    ariaDescribedBy={errors.pais ? 'pais-error' : undefined}
+                    placeholder="Elegí tu país de procedencia..."
+                    searchPlaceholder="Escribí para buscar país..."
+                  />
+                  {errors.pais ? (
+                    <p id="pais-error" className="login-field-error"><ST>{errors.pais}</ST></p>
+                  ) : null}
+                </div>
+              ) : null}
 
+              {/* Número de Identificación con validación y límites por tipo */}
+              <div className="registro-grid registro-grid--full">
                 {field('identificacion', labelIdentificacion, {
-                  input: esNacionalCr || form.tipoDocumento === 'dimex'
+                  input: form.tipoDocumento === 'cedula' || form.tipoDocumento === 'dimex'
                     ? {
                         inputMode: 'numeric',
                         autoComplete: 'off',
-                        maxLength: esNacionalCr ? LIMITE.cedula : LIMITE.dimex,
-                        placeholder: esNacionalCr ? '9 dígitos' : '10 a 12 dígitos',
+                        maxLength: form.tipoDocumento === 'cedula' ? LIMITE.cedula : LIMITE.dimex,
+                        placeholder: form.tipoDocumento === 'cedula' ? '9 dígitos (sin guiones)' : '10 a 12 dígitos',
                         onChange: (ev) => setField(
                           'identificacion',
                           soloDigitos(
                             ev.target.value,
-                            esNacionalCr ? LIMITE.cedula : LIMITE.dimex,
+                            form.tipoDocumento === 'cedula' ? LIMITE.cedula : LIMITE.dimex,
                           ),
                         ),
                       }
                     : {
                         autoComplete: 'off',
                         maxLength: LIMITE.pasaporte,
-                        placeholder: tPasaporte,
+                        placeholder: 'Número de pasaporte (letras y números)',
                         onChange: (ev) => setField(
                           'identificacion',
                           ev.target.value
@@ -760,11 +811,18 @@ const Registro = () => {
                 })}
               </div>
 
-              {esNacionalCr && consultandoCedula ? (
-                <p className="registro-cedula-aviso"><ST>{tConsultandoCedula}</ST></p>
+              {/* Feedback visual de autocompletado TSE / DIMEX */}
+              {(form.tipoDocumento === 'cedula' || form.tipoDocumento === 'dimex') && consultandoCedula ? (
+                <p className="registro-cedula-aviso text-xs text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping inline-block" />
+                  <ST>{form.tipoDocumento === 'dimex' ? tConsultandoDimex : tConsultandoCedula}</ST>
+                </p>
               ) : null}
-              {esNacionalCr && avisoCedula ? (
-                <p className="registro-cedula-aviso"><ST>{avisoCedula}</ST></p>
+              {avisoCedula ? (
+                <p className="registro-cedula-aviso text-xs text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden="true" />
+                  <ST>{avisoCedula}</ST>
+                </p>
               ) : null}
 
               {campoLetras('nombre', tNombre, LIMITE.nombre, { autoComplete: 'given-name' })}
@@ -849,15 +907,12 @@ const Registro = () => {
                   <PasswordField
                     id="password"
                     value={form.password}
-                    onChange={(ev) => setField(
-                      'password',
-                      ev.target.value.slice(0, LIMITE.password),
-                    )}
+                    onChange={(ev) => setField('password', ev.target.value)}
                     visible={showPass}
                     onToggle={() => setShowPass((v) => !v)}
-                    maxLength={LIMITE.password}
                     ariaInvalid={Boolean(errors.password)}
                     ariaDescribedBy={errors.password ? 'password-error' : undefined}
+                    maxLength={LIMITE.password}
                   />
                   {errors.password ? (
                     <p id="password-error" className="login-field-error"><ST>{errors.password}</ST></p>
@@ -868,15 +923,12 @@ const Registro = () => {
                   <PasswordField
                     id="confirmPassword"
                     value={form.confirmPassword}
-                    onChange={(ev) => setField(
-                      'confirmPassword',
-                      ev.target.value.slice(0, LIMITE.password),
-                    )}
+                    onChange={(ev) => setField('confirmPassword', ev.target.value)}
                     visible={showConfirm}
                     onToggle={() => setShowConfirm((v) => !v)}
-                    maxLength={LIMITE.password}
                     ariaInvalid={Boolean(errors.confirmPassword)}
                     ariaDescribedBy={errors.confirmPassword ? 'confirmPassword-error' : undefined}
+                    maxLength={LIMITE.password}
                   />
                   {errors.confirmPassword ? (
                     <p id="confirmPassword-error" className="login-field-error">
@@ -887,18 +939,16 @@ const Registro = () => {
               </div>
             </>
           ) : (
-            <>
-              <p className="registro-session-note">
-                <ST>{`Cuenta: ${sessionUser?.email || sessionUser?.username || rolesDeUsuario(sessionUser).join(', ')}`}</ST>
-              </p>
-              {campoTelefono('telefono', tTelefono)}
-            </>
+            <p className="registro-session-note">
+              <ST>Sesión iniciada con</ST> <strong>{sessionUser.email}</strong>.
+            </p>
           )}
 
           <div className="registro-checks">
-            <label className={`registro-check${form.aceptoTerminos ? ' is-checked' : ''}${errors.aceptoTerminos ? ' is-error' : ''}`}>
+            <label className={cn('registro-check', form.aceptoTerminos && 'is-checked', errors.aceptoTerminos && 'is-error')}>
               <input
                 type="checkbox"
+                name="aceptoTerminos"
                 checked={form.aceptoTerminos}
                 onChange={(ev) => setField('aceptoTerminos', ev.target.checked)}
               />
@@ -909,9 +959,10 @@ const Registro = () => {
               <p className="login-field-error"><ST>{errors.aceptoTerminos}</ST></p>
             ) : null}
 
-            <label className={`registro-check${form.aceptoPrivacidad ? ' is-checked' : ''}${errors.aceptoPrivacidad ? ' is-error' : ''}`}>
+            <label className={cn('registro-check', form.aceptoPrivacidad && 'is-checked', errors.aceptoPrivacidad && 'is-error')}>
               <input
                 type="checkbox"
+                name="aceptoPrivacidad"
                 checked={form.aceptoPrivacidad}
                 onChange={(ev) => setField('aceptoPrivacidad', ev.target.checked)}
               />
@@ -923,16 +974,23 @@ const Registro = () => {
             ) : null}
           </div>
 
-          {formError ? <p className="login-error-banner" role="alert"><ST>{formError}</ST></p> : null}
+          {formError ? <p className="login-error" role="alert"><ST>{formError}</ST></p> : null}
 
-          <button type="submit" className="login-button" disabled={!canSubmit || submitting}>
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-[#1e2a22] hover:bg-[#2a3a30] text-amber-50 h-11 text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50"
+          >
             <ST>{submitting ? tEnviando : tEnviar}</ST>
-          </button>
+          </Button>
         </form>
 
         {!upgradeMode ? (
           <p className="login-footer">
-            <Link to="/login" className="login-register-link"><ST>{tLogin}</ST></Link>
+            <ST>¿Ya tenés cuenta?</ST>{' '}
+            <Link to="/login" className="login-link font-medium hover:underline text-amber-900 dark:text-amber-300">
+              <ST>Iniciar sesión</ST>
+            </Link>
           </p>
         ) : null}
       </div>
