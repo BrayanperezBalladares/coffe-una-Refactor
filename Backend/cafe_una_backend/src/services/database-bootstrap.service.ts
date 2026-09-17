@@ -218,8 +218,11 @@ export class DatabaseBootstrapService implements OnModuleInit {
           "NombreCompleto" varchar(150) NOT NULL DEFAULT '',
           "DescripcionResponsable" varchar(200) NOT NULL DEFAULT '',
           "DescripcionProyecto" varchar(300) NOT NULL DEFAULT '',
+          "Origen" varchar(50) NOT NULL DEFAULT 'UNA',
           "Activo" boolean NOT NULL DEFAULT true
         );
+        ALTER TABLE activos_fijos
+          ADD COLUMN IF NOT EXISTS "Origen" varchar(50) NOT NULL DEFAULT 'UNA';
       `);
       await this.dataSource.query(`
         CREATE TABLE IF NOT EXISTS compras (

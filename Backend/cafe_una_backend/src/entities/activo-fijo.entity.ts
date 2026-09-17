@@ -43,13 +43,11 @@ export class ActivoFijo {
   })
   DescripcionResponsable: string;
 
-  @Column({
-    name: 'DescripcionProyecto',
-    type: 'varchar',
-    length: 300,
-    default: '',
-  })
+  @Column({ name: 'DescripcionProyecto', type: 'varchar', length: 300, default: '' })
   DescripcionProyecto: string;
+
+  @Column({ name: 'Origen', type: 'varchar', length: 50, default: 'UNA' })
+  Origen: string;
 
   @Column({ name: 'Activo', type: 'boolean', default: true })
   Activo: boolean;

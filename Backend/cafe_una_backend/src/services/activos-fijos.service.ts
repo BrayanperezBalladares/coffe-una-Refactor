@@ -23,6 +23,7 @@ export type ActivoFijoResponse = {
   nombreCompleto: string;
   descripcionResponsable: string;
   descripcionProyecto: string;
+  origen: string;
   activo: boolean;
 };
 
@@ -168,7 +169,27 @@ export class ActivosFijosService {
         300,
         'descripción de proyecto',
       ),
+      Origen: this.validarOrigen(pickString(body, 'origen', 'Origen')),
     };
+  }
+
+  private validarOrigen(valor: unknown): string {
+    if (valor === null || valor === undefined || valor === '') {
+      return 'UNA';
+    }
+    const normalizado = String(valor).trim().toUpperCase();
+    if (normalizado === 'UNA') return 'UNA';
+    if (normalizado === 'FUNDAUNA' || normalizado === 'FUNDA-UNA') return 'FUNDAUNA';
+    if (
+      normalizado === 'DONACION' ||
+      normalizado === 'DONACIÓN' ||
+      normalizado === 'DONACIONES'
+    ) {
+      return 'Donación';
+    }
+    throw new BadRequestException(
+      'El origen del activo debe ser UNA, FUNDAUNA o Donación.',
+    );
   }
 
   private limitar(valor: string, max: number, etiqueta: string): string {
@@ -240,6 +261,7 @@ export class ActivosFijosService {
       nombreCompleto: row.NombreCompleto || '',
       descripcionResponsable: row.DescripcionResponsable || '',
       descripcionProyecto: row.DescripcionProyecto || '',
+      origen: row.Origen || 'UNA',
       activo: row.Activo !== false,
     };
   }

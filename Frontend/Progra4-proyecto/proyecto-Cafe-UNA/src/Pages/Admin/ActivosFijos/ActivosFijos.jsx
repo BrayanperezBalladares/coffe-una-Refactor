@@ -48,6 +48,7 @@ const EMPTY_FORM = {
   nombreCompleto: "",
   descripcionResponsable: "",
   descripcionProyecto: "",
+  origen: "UNA",
 };
 
 /** Texto libre de activo (no códigos ni nombre de persona). */
@@ -155,6 +156,16 @@ function ActivoFormModal({ open, inicial, onClose, onSave, isSaving, error }) {
       return;
     }
 
+    const origen = (form.origen || "UNA").trim();
+    if (!["UNA", "FUNDAUNA", "Donación", "Donacion"].includes(origen)) {
+      setValidationError("El origen debe ser UNA, FUNDAUNA o Donación.");
+      queueFocusFormError({
+        errors: { origen: true },
+        root: document.querySelector('[role="dialog"]'),
+      });
+      return;
+    }
+
     const textoEs = await asegurarCamposEnEspanol(
       {
         nombre,
@@ -176,6 +187,7 @@ function ActivoFormModal({ open, inicial, onClose, onSave, isSaving, error }) {
       nombreCompleto: form.nombreCompleto.trim(),
       descripcionResponsable: textoEs.descripcionResponsable,
       descripcionProyecto: textoEs.descripcionProyecto,
+      origen: origen === "Donacion" ? "Donación" : origen,
     });
   };
 
@@ -216,6 +228,20 @@ function ActivoFormModal({ open, inicial, onClose, onSave, isSaving, error }) {
             <label className="grid gap-2 text-[length:var(--text-body)] font-medium text-slate-700">
               <ST>Número de serie</ST>
               <input name="numeroSerie" value={form.numeroSerie} onChange={setField("numeroSerie")} className={fieldClass} />
+            </label>
+            <label className="grid gap-2 text-[length:var(--text-body)] font-medium text-slate-700">
+              <ST>Origen contable</ST>
+              <select
+                name="origen"
+                value={form.origen || "UNA"}
+                onChange={setField("origen")}
+                className={fieldClass}
+                required
+              >
+                <option value="UNA">UNA (Universidad Nacional)</option>
+                <option value="FUNDAUNA">FUNDAUNA (Fundación UNA)</option>
+                <option value="Donación">Donación</option>
+              </select>
             </label>
             <label className="grid gap-2 text-[length:var(--text-body)] font-medium text-slate-700">
               <ST>Fecha de compra</ST>
@@ -349,6 +375,7 @@ export default function AdminActivosFijos() {
       activo.nombre,
       activo.modelo,
       activo.numeroSerie,
+      activo.origen,
       activo.codigoProyecto,
       activo.nombreCompleto,
       activo.descripcionResponsable,
@@ -361,6 +388,13 @@ export default function AdminActivosFijos() {
           if (valor === "activos") return lista.filter((item) => item.activo);
           if (valor === "inactivos") return lista.filter((item) => !item.activo);
           return lista;
+        },
+      },
+      {
+        id: "origen",
+        aplicar: (lista, valor) => {
+          if (!valor || valor === "todos") return lista;
+          return lista.filter((item) => (item.origen || "UNA") === valor);
         },
       },
     ],
@@ -514,6 +548,18 @@ export default function AdminActivosFijos() {
                       { value: "inactivos", label: "Inactivos" },
                     ],
                   },
+                  {
+                    id: "origen",
+                    label: "Origen",
+                    value: filters.valoresFiltro.origen || "todos",
+                    onChange: (valor) => filters.setValorFiltro("origen", valor),
+                    opciones: [
+                      { value: "todos", label: "Todos los orígenes" },
+                      { value: "UNA", label: "UNA" },
+                      { value: "FUNDAUNA", label: "FUNDAUNA" },
+                      { value: "Donación", label: "Donación" },
+                    ],
+                  },
                 ]}
               />
 
@@ -527,6 +573,7 @@ export default function AdminActivosFijos() {
                       <tr>
                         <th><ST>Código</ST></th>
                         <th><ST>Nombre</ST></th>
+                        <th><ST>Origen</ST></th>
                         <th className="hidden md:table-cell"><ST>Compra</ST></th>
                         <th><ST>Valor</ST></th>
                         <th><ST>Estado</ST></th>
@@ -545,6 +592,19 @@ export default function AdminActivosFijos() {
                             {activo.descripcionProyecto ? (
                               <div className="mt-1 text-slate-500"><ST>{activo.descripcionProyecto}</ST></div>
                             ) : null}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                activo.origen === "FUNDAUNA"
+                                  ? "border border-purple-200 bg-purple-50 text-purple-700"
+                                  : activo.origen === "Donación"
+                                  ? "border border-amber-200 bg-amber-50 text-amber-800"
+                                  : "border border-blue-200 bg-blue-50 text-blue-700"
+                              }`}
+                            >
+                              <ST>{activo.origen || "UNA"}</ST>
+                            </span>
                           </td>
                           <td className="hidden px-4 py-3 text-slate-600 md:table-cell">{formatFecha(activo.fechaCompra)}</td>
                           <td className="px-4 py-3 font-medium text-slate-900">{formatCRC(activo.valorEnLibro)}</td>

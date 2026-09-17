@@ -203,6 +203,11 @@ const DICCIONARIO = {
   "2° Apellido": "2nd last name",
   "Ej. Universidad Nacional": "e.g. National University",
   "Ej. Costa Rica": "e.g. Costa Rica",
+  "Origen contable": "Accounting origin",
+  "Origen": "Origin",
+  "Todos los orígenes": "All origins",
+  "UNA (Universidad Nacional)": "UNA (National University)",
+  "FUNDAUNA (Fundación UNA)": "FUNDAUNA (UNA Foundation)",
 
   // Visitas y Formularios
   "Costarricense": "Costa Rican",

@@ -40,6 +40,7 @@ export function normalizarActivoFijo(activo) {
     descripcionProyecto: String(
       firstDefined(activo, ["descripcionProyecto", "DescripcionProyecto"]) || "",
     ).trim(),
+    origen: String(firstDefined(activo, ["origen", "Origen"]) || "UNA").trim(),
     activo: toBoolean(firstDefined(activo, ["activo", "Activo"]) ?? true),
   };
 }
