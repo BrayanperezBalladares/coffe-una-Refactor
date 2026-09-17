@@ -63,7 +63,7 @@ describe('Registro.jsx - Feature 1 Document Selection, Countries and shadcn', ()
     await user.click(dimexBtn);
 
     // CountryCombobox must now appear
-    const countryPicker = screen.getByRole('combobox', { name: /país de procedencia/i });
+    const countryPicker = screen.getByRole('combobox');
     expect(countryPicker).toBeInTheDocument();
   });
 
@@ -76,7 +76,7 @@ describe('Registro.jsx - Feature 1 Document Selection, Countries and shadcn', ()
     await user.click(pasaporteBtn);
 
     // Open Country Combobox
-    const countryPicker = screen.getByRole('combobox', { name: /país de procedencia/i });
+    const countryPicker = screen.getByRole('combobox');
     await user.click(countryPicker);
 
     // Search input should be present
@@ -150,7 +150,7 @@ describe('Registro.jsx - Feature 1 Document Selection, Countries and shadcn', ()
     await user.click(screen.getByRole('radio', { name: /pasaporte/i }));
 
     // Select Country
-    const countryPicker = screen.getByRole('combobox', { name: /país de procedencia/i });
+    const countryPicker = screen.getByRole('combobox');
     await user.click(countryPicker);
     const searchInput = screen.getByPlaceholderText(/escribí para buscar país/i);
     await user.type(searchInput, 'Canad');

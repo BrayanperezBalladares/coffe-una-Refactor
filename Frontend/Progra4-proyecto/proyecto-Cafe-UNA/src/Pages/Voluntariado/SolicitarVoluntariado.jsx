@@ -42,6 +42,7 @@ import {
   TIPOS_VOLUNTARIADO,
 } from "../../lib/voluntariadoCatalogo";
 import { Calendar } from "@/Components/ui/calendar";
+import { CountryCombobox } from "@/Components/ui/CountryCombobox";
 import { queueFocusFormError } from "../../lib/formFocus";
 import { filtrarEnteros } from "../../lib/numericInput";
 import {
@@ -1040,16 +1041,33 @@ function SolicitarVoluntariado() {
                       <label htmlFor="vol-pais">
                         {tPais}<span className="req">*</span>
                       </label>
-                      <input id="vol-pais"
-                        type="text"
-                        name="pais"
-                        placeholder={tPhPais}
-                        value={formulario.pais}
-                        onChange={handleChange}
-                        readOnly={esNacionalCr}
-                        disabled={!formulario.esNacional}
-                      />
-                      {errores.pais && <span className="mensaje-error"><ST>{errores.pais}</ST></span>}
+                      {esNacionalCr ? (
+                        <input id="vol-pais"
+                          type="text"
+                          name="pais"
+                          placeholder={tPhPais}
+                          value={formulario.pais}
+                          readOnly
+                          disabled={!formulario.esNacional}
+                        />
+                      ) : (
+                        <CountryCombobox
+                          id="vol-pais"
+                          name="pais"
+                          value={formulario.pais}
+                          onChange={(nuevoPais) => {
+                            setFormulario((prev) => ({ ...prev, pais: nuevoPais }));
+                            if (errores.pais) {
+                              setErrores((prev) => ({ ...prev, pais: "" }));
+                            }
+                          }}
+                          disabled={!formulario.esNacional}
+                          error={Boolean(errores.pais)}
+                          ariaDescribedBy={errores.pais ? "vol-pais-error" : undefined}
+                          placeholder={tPhPais || "Seleccioná tu país..."}
+                        />
+                      )}
+                      {errores.pais && <span id="vol-pais-error" className="mensaje-error"><ST>{errores.pais}</ST></span>}
                     </div>
                   </div>
                 </SectionCard>

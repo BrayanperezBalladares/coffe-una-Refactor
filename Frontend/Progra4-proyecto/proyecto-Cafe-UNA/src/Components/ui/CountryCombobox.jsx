@@ -117,15 +117,24 @@ export function CountryCombobox({
       className={cn('relative w-full country-combobox-root', className)}
       onKeyDown={handleKeyDown}
     >
+      <input
+        type="text"
+        name={name}
+        id={id ? `${id}-input` : undefined}
+        value={value || ''}
+        onChange={(e) => onChange?.(e.target.value)}
+        aria-label={ariaLabel}
+        tabIndex={-1}
+        className="sr-only"
+      />
       <button
         type="button"
         id={id}
-        name={name}
         disabled={disabled}
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
-        aria-label={ariaLabel}
+        aria-label={open ? 'Cerrar selector de país' : 'Abrir selector de país'}
         aria-describedby={ariaDescribedBy}
         aria-invalid={error}
         onClick={() => !disabled && setOpen((prev) => !prev)}

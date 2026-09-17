@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Calendar } from "@/Components/ui/calendar";
+import { CountryCombobox } from "@/Components/ui/CountryCombobox";
 import PageLoading from "../../Components/PageLoading/PageLoading";
 import BackToHomeLink from "../../Components/BackToHomeLink/BackToHomeLink";
 import AvisoSedeFinca from "../../Components/AvisoSedeFinca/AvisoSedeFinca";
@@ -602,12 +603,17 @@ export default function SolicitarVisita() {
                 {form.tipoVisitante === "Internacional" ? (
                   <div className="form-grid--3cols">
                     <Field label="País de procedencia *">
-                      <input
+                      <CountryCombobox
+                        id="vis-pais"
                         name="paisProcedencia"
-                        aria-label="País de procedencia"
                         value={form.paisProcedencia}
-                        onChange={update}
-                        placeholder="País de origen"
+                        onChange={(nuevoPais) => {
+                          setForm((prev) => ({ ...prev, paisProcedencia: nuevoPais }));
+                          setError("");
+                        }}
+                        ariaLabel="País de procedencia *"
+                        placeholder="Seleccioná tu país..."
+                        error={Boolean(error && !form.paisProcedencia.trim())}
                       />
                     </Field>
                     <Field label="Provincia o Estado *">

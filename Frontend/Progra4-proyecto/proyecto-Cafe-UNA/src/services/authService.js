@@ -63,15 +63,9 @@ export function marcarIntentRegistroCliente() {
   }
 }
 
-/** Solo se permite /registro si viene del checkout o ya empezó verificación. */
+/** Permite acceso público al registro de clientes. */
 export function puedeAbrirRegistroCliente() {
-  try {
-    if (sessionStorage.getItem(REGISTRO_CLIENTE_INTENT_KEY) === "1") return true;
-    if (sessionStorage.getItem("registroClienteCorreo")) return true;
-  } catch {
-    /* ignore */
-  }
-  return false;
+  return true;
 }
 
 export function limpiarIntentRegistroCliente() {
