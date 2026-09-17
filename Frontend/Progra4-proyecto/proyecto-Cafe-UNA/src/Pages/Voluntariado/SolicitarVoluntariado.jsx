@@ -79,9 +79,13 @@ function SectionCard({ icon: Icon, paso, title, hint, children }) {
                 <ST>Paso</ST> {paso}.{" "}
               </span>
             ) : null}
-            {title}
+            {typeof title === "string" ? <ST>{title}</ST> : title}
           </h4>
-          {hint ? <p className="section-card__hint">{hint}</p> : null}
+          {hint ? (
+            <p className="section-card__hint">
+              {typeof hint === "string" ? <ST>{hint}</ST> : hint}
+            </p>
+          ) : null}
         </div>
         {Icon ? <Icon size={20} className="section-card__icon-inline" aria-hidden="true" /> : null}
       </div>
@@ -241,8 +245,8 @@ function SolicitarVoluntariado() {
   const esNacionalCr = formulario.esNacional === "si";
   const consultaCedulaRef = useRef({ digitos: "", enCurso: false });
   const pasos = esGrupal
-    ? { personal: 1, contacto: 2, grupo: 3, tipo: 4, fecha: 5, horario: 6 }
-    : { personal: 1, contacto: 2, tipo: 3, fecha: 4, horario: 5 };
+    ? { tipo: 1, fecha: 2, horario: 3, personal: 4, contacto: 5, grupo: 6 }
+    : { tipo: 1, fecha: 2, horario: 3, personal: 4, contacto: 5 };
 
   // Cargar resumen de disponibilidad de tipos
   useEffect(() => {
@@ -742,6 +746,10 @@ function SolicitarVoluntariado() {
         root: e.currentTarget,
         fieldMap: VOLUNTARIADO_FIELD_MAP,
         fieldOrder: [
+          "tipo",
+          "tipoOtro",
+          "fechaVoluntariado",
+          "disponibilidad",
           "esNacional",
           "identificacion",
           "nombre",
@@ -752,10 +760,6 @@ function SolicitarVoluntariado() {
           "telefono",
           "cantidadParticipantes",
           "documentoGrupo",
-          "tipo",
-          "tipoOtro",
-          "fechaVoluntariado",
-          "disponibilidad",
         ],
       });
       return;
@@ -889,6 +893,268 @@ function SolicitarVoluntariado() {
 
               <div className="form-secciones">
                 <SectionCard
+                  paso={pasos.tipo}
+                  icon={Sprout}
+                  title={tPaso1}
+                  hint={tPaso1Hint}
+                >
+                  <div className="opciones-radio-lista">
+                    {TIPOS_VOLUNTARIADO.map((tipo) => {
+                      const count = getCantidadFechas(
+                        resumenTipos,
+                        tipo,
+                        formulario.tipo === tipo ? fechasDisponibles : []
+                      );
+                      const tieneFechas = count > 0;
+                      const esSeleccionado = formulario.tipo === tipo;
+                      const TipoIcon = getTipoIcon(tipo);
+
+                      return (
+                        <label
+                          key={tipo}
+                          className={`opcion-radio ${
+                            esSeleccionado ? "opcion-radio--activa" : ""
+                          } ${!tieneFechas ? "opcion-radio--sin-fechas" : ""}`}
+                        >
+                          <input
+                            type="radio"
+                            name="tipoVoluntariado"
+                            value={tipo}
+                            checked={esSeleccionado}
+                            onChange={() => handleTipoVoluntariado(tipo)}
+                          />
+                          <div className="opcion-radio__left">
+                            <span className="opcion-radio__indicador" />
+                            <div className="opcion-radio__icon-box">
+                              <TipoIcon size={18} className="opcion-radio__icon" aria-hidden="true" />
+                            </div>
+                            <div className="opcion-radio__meta">
+                              <span className="opcion-radio__titulo">
+                                <ST>{tipo}</ST>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="opcion-radio__right">
+                            {tieneFechas ? (
+                              <span className="opcion-radio__badge-disponible">
+                                <CalendarDays className="size-3.5" />
+                                <span>{count} {count === 1 ? "fecha disponible" : "fechas disponibles"}</span>
+                              </span>
+                            ) : (
+                              <span className="opcion-radio__badge-nodisponible">
+                                <CalendarX2 className="size-3.5" />
+                                <span><ST>Sin fechas disponibles</ST></span>
+                              </span>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {esTipoOtro && (
+                    <div className="campo tipo-otro mt-3">
+                      <input
+                        type="text"
+                        name="tipoOtro"
+                        placeholder="Describa el tipo de voluntariado en el que desea participar"
+                        aria-label="Descripción del tipo de voluntariado"
+                        value={formulario.tipoOtro}
+                        onChange={handleChange}
+                      />
+                      {errores.tipoOtro && (
+                        <span className="mensaje-error"><ST>{errores.tipoOtro}</ST></span>
+                      )}
+                    </div>
+                  )}
+
+                  {formulario.tipo && !tipoSeleccionadoTieneFechas && !cargandoFechas && (
+                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 flex items-start gap-2">
+                      <AlertCircle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">
+                          <ST>No hay fechas habilitadas para este tipo de voluntariado actualmente.</ST>
+                        </p>
+                        <p className="mt-0.5 text-amber-700">
+                          <ST>Por favor seleccione otra modalidad con fechas disponibles o consulte más adelante.</ST>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {errores.tipo && <span className="mensaje-error mt-2 block"><ST>{errores.tipo}</ST></span>}
+                </SectionCard>
+
+                <SectionCard
+                  paso={pasos.fecha}
+                  icon={CalendarCheck2}
+                  title={tPaso2}
+                  hint={tPaso2Hint}
+                >
+                  {!formulario.tipo ? (
+                    <div className="voluntariado-aviso-bloque">
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <Sprout className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
+                      <p className="voluntariado-aviso-bloque__titulo">
+                        <ST>Elegí primero el tipo de voluntariado</ST>
+                      </p>
+                      <p className="voluntariado-aviso-bloque__texto">
+                        <ST>El calendario se habilitará automáticamente con las fechas disponibles para la modalidad seleccionada.</ST>
+                      </p>
+                    </div>
+                  ) : cargandoFechas ? (
+                    <div className="voluntariado-aviso-bloque">
+                      <div className="size-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mb-2" />
+                      <p className="voluntariado-aviso-bloque__texto">
+                        <ST>Consultando fechas disponibles para {formulario.tipo}...</ST>
+                      </p>
+                    </div>
+                  ) : !tipoSeleccionadoTieneFechas ? (
+                    <div className="voluntariado-aviso-bloque">
+                      <CalendarX2 className="voluntariado-aviso-bloque__icono size-8 text-amber-500" />
+                      <p className="voluntariado-aviso-bloque__titulo text-amber-900">
+                        <ST>Sin fechas configuradas</ST>
+                      </p>
+                      <p className="voluntariado-aviso-bloque__texto text-amber-700">
+                        <ST>Actualmente no hay fechas disponibles para "{formulario.tipo}". No es posible seleccionar fechas ni enviar solicitudes para esta opción.</ST>
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="campo full flex flex-col items-center">
+                      {fechaSeleccionada && (
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-900 bg-white px-5 py-2 shadow-xs">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            <ST>FECHA SELECCIONADA:</ST>
+                          </span>
+                          <span className="text-xs font-bold text-slate-950 capitalize">
+                            {format(fechaSeleccionada, "EEEE, dd 'de' MMMM 'de' yyyy", { locale })}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-center my-1 w-full">
+                        <Calendar
+                          mode="single"
+                          selected={fechaSeleccionada}
+                          onSelect={handleSelectFecha}
+                          disabled={isDateDisabled}
+                          locale={locale}
+                          modifiers={{
+                            habilitado: fechasHabilitadasDates,
+                          }}
+                          modifiersClassNames={{
+                            habilitado: "rdp-day-habilitado",
+                          }}
+                          captionLayout="dropdown"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600 mt-4 pt-2">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-slate-950 bg-white font-bold text-slate-950 text-[11px]">
+                            15
+                          </span>
+                          <span><ST>Fecha disponible para {formulario.tipo}</ST></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex size-5 items-center justify-center text-slate-400 opacity-40 text-[11px]">
+                            15
+                          </span>
+                          <span><ST>Fecha no disponible</ST></span>
+                        </div>
+                      </div>
+
+                      {errores.fechaVoluntariado && (
+                        <span className="mensaje-error text-center block w-full mt-2">
+                          <ST>{errores.fechaVoluntariado}</ST>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </SectionCard>
+
+                <SectionCard
+                  paso={pasos.horario}
+                  icon={Clock}
+                  title={tPaso3}
+                  hint={tPaso3Hint}
+                >
+                  {!formulario.tipo ? (
+                    <div className="voluntariado-aviso-bloque">
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <Clock className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
+                      <p className="voluntariado-aviso-bloque__titulo">
+                        <ST>Paso pendiente: tipo de voluntariado</ST>
+                      </p>
+                      <p className="voluntariado-aviso-bloque__texto">
+                        <ST>Completá los pasos anteriores para visualizar los horarios disponibles.</ST>
+                      </p>
+                    </div>
+                  ) : !formulario.fechaVoluntariado ? (
+                    <div className="voluntariado-aviso-bloque">
+                      <div className="voluntariado-aviso-bloque__icono-wrap">
+                        <CalendarDays className="voluntariado-aviso-bloque__icono size-6" />
+                      </div>
+                      <p className="voluntariado-aviso-bloque__titulo">
+                        <ST>Seleccioná una fecha en el calendario</ST>
+                      </p>
+                      <p className="voluntariado-aviso-bloque__texto">
+                        <ST>Al elegir un día, se cargarán los horarios o turnos configurados para esa fecha.</ST>
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="campo full">
+                      <p className="text-xs font-semibold text-slate-700 mb-3">
+                        <ST>Horarios disponibles para el día</ST>{" "}
+                        <strong>
+                          {fechaSeleccionada ? format(fechaSeleccionada, "dd 'de' MMMM", { locale }) : formulario.fechaVoluntariado}
+                        </strong>:
+                      </p>
+
+                      <div className="opciones-disponibilidad-grid">
+                        {horariosDisponiblesParaFecha.map((horarioStr) => {
+                          const esActivo = formulario.disponibilidad === horarioStr;
+                          return (
+                            <label
+                              key={horarioStr}
+                              className={`opcion-disponibilidad-card ${
+                                esActivo ? "opcion-disponibilidad-card--activa" : ""
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="disponibilidad"
+                                value={horarioStr}
+                                checked={esActivo}
+                                onChange={() => handleDisponibilidad(horarioStr)}
+                              />
+                              <div className="opcion-disponibilidad__header">
+                                <span className="opcion-disponibilidad__titulo">
+                                  {horarioStr}
+                                </span>
+                                <span className="opcion-disponibilidad__radio-dot" />
+                              </div>
+                              <span className="opcion-disponibilidad__horario">
+                                <Clock size={14} />
+                                {horarioStr}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {errores.disponibilidad && (
+                        <span className="mensaje-error mt-2 block">
+                          <ST>{errores.disponibilidad}</ST>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </SectionCard>
+
+                <SectionCard
                   paso={pasos.personal}
                   icon={User}
                   title={esGrupal ? tInfoResponsable : tInfoPersonal}
@@ -907,7 +1173,7 @@ function SolicitarVoluntariado() {
                           checked={formulario.esNacional === "si"}
                           onChange={() => handleEsNacional("si")}
                         />
-                        <span>{tSi}</span>
+                        <span><ST>Costarricense</ST></span>
                       </label>
                       <label className="radio-card">
                         <input
@@ -917,7 +1183,7 @@ function SolicitarVoluntariado() {
                           checked={formulario.esNacional === "no"}
                           onChange={() => handleEsNacional("no")}
                         />
-                        <span>{tNo}</span>
+                        <span><ST>Extranjero</ST></span>
                       </label>
                     </div>
                     {errores.esNacional && (
@@ -1185,268 +1451,6 @@ function SolicitarVoluntariado() {
                     </div>
                   </SectionCard>
                 )}
-
-                <SectionCard
-                  paso={pasos.tipo}
-                  icon={Sprout}
-                  title={tPaso1}
-                  hint={tPaso1Hint}
-                >
-                  <div className="opciones-radio-lista">
-                    {TIPOS_VOLUNTARIADO.map((tipo) => {
-                      const count = getCantidadFechas(
-                        resumenTipos,
-                        tipo,
-                        formulario.tipo === tipo ? fechasDisponibles : []
-                      );
-                      const tieneFechas = count > 0;
-                      const esSeleccionado = formulario.tipo === tipo;
-                      const TipoIcon = getTipoIcon(tipo);
-
-                      return (
-                        <label
-                          key={tipo}
-                          className={`opcion-radio ${
-                            esSeleccionado ? "opcion-radio--activa" : ""
-                          } ${!tieneFechas ? "opcion-radio--sin-fechas" : ""}`}
-                        >
-                          <input
-                            type="radio"
-                            name="tipoVoluntariado"
-                            value={tipo}
-                            checked={esSeleccionado}
-                            onChange={() => handleTipoVoluntariado(tipo)}
-                          />
-                          <div className="opcion-radio__left">
-                            <span className="opcion-radio__indicador" />
-                            <div className="opcion-radio__icon-box">
-                              <TipoIcon size={18} className="opcion-radio__icon" aria-hidden="true" />
-                            </div>
-                            <div className="opcion-radio__meta">
-                              <span className="opcion-radio__titulo">
-                                <ST>{tipo}</ST>
-                              </span>
-                            </div>
-                          </div>
-                          <div className="opcion-radio__right">
-                            {tieneFechas ? (
-                              <span className="opcion-radio__badge-disponible">
-                                <CalendarDays className="size-3.5" />
-                                <span>{count} {count === 1 ? "fecha disponible" : "fechas disponibles"}</span>
-                              </span>
-                            ) : (
-                              <span className="opcion-radio__badge-nodisponible">
-                                <CalendarX2 className="size-3.5" />
-                                <span><ST>Sin fechas disponibles</ST></span>
-                              </span>
-                            )}
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-
-                  {esTipoOtro && (
-                    <div className="campo tipo-otro mt-3">
-                      <input
-                        type="text"
-                        name="tipoOtro"
-                        placeholder="Describa el tipo de voluntariado en el que desea participar"
-                        aria-label="Descripción del tipo de voluntariado"
-                        value={formulario.tipoOtro}
-                        onChange={handleChange}
-                      />
-                      {errores.tipoOtro && (
-                        <span className="mensaje-error"><ST>{errores.tipoOtro}</ST></span>
-                      )}
-                    </div>
-                  )}
-
-                  {formulario.tipo && !tipoSeleccionadoTieneFechas && !cargandoFechas && (
-                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 flex items-start gap-2">
-                      <AlertCircle className="size-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold">
-                          <ST>No hay fechas habilitadas para este tipo de voluntariado actualmente.</ST>
-                        </p>
-                        <p className="mt-0.5 text-amber-700">
-                          <ST>Por favor seleccione otra modalidad con fechas disponibles o consulte más adelante.</ST>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {errores.tipo && <span className="mensaje-error mt-2 block"><ST>{errores.tipo}</ST></span>}
-                </SectionCard>
-
-                <SectionCard
-                  paso={pasos.fecha}
-                  icon={CalendarCheck2}
-                  title={tPaso2}
-                  hint={tPaso2Hint}
-                >
-                  {!formulario.tipo ? (
-                    <div className="voluntariado-aviso-bloque">
-                      <div className="voluntariado-aviso-bloque__icono-wrap">
-                        <Sprout className="voluntariado-aviso-bloque__icono size-6" />
-                      </div>
-                      <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Elegí primero el tipo de voluntariado</ST>
-                      </p>
-                      <p className="voluntariado-aviso-bloque__texto">
-                        <ST>El calendario se habilitará automáticamente con las fechas disponibles para la modalidad seleccionada.</ST>
-                      </p>
-                    </div>
-                  ) : cargandoFechas ? (
-                    <div className="voluntariado-aviso-bloque">
-                      <div className="size-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mb-2" />
-                      <p className="voluntariado-aviso-bloque__texto">
-                        <ST>Consultando fechas disponibles para {formulario.tipo}...</ST>
-                      </p>
-                    </div>
-                  ) : !tipoSeleccionadoTieneFechas ? (
-                    <div className="voluntariado-aviso-bloque">
-                      <CalendarX2 className="voluntariado-aviso-bloque__icono size-8 text-amber-500" />
-                      <p className="voluntariado-aviso-bloque__titulo text-amber-900">
-                        <ST>Sin fechas configuradas</ST>
-                      </p>
-                      <p className="voluntariado-aviso-bloque__texto text-amber-700">
-                        <ST>Actualmente no hay fechas disponibles para "{formulario.tipo}". No es posible seleccionar fechas ni enviar solicitudes para esta opción.</ST>
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="campo full flex flex-col items-center">
-                      {fechaSeleccionada && (
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-900 bg-white px-5 py-2 shadow-xs">
-                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            <ST>FECHA SELECCIONADA:</ST>
-                          </span>
-                          <span className="text-xs font-bold text-slate-950 capitalize">
-                            {format(fechaSeleccionada, "EEEE, dd 'de' MMMM 'de' yyyy", { locale })}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex justify-center my-1 w-full">
-                        <Calendar
-                          mode="single"
-                          selected={fechaSeleccionada}
-                          onSelect={handleSelectFecha}
-                          disabled={isDateDisabled}
-                          locale={locale}
-                          modifiers={{
-                            habilitado: fechasHabilitadasDates,
-                          }}
-                          modifiersClassNames={{
-                            habilitado: "rdp-day-habilitado",
-                          }}
-                          captionLayout="dropdown"
-                        />
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600 mt-4 pt-2">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-slate-950 bg-white font-bold text-slate-950 text-[11px]">
-                            15
-                          </span>
-                          <span><ST>Fecha disponible para {formulario.tipo}</ST></span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex size-5 items-center justify-center text-slate-400 opacity-40 text-[11px]">
-                            15
-                          </span>
-                          <span><ST>Fecha no disponible</ST></span>
-                        </div>
-                      </div>
-
-                      {errores.fechaVoluntariado && (
-                        <span className="mensaje-error text-center block w-full mt-2">
-                          <ST>{errores.fechaVoluntariado}</ST>
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </SectionCard>
-
-                <SectionCard
-                  paso={pasos.horario}
-                  icon={Clock}
-                  title={tPaso3}
-                  hint={tPaso3Hint}
-                >
-                  {!formulario.tipo ? (
-                    <div className="voluntariado-aviso-bloque">
-                      <div className="voluntariado-aviso-bloque__icono-wrap">
-                        <Clock className="voluntariado-aviso-bloque__icono size-6" />
-                      </div>
-                      <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Paso pendiente: tipo de voluntariado</ST>
-                      </p>
-                      <p className="voluntariado-aviso-bloque__texto">
-                        <ST>Completá los pasos anteriores para visualizar los horarios disponibles.</ST>
-                      </p>
-                    </div>
-                  ) : !formulario.fechaVoluntariado ? (
-                    <div className="voluntariado-aviso-bloque">
-                      <div className="voluntariado-aviso-bloque__icono-wrap">
-                        <CalendarDays className="voluntariado-aviso-bloque__icono size-6" />
-                      </div>
-                      <p className="voluntariado-aviso-bloque__titulo">
-                        <ST>Seleccioná una fecha en el calendario</ST>
-                      </p>
-                      <p className="voluntariado-aviso-bloque__texto">
-                        <ST>Al elegir un día, se cargarán los horarios o turnos configurados para esa fecha.</ST>
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="campo full">
-                      <p className="text-xs font-semibold text-slate-700 mb-3">
-                        <ST>Horarios disponibles para el día</ST>{" "}
-                        <strong>
-                          {fechaSeleccionada ? format(fechaSeleccionada, "dd 'de' MMMM", { locale }) : formulario.fechaVoluntariado}
-                        </strong>:
-                      </p>
-
-                      <div className="opciones-disponibilidad-grid">
-                        {horariosDisponiblesParaFecha.map((horarioStr) => {
-                          const esActivo = formulario.disponibilidad === horarioStr;
-                          return (
-                            <label
-                              key={horarioStr}
-                              className={`opcion-disponibilidad-card ${
-                                esActivo ? "opcion-disponibilidad-card--activa" : ""
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="disponibilidad"
-                                value={horarioStr}
-                                checked={esActivo}
-                                onChange={() => handleDisponibilidad(horarioStr)}
-                              />
-                              <div className="opcion-disponibilidad__header">
-                                <span className="opcion-disponibilidad__titulo">
-                                  {horarioStr}
-                                </span>
-                                <span className="opcion-disponibilidad__radio-dot" />
-                              </div>
-                              <span className="opcion-disponibilidad__horario">
-                                <Clock size={14} />
-                                {horarioStr}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {errores.disponibilidad && (
-                        <span className="mensaje-error mt-2 block">
-                          <ST>{errores.disponibilidad}</ST>
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </SectionCard>
               </div>
 
               {errorApi && <p className="form-error" role="alert" data-form-error><ST>{errorApi}</ST></p>}
