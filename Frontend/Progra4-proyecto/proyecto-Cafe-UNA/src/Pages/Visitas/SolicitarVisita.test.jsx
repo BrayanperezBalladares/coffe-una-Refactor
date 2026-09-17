@@ -40,6 +40,7 @@ vi.mock("../../services/cedulaService", () => ({
 }));
 
 import SolicitarVisita from "./SolicitarVisita";
+import * as pdfVisitasModule from "../../lib/exportarRecomendacionesVisitaPdf";
 
 describe("SolicitarVisita", () => {
   beforeEach(() => {
@@ -215,5 +216,16 @@ describe("SolicitarVisita", () => {
         ciudadProvincia: "Estados Unidos",
       }),
     );
+  });
+
+  it("renders the PDF download button and triggers descargarRecomendacionesVisitaPdf upon click", async () => {
+    const descargarSpy = vi.spyOn(pdfVisitasModule, "descargarRecomendacionesVisitaPdf").mockResolvedValue();
+    render(<SolicitarVisita />);
+
+    const downloadBtn = screen.getByRole("button", { name: /descargar recomendaciones/i });
+    expect(downloadBtn).toBeInTheDocument();
+
+    fireEvent.click(downloadBtn);
+    expect(descargarSpy).toHaveBeenCalledTimes(1);
   });
 });

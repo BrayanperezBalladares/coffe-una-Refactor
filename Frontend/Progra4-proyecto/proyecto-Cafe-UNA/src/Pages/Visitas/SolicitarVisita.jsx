@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  FileDown,
   Lock,
   Sparkles,
   UserRound,
@@ -32,6 +33,7 @@ import {
   crearSolicitudVisita,
   obtenerDisponibilidadVisitasPublica,
 } from "../../services/visitasService";
+import { descargarRecomendacionesVisitaPdf } from "../../lib/exportarRecomendacionesVisitaPdf";
 import { useIdioma } from "../../lib/useIdioma";
 import { useTraducir } from "../../hooks/useTraducir";
 import { ST } from "../../Components/T/ST";
@@ -145,6 +147,18 @@ export default function SolicitarVisita() {
   const [consultandoCedula, setConsultandoCedula] = useState(false);
   const [avisoCedula, setAvisoCedula] = useState(null);
   const [sedeFinca, setSedeFinca] = useState(() => sedeDesdeHomeLocation(null));
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+
+  const handleDescargarRecomendacionesPdf = async () => {
+    try {
+      setDescargandoPdf(true);
+      await descargarRecomendacionesVisitaPdf();
+    } catch (err) {
+      console.error("Error al generar el PDF de recomendaciones:", err);
+    } finally {
+      setDescargandoPdf(false);
+    }
+  };
 
   const tPhId = useTraducir(form.tipoVisitante === "Internacional" ? "Pasaporte o ID" : "101110111");
   const tPhNombre = useTraducir("Nombre");
@@ -939,9 +953,21 @@ export default function SolicitarVisita() {
                 </fieldset>
 
                 <div className="visita-recomendaciones">
-                  <div className="visita-recomendaciones__header">
-                    <Sparkles size={16} className="text-amber-700" />
-                    <strong><ST>Recomendaciones para el recorrido</ST></strong>
+                  <div className="visita-recomendaciones__header flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-amber-700 shrink-0" />
+                      <strong><ST>Recomendaciones para el recorrido</ST></strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleDescargarRecomendacionesPdf}
+                      disabled={descargandoPdf}
+                      className="visita-btn-descargar-pdf inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+                      title="Descargar guía y recomendaciones oficiales en formato PDF"
+                    >
+                      <FileDown size={14} className="text-amber-700 shrink-0" />
+                      <span><ST>{descargandoPdf ? "Generando PDF..." : "Descargar recomendaciones (PDF)"}</ST></span>
+                    </button>
                   </div>
                   <ul className="visita-recomendaciones__list">
                     <li><ST>Usá vestimenta cómoda y calzado cerrado apropiado para senderos al aire libre.</ST></li>
@@ -970,9 +996,28 @@ export default function SolicitarVisita() {
               </p>
             ) : null}
             {success ? (
-              <p className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">
-                <CheckCircle2 aria-hidden="true" /> <ST>Solicitud #{success.id} enviada en estado {success.estado}.</ST>
-              </p>
+              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/90 p-5 text-emerald-950 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4" role="status">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 size={24} className="text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
+                  <div>
+                    <p className="font-bold text-base">
+                      <ST>¡Solicitud de visita enviada con éxito!</ST>
+                    </p>
+                    <p className="text-sm text-emerald-800 mt-0.5">
+                      <ST>Solicitud #{success.id} enviada en estado {success.estado}. Te notificaremos por correo electrónico.</ST>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDescargarRecomendacionesPdf}
+                  disabled={descargandoPdf}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer shrink-0"
+                >
+                  <FileDown size={15} />
+                  <span><ST>Descargar guía de visita (PDF)</ST></span>
+                </button>
+              </div>
             ) : null}
 
             {!isAuthenticated ? (

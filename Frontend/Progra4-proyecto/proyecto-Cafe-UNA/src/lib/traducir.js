@@ -270,6 +270,12 @@ const DICCIONARIO = {
     "Bring repellent if visiting areas with dense vegetation or coffee crops.",
   "Considerá protección solar e hidratación suficiente para el recorrido.":
     "Consider sun protection and sufficient hydration for the tour.",
+  "Llegar 10 minutos antes de la hora acordada para iniciar puntualmente.":
+    "Arrive 10 minutes before the agreed time to start promptly.",
+  "Descargar recomendaciones (PDF)": "Download recommendations (PDF)",
+  "Descargar guía de visita (PDF)": "Download visit guide (PDF)",
+  "Generando PDF...": "Generating PDF...",
+  "¡Solicitud de visita enviada con éxito!": "Visit request submitted successfully!",
   "Observaciones o solicitudes especiales": "Remarks or special requests",
   "Observaciones o requerimientos especiales (opcional)": "Remarks or special requirements (optional)",
   "Detalles adicionales, temática de interés o requerimientos especiales…":
