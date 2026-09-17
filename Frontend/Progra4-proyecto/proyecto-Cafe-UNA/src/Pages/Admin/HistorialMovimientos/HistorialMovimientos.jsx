@@ -32,6 +32,7 @@ function formatFechaHora(valor) {
 function claseBadgeTipo(tipo) {
   if (tipo === "entrada") return "bg-emerald-50 text-emerald-800 border border-emerald-200";
   if (tipo === "transferencia") return "bg-sky-50 text-sky-800 border border-sky-200";
+  if (tipo === "salida") return "bg-amber-50 text-amber-800 border border-amber-200";
   if (tipo === "venta_presencial" || tipo === "venta_web") return "bg-rose-50 text-rose-800 border border-rose-200";
   return "bg-slate-100 text-slate-700 border border-slate-200";
 }
@@ -133,6 +134,7 @@ export default function AdminHistorialMovimientos() {
       { value: "todos", label: t("Todos los tipos") },
       { value: "entrada", label: t("Entrada") },
       { value: "transferencia", label: t("Transferencia") },
+      { value: "salida", label: t("Salida") },
       { value: "venta_presencial", label: t("Venta presencial") },
       { value: "venta_web", label: t("Venta web") },
     ],
@@ -368,7 +370,7 @@ export default function AdminHistorialMovimientos() {
                         <span
                           className={`admin-chip-estado inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${claseBadgeTipo(row.tipo)}`}
                         >
-                          <ST>{etiquetaTipo(row.tipo)}</ST>
+                          <ST>{etiquetaTipo(row.tipo, row.motivoSalida)}</ST>
                         </span>
                       </td>
                       <td className="px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900">
@@ -381,7 +383,18 @@ export default function AdminHistorialMovimientos() {
                         {row.origenNombre ? <ST>{row.origenNombre}</ST> : "—"}
                       </td>
                       <td className="px-3.5 py-2.5 text-xs sm:text-sm text-slate-700">
-                        {row.destinoNombre ? <ST>{row.destinoNombre}</ST> : "—"}
+                        {row.destinatarioNombre ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-900">{row.destinatarioNombre}</span>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+                              <ST>Destinatario</ST>
+                            </span>
+                          </div>
+                        ) : row.destinoNombre ? (
+                          <ST>{row.destinoNombre}</ST>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                       <td className="px-3.5 py-2.5 text-xs sm:text-sm text-slate-700">
                         {row.responsableNombre || "—"}

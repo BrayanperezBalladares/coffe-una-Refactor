@@ -7,6 +7,7 @@ import { AdminPaginacion } from "../../../Components/Admin/ui/AdminPaginacion";
 import { CategoriaNueva, CategoriaOpcionBorrar } from "../../../Components/Admin/ui/CategoriaCampo";
 import { ProductActions } from "./components/ProductActions";
 import { CentralStockEditor } from "./components/CentralStockEditor";
+import { EgresoInventarioModal } from "./components/EgresoInventarioModal";
 import { ProductCatalogFormDrawer } from "./components/ProductCatalogFormDrawer";
 import { ProductCatalogMobileList } from "./components/ProductCatalogMobileList";
 import { ProductCatalogTable } from "./components/ProductCatalogTable";
@@ -21,6 +22,7 @@ import {
   actualizarProducto,
   actualizarStockCentral,
   crearProducto,
+  registrarEgresoInventario,
 } from "../../../services/productosService";
 import { asegurarCamposEnEspanol } from "../../../lib/traducir";
 import { t } from "../../../lib/t";
@@ -59,8 +61,10 @@ const AdminInventarioProducto = () => {
   const [modalCrear, setModalCrear] = useState(false);
   const [productoEditar, setProductoEditar] = useState(null);
   const [productoStockEditar, setProductoStockEditar] = useState(null);
+  const [productoEgreso, setProductoEgreso] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [guardandoStock, setGuardandoStock] = useState(false);
+  const [guardandoEgreso, setGuardandoEgreso] = useState(false);
   const [categoriasApi, setCategoriasApi] = useState([]);
   const catalogState = useProductCatalog();
   const stockState = useCentralStock();
@@ -297,6 +301,17 @@ const AdminInventarioProducto = () => {
 
   const destacadosEnUso = contarDestacados(productos);
 
+  const handleGuardarEgreso = async (datosEgreso) => {
+    setGuardandoEgreso(true);
+    try {
+      await registrarEgresoInventario(datosEgreso);
+      await Promise.all([catalogState.retry(), stockState.retry()]);
+      setProductoEgreso(null);
+    } finally {
+      setGuardandoEgreso(false);
+    }
+  };
+
   const stockEditor = (
       <CentralStockEditor
         key={productoStockEditar?.id ?? "closed"}
@@ -309,9 +324,22 @@ const AdminInventarioProducto = () => {
       />
   );
 
+  const egresoModal = (
+    <EgresoInventarioModal
+      key={productoEgreso?.id ?? "egreso-closed"}
+      open={Boolean(productoEgreso)}
+      product={productoEgreso}
+      availableStock={productoEgreso?.stock ?? 0}
+      onSave={handleGuardarEgreso}
+      onClose={() => setProductoEgreso(null)}
+      isSaving={guardandoEgreso}
+    />
+  );
+
   return (
     <>
     {stockEditor}
+    {egresoModal}
     <AdminPageGate showLoading={showLoading} message={loadingMessage}>
     <AdminLayout>
       <ProductCatalogFormDrawer
@@ -486,6 +514,7 @@ const AdminInventarioProducto = () => {
                   onEditar={() => setProductoEditar(producto)}
                   onToggleEstado={() => handleToggleEstado(producto)}
                   onEditarStock={() => setProductoStockEditar(producto)}
+                  onEgreso={() => setProductoEgreso(producto)}
                 />
               )}
             />
@@ -506,6 +535,7 @@ const AdminInventarioProducto = () => {
                   onEditar={() => setProductoEditar(producto)}
                   onToggleEstado={() => handleToggleEstado(producto)}
                   onEditarStock={() => setProductoStockEditar(producto)}
+                  onEgreso={() => setProductoEgreso(producto)}
                 />
               )}
             />

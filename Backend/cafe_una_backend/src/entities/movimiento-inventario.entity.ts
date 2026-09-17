@@ -72,6 +72,15 @@ export class MovimientoInventario {
   @JoinColumn({ name: 'UbicacionDestinoId', referencedColumnName: 'Id' })
   Destino?: InventarioUbicacion | null;
 
+  @Column({ name: 'MotivoSalida', type: 'varchar', length: 50, nullable: true })
+  MotivoSalida?: string | null;
+
+  @Column({ name: 'DestinatarioNombre', type: 'varchar', length: 200, default: '' })
+  DestinatarioNombre: string;
+
+  @Column({ name: 'DestinatarioId', type: 'integer', nullable: true })
+  DestinatarioId?: number | null;
+
   @Column({
     name: 'Fecha',
     type: 'timestamptz',

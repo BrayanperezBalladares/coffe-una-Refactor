@@ -594,16 +594,25 @@ export class DatabaseBootstrapService implements OnModuleInit {
         ON movimientos_inventario ("Tipo");
     `);
     await this.dataSource.query(`
+      ALTER TABLE movimientos_inventario
+        ADD COLUMN IF NOT EXISTS "MotivoSalida" varchar(50) NULL;
+    `);
+    await this.dataSource.query(`
+      ALTER TABLE movimientos_inventario
+        ADD COLUMN IF NOT EXISTS "DestinatarioNombre" varchar(200) NOT NULL DEFAULT '';
+    `);
+    await this.dataSource.query(`
+      ALTER TABLE movimientos_inventario
+        ADD COLUMN IF NOT EXISTS "DestinatarioId" integer NULL;
+    `);
+    await this.dataSource.query(`
       DO $$
       BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint
-          WHERE conname = 'CK_movimientos_inventario_tipo'
-        ) THEN
-          ALTER TABLE movimientos_inventario
-            ADD CONSTRAINT "CK_movimientos_inventario_tipo"
-            CHECK ("Tipo" IN ('entrada', 'transferencia', 'venta_presencial', 'venta_web'));
-        END IF;
+        ALTER TABLE movimientos_inventario
+          DROP CONSTRAINT IF EXISTS "CK_movimientos_inventario_tipo";
+        ALTER TABLE movimientos_inventario
+          ADD CONSTRAINT "CK_movimientos_inventario_tipo"
+          CHECK ("Tipo" IN ('entrada', 'transferencia', 'venta_presencial', 'venta_web', 'salida'));
       END
       $$;
     `);

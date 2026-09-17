@@ -6,6 +6,7 @@ export const TIPO_MOVIMIENTO = {
   TRANSFERENCIA: 'transferencia',
   VENTA_PRESENCIAL: 'venta_presencial',
   VENTA_WEB: 'venta_web',
+  SALIDA: 'salida',
 } as const;
 
 export type TipoMovimientoInventario =
@@ -21,6 +22,8 @@ const ALIAS_TIPO: Record<string, TipoMovimientoInventario> = {
   venta: TIPO_MOVIMIENTO.VENTA_PRESENCIAL,
   venta_web: TIPO_MOVIMIENTO.VENTA_WEB,
   'venta web': TIPO_MOVIMIENTO.VENTA_WEB,
+  salida: TIPO_MOVIMIENTO.SALIDA,
+  egreso: TIPO_MOVIMIENTO.SALIDA,
 };
 
 export function normalizarTipoMovimiento(
@@ -51,6 +54,9 @@ export function valoresTipoParaFiltro(tipo: TipoMovimientoInventario): string[] 
   if (tipo === TIPO_MOVIMIENTO.TRANSFERENCIA) {
     return [tipo, 'Transferencia'];
   }
+  if (tipo === TIPO_MOVIMIENTO.SALIDA) {
+    return [tipo, 'Salida', 'salida', 'egreso'];
+  }
   return [tipo];
 }
 
@@ -68,10 +74,14 @@ export async function insertarMovimientoInventario(
     ubicacionOrigenId?: number | null;
     ubicacionDestinoId?: number | null;
     fecha?: Date;
+    motivoSalida?: string | null;
+    destinatarioNombre?: string;
+    destinatarioId?: number | null;
   },
 ): Promise<MovimientoInventario> {
   const notas = String(datos.notas ?? '').slice(0, 500);
   const responsableNombre = String(datos.responsableNombre ?? '').slice(0, 200);
+  const destinatarioNombre = String(datos.destinatarioNombre ?? '').slice(0, 200);
   const ubicacionId =
     datos.ubicacionId ??
     datos.ubicacionOrigenId ??
@@ -91,6 +101,9 @@ export async function insertarMovimientoInventario(
       UbicacionId: ubicacionId,
       UbicacionOrigenId: datos.ubicacionOrigenId ?? null,
       UbicacionDestinoId: datos.ubicacionDestinoId ?? null,
+      MotivoSalida: datos.motivoSalida ?? null,
+      DestinatarioNombre: destinatarioNombre,
+      DestinatarioId: datos.destinatarioId ?? null,
       Fecha: datos.fecha ?? new Date(),
     }),
   );

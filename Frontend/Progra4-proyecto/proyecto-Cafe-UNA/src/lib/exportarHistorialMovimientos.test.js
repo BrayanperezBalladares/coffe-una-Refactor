@@ -39,6 +39,8 @@ describe("exportarHistorialMovimientos", () => {
     expect(etiquetaTipo("transferencia")).toBe("Transferencia");
     expect(etiquetaTipo("venta_presencial")).toBe("Venta presencial");
     expect(etiquetaTipo("venta_web")).toBe("Venta web");
+    expect(etiquetaTipo("salida")).toBe("Salida");
+    expect(etiquetaTipo("salida", "donacion")).toBe("Salida (Donacion)");
     expect(etiquetaTipo("otro")).toBe("otro");
   });
 
@@ -50,7 +52,7 @@ describe("exportarHistorialMovimientos", () => {
 
     const lineas = csv.replace("\uFEFF", "").split("\r\n");
     expect(lineas[0]).toBe(
-      "FECHA,TIPO DE MOVIMIENTO,PRODUCTO,CANTIDAD,ORIGEN,DESTINO,RESPONSABLE,NOTAS",
+      "FECHA,TIPO DE MOVIMIENTO,MOTIVO,DESTINATARIO,PRODUCTO,CANTIDAD,ORIGEN,DESTINO,RESPONSABLE,NOTAS",
     );
 
     expect(lineas[1]).toContain("08/09/2026");

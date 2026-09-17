@@ -7,8 +7,11 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { JwtUsuario } from '../common/permisos';
 import { RequierePermiso } from '../common/requiere-permiso.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermisosGuard } from '../guards/permisos.guard';
@@ -103,5 +106,17 @@ export class InventarioController {
     );
     if (!actualizado) throw new NotFoundException();
     return actualizado;
+  }
+
+  @Post('egreso')
+  @RequierePermiso('ajustar_stock_ubicaciones', 'actualizar_stock_productos')
+  async registrarEgreso(
+    @Body() body: Record<string, unknown>,
+    @Req() req: Request & { user?: JwtUsuario },
+  ) {
+    return this.inventarioService.registrarEgreso(
+      body ?? {},
+      req.user?.userId ?? null,
+    );
   }
 }

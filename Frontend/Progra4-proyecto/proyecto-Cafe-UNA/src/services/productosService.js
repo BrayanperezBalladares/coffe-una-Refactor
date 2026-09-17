@@ -552,3 +552,35 @@ export async function eliminarProducto(id) {
   limpiarProductosCache();
   return true;
 }
+
+export async function registrarEgresoInventario({
+  productoId,
+  cantidad,
+  motivo,
+  destinatarioNombre,
+  destinatarioId,
+  locationCode = "BODEGA_CENTRAL",
+  notas,
+} = {}) {
+  const payload = {
+    productoId,
+    cantidad: Number(cantidad),
+    motivo: String(motivo || "").trim().toLowerCase(),
+    destinatarioNombre: String(destinatarioNombre || "").trim(),
+    locationCode,
+    notas: String(notas || "").trim(),
+  };
+  if (destinatarioId != null) {
+    payload.destinatarioId = destinatarioId;
+  }
+
+  const respuesta = await inventoryRequest(`${INVENTORY_BASE_URL}/egreso`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  limpiarProductosCache();
+  limpiarInventarioUbicacionCache();
+  return respuesta;
+}
+

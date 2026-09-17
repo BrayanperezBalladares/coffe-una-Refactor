@@ -1179,4 +1179,212 @@ export class InventarioService {
 
     return stock;
   }
+
+  async registrarEgreso(
+    body: Record<string, unknown>,
+    actorId: number | null,
+  ): Promise<{
+    id: string;
+    productoId: string;
+    cantidad: number;
+    motivo: string;
+    destinatarioNombre: string;
+    destinatarioId: number | null;
+    stockRestante: number;
+    fecha: string;
+  }> {
+    const rawProductoId = this.tomarCampo(
+      body,
+      'productoId',
+      'ProductoId',
+      'id',
+      'Id',
+    );
+    const productoId = this.validarProductId(
+      this.normalizarIdentidadProducto(rawProductoId),
+    );
+
+    const rawCantidad = this.tomarCampo(body, 'cantidad', 'Cantidad');
+    const cantidad = Number(rawCantidad);
+    if (!Number.isInteger(cantidad) || cantidad <= 0 || cantidad > 2147483647) {
+      throw new BadRequestException('La cantidad debe ser un entero mayor a 0.');
+    }
+
+    const rawMotivo = String(
+      this.tomarCampo(body, 'motivo', 'Motivo', 'motivoSalida', 'MotivoSalida') ??
+        '',
+    )
+      .trim()
+      .toLowerCase();
+    const MOTIVOS_VALIDOS = [
+      'venta',
+      'donacion',
+      'donación',
+      'traslado',
+      'ajuste',
+    ];
+    if (!rawMotivo || !MOTIVOS_VALIDOS.includes(rawMotivo)) {
+      throw new BadRequestException(
+        'El motivo de salida debe ser venta, donación, traslado o ajuste.',
+      );
+    }
+    const motivo = rawMotivo === 'donación' ? 'donacion' : rawMotivo;
+
+    const destinatarioNombre = String(
+      this.tomarCampo(
+        body,
+        'destinatarioNombre',
+        'DestinatarioNombre',
+        'destinatario',
+        'Destinatario',
+      ) ?? '',
+    )
+      .trim()
+      .slice(0, 200);
+
+    if (motivo === 'donacion' && !destinatarioNombre) {
+      throw new BadRequestException(
+        'El destinatario es obligatorio cuando el motivo de salida es por donación.',
+      );
+    }
+
+    const rawDestinatarioId = this.tomarCampo(
+      body,
+      'destinatarioId',
+      'DestinatarioId',
+    );
+    let destinatarioId: number | null = null;
+    if (
+      rawDestinatarioId !== undefined &&
+      rawDestinatarioId !== null &&
+      String(rawDestinatarioId).trim() !== ''
+    ) {
+      const parsedId = Number(rawDestinatarioId);
+      if (Number.isInteger(parsedId) && parsedId > 0) {
+        destinatarioId = parsedId;
+      }
+    }
+
+    const notas = String(
+      this.tomarCampo(body, 'notas', 'Notas', 'observaciones', 'Observaciones') ??
+        '',
+    )
+      .trim()
+      .slice(0, 500);
+
+    const locationCode = String(
+      this.tomarCampo(
+        body,
+        'locationCode',
+        'LocationCode',
+        'codigoUbicacion',
+      ) ?? BODEGA_CENTRAL,
+    )
+      .trim()
+      .toUpperCase();
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const ubicacion = await queryRunner.manager.findOne(InventarioUbicacion, {
+        where: { Codigo: locationCode },
+      });
+      if (!ubicacion) {
+        throw new NotFoundException(
+          `La ubicación '${locationCode}' no está inicializada.`,
+        );
+      }
+
+      const producto = await queryRunner.manager.findOne(Producto, {
+        where: { Id: productoId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!producto) {
+        throw new NotFoundException('No se encontró el producto.');
+      }
+
+      const saldo = await queryRunner.manager.findOne(
+        InventarioStockUbicacion,
+        {
+          where: { ProductoId: productoId, UbicacionId: ubicacion.Id },
+          lock: { mode: 'pessimistic_write' },
+        },
+      );
+      const stockDisponible = Number(saldo?.Stock) || 0;
+      if (!saldo || stockDisponible < cantidad) {
+        throw new BadRequestException(
+          `Stock insuficiente para realizar el egreso. Disponible: ${stockDisponible}.`,
+        );
+      }
+
+      const nuevoStock = stockDisponible - cantidad;
+      saldo.Stock = nuevoStock;
+      await queryRunner.manager.save(saldo);
+
+      if (ubicacion.Codigo === BODEGA_CENTRAL) {
+        producto.Stock = nuevoStock;
+        if (nuevoStock === 0) {
+          producto.EsDestacado = false;
+        }
+        await queryRunner.manager.save(producto);
+      }
+
+      let responsableNombre = '';
+      if (actorId != null) {
+        const usuario = await queryRunner.manager.findOne(Usuario, {
+          where: { Id: actorId },
+        });
+        responsableNombre = usuario
+          ? String(usuario.Nombre || usuario.Correo || `usuario:${actorId}`).slice(
+              0,
+              200,
+            )
+          : `usuario:${actorId}`;
+      }
+
+      const movimiento = await insertarMovimientoInventario(
+        queryRunner.manager,
+        {
+          tipo: TIPO_MOVIMIENTO.SALIDA,
+          productoId,
+          cantidad,
+          responsableId: actorId,
+          responsableNombre,
+          notas,
+          ubicacionOrigenId: ubicacion.Id,
+          ubicacionId: ubicacion.Id,
+          motivoSalida: motivo,
+          destinatarioNombre,
+          destinatarioId,
+          fecha: new Date(),
+        },
+      );
+
+      await queryRunner.commitTransaction();
+      await this.stockAlertaService.verificarTrasMovimiento(productoId);
+
+      return {
+        id: String(movimiento.Id),
+        productoId,
+        cantidad,
+        motivo,
+        destinatarioNombre,
+        destinatarioId,
+        stockRestante: nuevoStock,
+        fecha:
+          movimiento.Fecha instanceof Date
+            ? movimiento.Fecha.toISOString()
+            : String(movimiento.Fecha),
+      };
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }

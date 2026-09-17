@@ -1,4 +1,4 @@
-import { PackageOpen, Pencil, Power } from "lucide-react";
+import { PackageMinus, PackageOpen, Pencil, Power } from "lucide-react";
 import { ST } from "../../../../Components/T/ST";
 import { t } from "../../../../lib/t";
 
@@ -13,12 +13,12 @@ export function ProductActions({
   onEditar,
   onToggleEstado,
   onEditarStock,
+  onEgreso,
   variant = "table",
 }) {
   const esDeshabilitado = producto.estado === "Deshabilitado";
   const esMovil = variant === "mobile";
   const bloquearInhabilitar = producto.esDestacado && !esDeshabilitado;
-  const filaSuperior = puedeEditar && puedeActualizarStock;
   const etiquetaToggle = esDeshabilitado ? "Activar" : "Desactivar";
 
   const sizeClass = esMovil
@@ -32,11 +32,12 @@ export function ProductActions({
       : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 focus-visible:ring-rose-300"
   }`;
   const stockClassName = `${actionButtonBase} ${sizeClass} border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 focus-visible:ring-slate-400`;
+  const egresoClassName = `${actionButtonBase} ${sizeClass} border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus-visible:ring-amber-400`;
 
   return (
     <div
-      className={`product-actions grid gap-1 ${esMovil ? "w-full gap-2" : "w-[10.5rem]"} ${
-        filaSuperior && !esMovil ? "grid-cols-2" : "grid-cols-1"
+      className={`product-actions grid gap-1 ${esMovil ? "w-full gap-2" : "w-[12rem]"} ${
+        !esMovil ? "grid-cols-2" : "grid-cols-1"
       }`}
     >
       {puedeEditar ? (
@@ -51,13 +52,21 @@ export function ProductActions({
           <span><ST>Stock</ST></span>
         </button>
       ) : null}
+      {puedeActualizarStock && onEgreso ? (
+        <button type="button" onClick={onEgreso} className={egresoClassName}>
+          <PackageMinus className="size-3 shrink-0" aria-hidden="true" />
+          <span><ST>Egreso</ST></span>
+        </button>
+      ) : null}
       {puedeInactivar ? (
         <button
           type="button"
           onClick={onToggleEstado}
           disabled={bloquearInhabilitar}
           title={bloquearInhabilitar ? t("Quita el destacado antes de desactivarlo") : undefined}
-          className={`${toggleClassName} disabled:cursor-not-allowed disabled:opacity-50 ${filaSuperior && !esMovil ? "col-span-2" : ""}`}
+          className={`${toggleClassName} disabled:cursor-not-allowed disabled:opacity-50 ${
+            !esMovil && (puedeEditar || puedeActualizarStock) ? "col-span-2" : ""
+          }`}
         >
           <Power className="size-3 shrink-0" aria-hidden="true" />
           <span><ST>{etiquetaToggle}</ST></span>

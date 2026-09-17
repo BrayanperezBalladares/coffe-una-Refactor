@@ -5,11 +5,18 @@ import {
   LOGO_WIDTH_PX,
 } from "./logoCafeUnaBase64";
 
-export function etiquetaTipo(tipo) {
+export function etiquetaTipo(tipo, motivo = null) {
   if (tipo === "entrada") return "Entrada";
   if (tipo === "transferencia") return "Transferencia";
   if (tipo === "venta_presencial") return "Venta presencial";
   if (tipo === "venta_web") return "Venta web";
+  if (tipo === "salida") {
+    if (motivo) {
+      const motivoCap = String(motivo).charAt(0).toUpperCase() + String(motivo).slice(1);
+      return `Salida (${motivoCap})`;
+    }
+    return "Salida";
+  }
   return tipo || "";
 }
 
@@ -23,6 +30,8 @@ export function construirCsvMovimientos(rows = []) {
   const encabezados = [
     "FECHA",
     "TIPO DE MOVIMIENTO",
+    "MOTIVO",
+    "DESTINATARIO",
     "PRODUCTO",
     "CANTIDAD",
     "ORIGEN",
@@ -36,10 +45,12 @@ export function construirCsvMovimientos(rows = []) {
       [
         csvEscape(row.fechaTexto || row.fecha),
         csvEscape(etiquetaTipo(row.tipo)),
+        csvEscape(row.motivoSalida || "—"),
+        csvEscape(row.destinatarioNombre || "—"),
         csvEscape(row.productoNombre || row.productoId),
         csvEscape(row.cantidad),
         csvEscape(row.origenNombre || "—"),
-        csvEscape(row.destinoNombre || "—"),
+        csvEscape(row.destinoNombre || row.destinatarioNombre || "—"),
         csvEscape(row.responsableNombre || "—"),
         csvEscape(row.notas || ""),
       ].join(","),
@@ -357,11 +368,11 @@ export function construirPdfMovimientos({
       }
 
       ops.push(pdfText(colX.fecha, y, String(row.fechaTexto || row.fecha || "—").slice(0, 22), 8, "/F1", 0.15));
-      ops.push(pdfText(colX.tipo, y, String(etiquetaTipo(row.tipo)).slice(0, 20), 8, "/F2", 0));
+      ops.push(pdfText(colX.tipo, y, String(etiquetaTipo(row.tipo, row.motivoSalida)).slice(0, 20), 8, "/F2", 0));
       ops.push(pdfText(colX.producto, y, String(row.productoNombre || row.productoId || "—").slice(0, 32), 8, "/F1", 0));
       ops.push(pdfText(colX.cantidad, y, String(row.cantidad ?? "0"), 8, "/F2", 0));
       ops.push(pdfText(colX.origen, y, String(row.origenNombre || "—").slice(0, 18), 8, "/F1", 0.25));
-      ops.push(pdfText(colX.destino, y, String(row.destinoNombre || "—").slice(0, 18), 8, "/F1", 0.25));
+      ops.push(pdfText(colX.destino, y, String(row.destinoNombre || row.destinatarioNombre || "—").slice(0, 18), 8, "/F1", 0.25));
       ops.push(pdfText(colX.responsable, y, String(row.responsableNombre || "—").slice(0, 18), 8, "/F1", 0.2));
 
       ops.push(pdfLineStroke(margin, y - 5, pageWidth - margin, y - 5, 0.88, 0.3));
