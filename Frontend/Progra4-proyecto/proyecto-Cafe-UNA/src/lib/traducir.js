@@ -204,6 +204,100 @@ const DICCIONARIO = {
   "Ej. Universidad Nacional": "e.g. National University",
   "Ej. Costa Rica": "e.g. Costa Rica",
 
+  // Visitas y Formularios
+  "Costarricense": "Costa Rican",
+  "Extranjero": "Foreigner",
+  "Costarricense / Nacional": "Costa Rican / National",
+  "Internacional / Extranjero": "International / Foreigner",
+  "¿El encargado es costarricense o residente?": "Is the coordinator Costa Rican or a resident?",
+  "¿El encargado es costarricense?": "Is the coordinator Costa Rican?",
+  "Solicitud de visitas grupales": "Group visit request",
+  "Completá la información del grupo y elegí uno de los horarios habilitados por la administración. La solicitud quedará pendiente de revisión.":
+    "Fill in the group information and select one of the schedules enabled by the administration. The request will remain pending review.",
+  "Información del encargado": "Coordinator information",
+  "Datos de la persona responsable de coordinar la visita.":
+    "Details of the person responsible for coordinating the visit.",
+  "Identificación (Cédula)": "Identification (ID Card)",
+  "Identificación (Pasaporte / ID)": "Identification (Passport / ID)",
+  "País de procedencia": "Country of origin",
+  "Seleccioná tu país...": "Select your country...",
+  "Seleccioná el país de procedencia...": "Select the country of origin...",
+  "Consultando datos de la cédula...": "Checking ID card information...",
+  "Institución o empresa (opcional)": "Institution or company (optional)",
+  "Universidad, colegio, empresa u organización": "University, school, company or organization",
+  "Información del grupo": "Group information",
+  "Las visitas grupales requieren al menos dos personas.": "Group visits require at least two people.",
+  "Cantidad de visitantes": "Number of visitors",
+  "Mínimo 2 personas": "Minimum 2 people",
+  "Tipo de grupo": "Group type",
+  "Universidad, empresa, asociación…": "University, company, association…",
+  "Provincia": "Province",
+  "Seleccioná una provincia": "Select a province",
+  "Cantón": "Canton",
+  "Seleccioná un cantón": "Select a canton",
+  "Primero seleccioná una provincia": "First select a province",
+  "Motivo de la visita": "Visit reason",
+  "Ej: Gira de campo agronómica, recorrido de sostenibilidad…": "E.g. Agronomic field trip, sustainability tour…",
+  "Fecha y horario disponibles": "Available date and time",
+  "Seleccioná un día habilitado en el calendario y luego el turno de tu preferencia.":
+    "Select an enabled day on the calendar and then your preferred time slot.",
+  "Cargando fechas y horarios disponibles…": "Loading available dates and times…",
+  "No hay fechas y horarios habilitados": "No dates and times enabled",
+  "Actualmente no hay fechas habilitadas para visitas grupales. Por favor consultá más adelante.":
+    "There are currently no dates enabled for group visits. Please check back later.",
+  "FECHA SELECCIONADA:": "SELECTED DATE:",
+  "Fecha disponible para visitas": "Date available for visits",
+  "Fecha no disponible": "Date unavailable",
+  "Seleccioná una fecha en el calendario": "Select a date on the calendar",
+  "Al seleccionar un día habilitado, se cargarán los turnos u horarios disponibles para esa fecha.":
+    "When selecting an enabled day, the available shifts or schedules for that date will load.",
+  "Sin turnos para esta fecha": "No slots for this date",
+  "No hay turnos disponibles para el día seleccionado.": "There are no slots available for the selected day.",
+  "Horarios disponibles para el": "Available schedules for",
+  "Necesidades y recomendaciones": "Needs and recommendations",
+  "Todas las visitas serán recibidas o acompañadas por personal del proyecto.":
+    "All visits will be received or accompanied by project staff.",
+  "Necesidades del grupo": "Group needs",
+  "Requerimientos de accesibilidad": "Accessibility requirements",
+  "Apoyo para personas con movilidad reducida o necesidades especiales.":
+    "Support for people with reduced mobility or special needs.",
+  "Parqueo": "Parking",
+  "Habilitar espacio de parqueo y maniobra en la finca.": "Enable parking and maneuvering space on the farm.",
+  "Recomendaciones para el recorrido": "Recommendations for the tour",
+  "Usá vestimenta cómoda y calzado cerrado apropiado para senderos al aire libre.":
+    "Wear comfortable clothing and closed footwear suitable for outdoor trails.",
+  "Llevá repelente si visitarán zonas con vegetación densa o cultivo de café.":
+    "Bring repellent if visiting areas with dense vegetation or coffee crops.",
+  "Considerá protección solar e hidratación suficiente para el recorrido.":
+    "Consider sun protection and sufficient hydration for the tour.",
+  "Observaciones o solicitudes especiales": "Remarks or special requests",
+  "Observaciones o requerimientos especiales (opcional)": "Remarks or special requirements (optional)",
+  "Detalles adicionales, temática de interés o requerimientos especiales…":
+    "Additional details, topic of interest or special requirements…",
+  "Debe iniciar sesión para enviar su solicitud de visita.": "You must log in to submit your visit request.",
+  "Enviar solicitud": "Submit request",
+  "Enviando…": "Submitting…",
+  "Inicie sesión para enviar": "Log in to submit",
+  "Completá los campos obligatorios antes de enviar la solicitud.":
+    "Complete the required fields before submitting the application.",
+  "Indicá el país de procedencia del grupo internacional.":
+    "Please indicate the country of origin of the international group.",
+  "Las visitas grupales requieren al menos 2 personas.": "Group visits require at least 2 people.",
+
+  // Categorías Donaciones
+  "¿Qué donaciones recibimos?": "What donations do we receive?",
+  "Maquinaria": "Machinery",
+  "Herramientas agrícolas": "Agricultural tools",
+  "Materiales de empaque": "Packaging materials",
+  "Insumos de limpieza": "Cleaning supplies",
+  "John Deere, Tractor Agrícola": "John Deere, Agricultural Tractor",
+  "Carretillos, Herramientas agrícolas, Machetes, Palas": "Wheelbarrows, Agricultural tools, Machetes, Shovels",
+  "Bolsas para café, Cajas de cartón, Empaques biodegradables, Etiquetas":
+    "Coffee bags, Cardboard boxes, Biodegradable packaging, Labels",
+  "Jabón biodegradable, Paños de limpieza": "Biodegradable soap, Cleaning cloths",
+  "Por ahora no hay categorías de donación material activas.":
+    "There are currently no active material donation categories.",
+
   // Iniciativas (copy frecuente)
   "Cada aporte, visita o colaboración deja una huella especial.":
     "Every contribution, visit or collaboration leaves a special mark.",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { format, isBefore, startOfDay } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 import {
   CalendarCheck2,
   CalendarDays,
@@ -32,6 +32,9 @@ import {
   crearSolicitudVisita,
   obtenerDisponibilidadVisitasPublica,
 } from "../../services/visitasService";
+import { useIdioma } from "../../lib/useIdioma";
+import { useTraducir } from "../../hooks/useTraducir";
+import { ST } from "../../Components/T/ST";
 import "../Voluntariado/SolicitarVoluntariado.css";
 
 const VISITA_LOGIN_REDIRECT = "/visitas/solicitar";
@@ -81,7 +84,7 @@ function partesNombreCedula(datos) {
 function Field({ label, children }) {
   return (
     <label className="campo">
-      {label}
+      {typeof label === "string" ? <ST>{label}</ST> : label}
       {children}
     </label>
   );
@@ -99,11 +102,11 @@ function SectionCard({ icon: Icon, paso, title, hint, children }) {
         <div className="section-card__title-group">
           <h4>
             {paso != null ? (
-              <span className="sr-only">Paso {paso}. </span>
+              <span className="sr-only"><ST>Paso</ST> {paso}. </span>
             ) : null}
-            {title}
+            {typeof title === "string" ? <ST>{title}</ST> : title}
           </h4>
-          {hint ? <p className="section-card__hint">{hint}</p> : null}
+          {hint ? <p className="section-card__hint">{typeof hint === "string" ? <ST>{hint}</ST> : hint}</p> : null}
         </div>
         {Icon ? <Icon aria-hidden="true" className="section-card__icon-inline" size={20} /> : null}
       </div>
@@ -121,6 +124,8 @@ function parseIsoLocal(isoStr) {
 
 export default function SolicitarVisita() {
   const navigate = useNavigate();
+  const { idioma } = useIdioma();
+  const dateLocale = idioma === "en" ? enUS : es;
   const session = getActiveSessionUser();
   const isAuthenticated = Boolean(session?.token || session?.id);
 
@@ -140,6 +145,19 @@ export default function SolicitarVisita() {
   const [consultandoCedula, setConsultandoCedula] = useState(false);
   const [avisoCedula, setAvisoCedula] = useState(null);
   const [sedeFinca, setSedeFinca] = useState(() => sedeDesdeHomeLocation(null));
+
+  const tPhId = useTraducir(form.tipoVisitante === "Internacional" ? "Pasaporte o ID" : "101110111");
+  const tPhNombre = useTraducir("Nombre");
+  const tPh1 = useTraducir("1° Apellido");
+  const tPh2 = useTraducir("2° Apellido");
+  const tPhEmail = useTraducir("ejemplo@correo.com");
+  const tPhTelefono = useTraducir("88888888");
+  const tPhInstitucion = useTraducir("Universidad, colegio, empresa u organización");
+  const tPhCantidad = useTraducir("Mínimo 2 personas");
+  const tPhTipoGrupo = useTraducir("Universidad, empresa, asociación…");
+  const tPhMotivo = useTraducir("Ej: Gira de campo agronómica, recorrido de sostenibilidad…");
+  const tPhObservaciones = useTraducir("Detalles adicionales, temática de interés o requerimientos especiales…");
+  const tPhPais = useTraducir("Seleccioná tu país...");
 
   const {
     ref: pageRef,
@@ -455,10 +473,12 @@ export default function SolicitarVisita() {
 
         <section className="voluntariado-section">
           <header className="voluntariado-header">
-            <h1>Solicitud de visitas grupales</h1>
+            <h1><ST>Solicitud de visitas grupales</ST></h1>
             <p>
-              Completá la información del grupo y elegí uno de los horarios habilitados por la administración.
-              La solicitud quedará pendiente de revisión.
+              <ST>
+                Completá la información del grupo y elegí uno de los horarios habilitados por la administración.
+                La solicitud quedará pendiente de revisión.
+              </ST>
             </p>
           </header>
 
@@ -478,7 +498,7 @@ export default function SolicitarVisita() {
               >
                 <div className="campo full">
                   <p className="campo-label font-medium mb-2 text-foreground/90">
-                    ¿El encargado es costarricense o residente? <span className="req text-destructive">*</span>
+                    <ST>¿El encargado es costarricense o residente?</ST> <span className="req text-destructive">*</span>
                   </p>
                   <div className="tipo-opciones flex gap-4">
                     <label className={cn(
@@ -493,7 +513,7 @@ export default function SolicitarVisita() {
                         onChange={() => update({ target: { name: "tipoVisitante", value: "Nacional", type: "text" } })}
                         className="accent-primary"
                       />
-                      <span>Costarricense / Nacional</span>
+                      <span><ST>Costarricense</ST></span>
                     </label>
                     <label className={cn(
                       "radio-card flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border transition-colors",
@@ -507,7 +527,7 @@ export default function SolicitarVisita() {
                         onChange={() => update({ target: { name: "tipoVisitante", value: "Internacional", type: "text" } })}
                         className="accent-primary"
                       />
-                      <span>Internacional / Extranjero</span>
+                      <span><ST>Extranjero</ST></span>
                     </label>
                   </div>
                   <select
@@ -535,7 +555,7 @@ export default function SolicitarVisita() {
                           setError("");
                         }}
                         ariaLabel="País de procedencia *"
-                        placeholder="Seleccioná tu país..."
+                        placeholder={tPhPais}
                         error={Boolean(error && !form.paisProcedencia.trim())}
                       />
                     </Field>
@@ -548,7 +568,7 @@ export default function SolicitarVisita() {
                       <input
                         name="encargadoIdentificacion"
                         aria-label="Identificación del encargado"
-                        placeholder={form.tipoVisitante === "Internacional" ? "Pasaporte o ID" : "101110111"}
+                        placeholder={tPhId}
                         value={form.encargadoIdentificacion}
                         onChange={update}
                         onBlur={handleIdentificacionBlur}
@@ -564,7 +584,7 @@ export default function SolicitarVisita() {
                   <Field label="Nombre *">
                     <input
                       name="encargadoNombre"
-                      placeholder="Nombre"
+                      placeholder={tPhNombre}
                       value={form.encargadoNombre}
                       onChange={update}
                       maxLength={80}
@@ -576,7 +596,7 @@ export default function SolicitarVisita() {
                   <Field label="Primer apellido *">
                     <input
                       name="encargadoPrimerApellido"
-                      placeholder="1° Apellido"
+                      placeholder={tPh1}
                       value={form.encargadoPrimerApellido}
                       onChange={update}
                       maxLength={80}
@@ -585,7 +605,7 @@ export default function SolicitarVisita() {
                   <Field label="Segundo apellido">
                     <input
                       name="encargadoSegundoApellido"
-                      placeholder="2° Apellido"
+                      placeholder={tPh2}
                       value={form.encargadoSegundoApellido}
                       onChange={update}
                       maxLength={80}
@@ -594,11 +614,11 @@ export default function SolicitarVisita() {
                 </div>
 
                 {consultandoCedula && (
-                  <span className="mensaje-info">Consultando datos de la cédula...</span>
+                  <span className="mensaje-info"><ST>Consultando datos de la cédula...</ST></span>
                 )}
                 {!consultandoCedula && avisoCedula && (
                   <span className={esAvisoCedulaInformativo(avisoCedula) ? "mensaje-info" : "mensaje-error"}>
-                    {avisoCedula}
+                    <ST>{avisoCedula}</ST>
                   </span>
                 )}
 
@@ -607,7 +627,7 @@ export default function SolicitarVisita() {
                     <input
                       type="email"
                       name="encargadoEmail"
-                      placeholder="ejemplo@correo.com"
+                      placeholder={tPhEmail}
                       value={form.encargadoEmail}
                       onChange={update}
                     />
@@ -615,7 +635,7 @@ export default function SolicitarVisita() {
                   <Field label="Teléfono *">
                     <input
                       name="encargadoTelefono"
-                      placeholder="88888888"
+                      placeholder={tPhTelefono}
                       value={form.encargadoTelefono}
                       onChange={update}
                     />
@@ -626,7 +646,7 @@ export default function SolicitarVisita() {
                   <Field label="Institución o empresa (opcional)">
                     <input
                       name="encargadoInstitucion"
-                      placeholder="Universidad, colegio, empresa u organización"
+                      placeholder={tPhInstitucion}
                       value={form.encargadoInstitucion}
                       onChange={update}
                       maxLength={120}
@@ -647,7 +667,7 @@ export default function SolicitarVisita() {
                       min="2"
                       type="number"
                       name="cantidadVisitantes"
-                      placeholder="Mínimo 2 personas"
+                      placeholder={tPhCantidad}
                       value={form.cantidadVisitantes}
                       onChange={update}
                     />
@@ -659,7 +679,7 @@ export default function SolicitarVisita() {
                       aria-label="Tipo de grupo"
                       value={form.tipoGrupo}
                       onChange={update}
-                      placeholder="Universidad, empresa, asociación…"
+                      placeholder={tPhTipoGrupo}
                     />
                   </Field>
                 </div>
@@ -668,7 +688,7 @@ export default function SolicitarVisita() {
                   <div className="form-grid--2cols">
                     <Field label="Provincia *">
                       <select name="provincia" value={form.provincia} onChange={update}>
-                        <option value="">Seleccioná una provincia</option>
+                        <option value="">{idioma === "en" ? "Select a province" : "Seleccioná una provincia"}</option>
                         {PROVINCIAS_CR.map((prov) => (
                           <option key={prov} value={prov}>
                             {prov}
@@ -684,7 +704,9 @@ export default function SolicitarVisita() {
                         disabled={!form.provincia}
                       >
                         <option value="">
-                          {form.provincia ? "Seleccioná un cantón" : "Primero seleccioná una provincia"}
+                          {form.provincia
+                            ? (idioma === "en" ? "Select a canton" : "Seleccioná un cantón")
+                            : (idioma === "en" ? "First select a province" : "Primero seleccioná una provincia")}
                         </option>
                         {cantonesDeProvincia(form.provincia).map((can) => (
                           <option key={can} value={can}>
@@ -700,7 +722,7 @@ export default function SolicitarVisita() {
                   <Field label="Motivo de la visita *">
                     <input
                       name="motivoVisita"
-                      placeholder="Ej: Gira de campo agronómica, recorrido de sostenibilidad…"
+                      placeholder={tPhMotivo}
                       value={form.motivoVisita}
                       onChange={update}
                     />
@@ -721,12 +743,12 @@ export default function SolicitarVisita() {
                       <Clock className="voluntariado-aviso-bloque__icono size-7 animate-spin" />
                     </div>
                     <p className="voluntariado-aviso-bloque__texto">
-                      Cargando fechas y horarios disponibles…
+                      <ST>Cargando fechas y horarios disponibles…</ST>
                     </p>
                   </div>
                 ) : availabilityStatus === "error" ? (
                   <p className="mensaje-error text-center" role="alert">
-                    {availabilityError || "No se pudieron cargar los horarios disponibles."}
+                    <ST>{availabilityError || "No se pudieron cargar los horarios disponibles."}</ST>
                   </p>
                 ) : fechasHabilitadasDates.length === 0 ? (
                   <div className="voluntariado-aviso-bloque">
@@ -734,10 +756,10 @@ export default function SolicitarVisita() {
                       <CalendarX2 className="voluntariado-aviso-bloque__icono size-7" />
                     </div>
                     <p className="voluntariado-aviso-bloque__titulo">
-                      No hay fechas y horarios habilitados
+                      <ST>No hay fechas y horarios habilitados</ST>
                     </p>
                     <p className="voluntariado-aviso-bloque__texto">
-                      Actualmente no hay fechas habilitadas para visitas grupales. Por favor consultá más adelante.
+                      <ST>Actualmente no hay fechas habilitadas para visitas grupales. Por favor consultá más adelante.</ST>
                     </p>
                   </div>
                 ) : (
@@ -745,10 +767,14 @@ export default function SolicitarVisita() {
                     {fechaSeleccionada && (
                       <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-900/20 bg-amber-50/70 px-5 py-2 shadow-xs">
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-900/60">
-                          FECHA SELECCIONADA:
+                          <ST>FECHA SELECCIONADA:</ST>
                         </span>
                         <span className="text-xs font-bold text-amber-950 capitalize">
-                          {format(fechaSeleccionada, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: es })}
+                          {format(
+                            fechaSeleccionada,
+                            idioma === "en" ? "EEEE, MMMM do, yyyy" : "EEEE, dd 'de' MMMM 'de' yyyy",
+                            { locale: dateLocale }
+                          )}
                         </span>
                       </div>
                     )}
@@ -759,7 +785,7 @@ export default function SolicitarVisita() {
                         selected={fechaSeleccionada}
                         onSelect={handleSelectFecha}
                         disabled={isDateDisabled}
-                        locale={es}
+                        locale={dateLocale}
                         modifiers={{
                           habilitado: fechasHabilitadasDates,
                         }}
@@ -775,13 +801,13 @@ export default function SolicitarVisita() {
                         <span className="inline-flex size-5 items-center justify-center rounded-full border-2 border-[#24140e] bg-white font-bold text-[#24140e] text-[11px]">
                           15
                         </span>
-                        <span>Fecha disponible para visitas</span>
+                        <span><ST>Fecha disponible para visitas</ST></span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="inline-flex size-5 items-center justify-center text-stone-400 opacity-40 text-[11px]">
                           15
                         </span>
-                        <span>Fecha no disponible</span>
+                        <span><ST>Fecha no disponible</ST></span>
                       </div>
                     </div>
 
@@ -792,10 +818,10 @@ export default function SolicitarVisita() {
                             <Clock className="voluntariado-aviso-bloque__icono size-7" />
                           </div>
                           <p className="voluntariado-aviso-bloque__titulo">
-                            Seleccioná una fecha en el calendario
+                            <ST>Seleccioná una fecha en el calendario</ST>
                           </p>
                           <p className="voluntariado-aviso-bloque__texto">
-                            Al seleccionar un día habilitado, se cargarán los turnos u horarios disponibles para esa fecha.
+                            <ST>Al seleccionar un día habilitado, se cargarán los turnos u horarios disponibles para esa fecha.</ST>
                           </p>
                         </div>
                       ) : slotsParaFechaSeleccionada.length === 0 ? (
@@ -804,18 +830,22 @@ export default function SolicitarVisita() {
                             <CalendarX2 className="voluntariado-aviso-bloque__icono size-7" />
                           </div>
                           <p className="voluntariado-aviso-bloque__titulo">
-                            Sin turnos para esta fecha
+                            <ST>Sin turnos para esta fecha</ST>
                           </p>
                           <p className="voluntariado-aviso-bloque__texto">
-                            No hay turnos disponibles para el día seleccionado.
+                            <ST>No hay turnos disponibles para el día seleccionado.</ST>
                           </p>
                         </div>
                       ) : (
                         <div>
                           <p className="text-xs font-semibold text-stone-700 mb-3">
-                            Horarios disponibles para el{" "}
+                            <ST>Horarios disponibles para el</ST>{" "}
                             <strong className="text-stone-900">
-                              {format(fechaSeleccionada, "dd 'de' MMMM", { locale: es })}
+                              {format(
+                                fechaSeleccionada,
+                                idioma === "en" ? "MMMM do" : "dd 'de' MMMM",
+                                { locale: dateLocale }
+                              )}
                             </strong>:
                           </p>
 
@@ -855,7 +885,7 @@ export default function SolicitarVisita() {
                                   </span>
                                   {slot.nota ? (
                                     <span className="text-xs text-stone-500 mt-1 block">
-                                      {slot.nota}
+                                      <ST>{slot.nota}</ST>
                                     </span>
                                   ) : null}
                                 </label>
@@ -877,7 +907,7 @@ export default function SolicitarVisita() {
               >
                 <fieldset className="visita-necesidades-fieldset">
                   <legend className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-600">
-                    Necesidades del grupo
+                    <ST>Necesidades del grupo</ST>
                   </legend>
                   <div className="visita-checkbox-grid">
                     <label className={`visita-checkbox-card ${form.requiereAccesibilidad ? "visita-checkbox-card--activa" : ""}`}>
@@ -888,8 +918,8 @@ export default function SolicitarVisita() {
                         onChange={update}
                       />
                       <div className="visita-checkbox-card__info">
-                        <strong>Requerimientos de accesibilidad</strong>
-                        <span>Apoyo para personas con movilidad reducida o necesidades especiales.</span>
+                        <strong><ST>Requerimientos de accesibilidad</ST></strong>
+                        <span><ST>Apoyo para personas con movilidad reducida o necesidades especiales.</ST></span>
                       </div>
                     </label>
                     <label className={`visita-checkbox-card ${form.requiereParqueoBus ? "visita-checkbox-card--activa" : ""}`}>
@@ -901,8 +931,8 @@ export default function SolicitarVisita() {
                         onChange={update}
                       />
                       <div className="visita-checkbox-card__info">
-                        <strong>Parqueo</strong>
-                        <span>Habilitar espacio de parqueo y maniobra en la finca.</span>
+                        <strong><ST>Parqueo</ST></strong>
+                        <span><ST>Habilitar espacio de parqueo y maniobra en la finca.</ST></span>
                       </div>
                     </label>
                   </div>
@@ -911,12 +941,12 @@ export default function SolicitarVisita() {
                 <div className="visita-recomendaciones">
                   <div className="visita-recomendaciones__header">
                     <Sparkles size={16} className="text-amber-700" />
-                    <strong>Recomendaciones para el recorrido</strong>
+                    <strong><ST>Recomendaciones para el recorrido</ST></strong>
                   </div>
                   <ul className="visita-recomendaciones__list">
-                    <li>Usá vestimenta cómoda y calzado cerrado apropiado para senderos al aire libre.</li>
-                    <li>Llevá repelente si visitarán zonas con vegetación densa o cultivo de café.</li>
-                    <li>Considerá protección solar e hidratación suficiente para el recorrido.</li>
+                    <li><ST>Usá vestimenta cómoda y calzado cerrado apropiado para senderos al aire libre.</ST></li>
+                    <li><ST>Llevá repelente si visitarán zonas con vegetación densa o cultivo de café.</ST></li>
+                    <li><ST>Considerá protección solar e hidratación suficiente para el recorrido.</ST></li>
                   </ul>
                 </div>
 
@@ -924,7 +954,7 @@ export default function SolicitarVisita() {
                   <Field label="Observaciones o solicitudes especiales">
                     <textarea
                       name="observaciones"
-                      placeholder="Detalles adicionales, temática de interés o requerimientos especiales…"
+                      placeholder={tPhObservaciones}
                       rows={3}
                       value={form.observaciones}
                       onChange={update}
@@ -936,12 +966,12 @@ export default function SolicitarVisita() {
 
             {error ? (
               <p className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
-                {error}
+                <ST>{error}</ST>
               </p>
             ) : null}
             {success ? (
               <p className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900" role="status">
-                <CheckCircle2 aria-hidden="true" /> Solicitud #{success.id} enviada en estado {success.estado}.
+                <CheckCircle2 aria-hidden="true" /> <ST>Solicitud #{success.id} enviada en estado {success.estado}.</ST>
               </p>
             ) : null}
 
@@ -949,13 +979,13 @@ export default function SolicitarVisita() {
               <div className="auth-banner mb-6">
                 <Lock size={20} strokeWidth={2} className="auth-banner__icon" />
                 <div className="auth-banner__content">
-                  <p className="auth-banner__text">Debe iniciar sesión para enviar su solicitud de visita.</p>
+                  <p className="auth-banner__text"><ST>Debe iniciar sesión para enviar su solicitud de visita.</ST></p>
                   <Link
                     to="/login"
                     className="auth-banner__link"
                     onClick={() => sessionStorage.setItem("postLoginRedirect", VISITA_LOGIN_REDIRECT)}
                   >
-                    Iniciar sesión →
+                    <ST>Iniciar sesión →</ST>
                   </Link>
                 </div>
               </div>
@@ -973,7 +1003,7 @@ export default function SolicitarVisita() {
                 }
                 type="submit"
               >
-                {submitting ? "Enviando…" : "Enviar solicitud"}
+                {submitting ? <ST>Enviando…</ST> : <ST>Enviar solicitud</ST>}
               </button>
             </div>
           </form>

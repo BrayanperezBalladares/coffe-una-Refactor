@@ -914,14 +914,18 @@ export default function SolicitarDonacion() {
               <ul className="donacion-intro__cats">
                 {necesidades.map((item) => (
                   <li key={item.id}>
-                    <strong>{item.titulo}</strong>
+                    <strong><ST>{item.titulo}</ST></strong>
                     {item.materiales?.length ? (
                       <span>
                         {(item.materiales || [])
                           .filter((mat) => !mat.estado || mat.estado === "ACTIVA")
                           .slice(0, 4)
-                          .map((mat) => mat.nombre)
-                          .join(", ")}
+                          .map((mat, idx, arr) => (
+                            <span key={mat.id || idx}>
+                              <ST>{mat.nombre}</ST>
+                              {idx < arr.length - 1 ? ", " : ""}
+                            </span>
+                          ))}
                       </span>
                     ) : null}
                   </li>
