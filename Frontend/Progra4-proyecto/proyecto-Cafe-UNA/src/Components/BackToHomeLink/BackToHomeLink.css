@@ -3,6 +3,9 @@
   align-items: center;
   gap: 0.5rem;
   min-height: 40px;
+  width: fit-content;
+  max-width: fit-content;
+  align-self: flex-start;
   padding: 0.4rem 0.85rem 0.4rem 0.7rem;
   margin: 0 0 1.25rem;
   color: #44403c;

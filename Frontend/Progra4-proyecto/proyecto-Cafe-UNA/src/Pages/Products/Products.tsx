@@ -1,16 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
-  ArrowUpDown,
-  Check,
-  ChevronRight,
   Coffee,
-  Package,
   Search,
-  Shirt,
   ShoppingCart,
   Sparkles,
-  Tag,
   X,
 } from 'lucide-react';
 import BackToHomeLink from '../../Components/BackToHomeLink/BackToHomeLink';
@@ -36,8 +30,6 @@ import { useTraducir, useTraducirLista } from '../../hooks/useTraducir';
 
 const PRODUCTS_PER_PAGE = 12;
 const CAMPOS_PRODUCTO = ['nombre', 'descripcion'];
-
-type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export interface ProductItem {
   id: number | string;
@@ -81,11 +73,12 @@ function mergeNombres(a: string[], b: string[]): string[] {
   return Array.from(map.values()).sort((x, y) => x.localeCompare(y, 'es', { sensitivity: 'base' }));
 }
 
-function iconoDeCategoria(categoria: string) {
-  const c = String(categoria || '').toLowerCase();
-  if (c.includes('café') || c.includes('cafe') || c.includes('grano')) return Coffee;
-  if (c.includes('textil') || c.includes('ropa') || c.includes('merch')) return Shirt;
-  return Tag;
+const EXCLUDED_CATEGORIES = ['camisa', 'camisas', 'shirt', 'ropa', 'textil'];
+
+function esCategoriaExcluida(cat?: string | null): boolean {
+  if (!cat) return false;
+  const c = String(cat).toLowerCase().trim();
+  return EXCLUDED_CATEGORIES.some((exc) => c.includes(exc));
 }
 
 function formatPriceCRC(amount: number): string {
@@ -144,12 +137,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         <div className="product-card__badges">
-          {product.categoria ? (
-            <span className="product-card__badge product-card__badge--cat">
-              {product.categoria}
-            </span>
-          ) : <span />}
-
           <span
             className={`product-card__badge ${
               estaAgotado ? 'product-card__badge--soldout' : 'product-card__badge--stock'
@@ -196,8 +183,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 interface ToolbarProps {
   busqueda: string;
   setBusqueda: (v: string) => void;
-  sortOption: SortOption;
-  setSortOption: (v: SortOption) => void;
   categoria: string;
   setCategoria: (v: string) => void;
   subcategoria: string;
@@ -207,7 +192,6 @@ interface ToolbarProps {
   hayFiltros: boolean;
   onLimpiarFiltros: () => void;
   tBuscar: string;
-  tOrdenar: string;
   tTodas: string;
   tLimpiar: string;
 }
@@ -215,8 +199,6 @@ interface ToolbarProps {
 const ProductFilterToolbar: React.FC<ToolbarProps> = ({
   busqueda,
   setBusqueda,
-  sortOption,
-  setSortOption,
   categoria,
   setCategoria,
   subcategoria,
@@ -226,7 +208,6 @@ const ProductFilterToolbar: React.FC<ToolbarProps> = ({
   hayFiltros,
   onLimpiarFiltros,
   tBuscar,
-  tOrdenar,
   tTodas,
   tLimpiar,
 }) => (
@@ -253,67 +234,51 @@ const ProductFilterToolbar: React.FC<ToolbarProps> = ({
           </button>
         ) : null}
       </div>
-
-      <div className="products-sort">
-        <ArrowUpDown size={15} className="products-sort__icon" aria-hidden="true" />
-        <label htmlFor="products-sort-select" className="sr-only">{tOrdenar}</label>
-        <select
-          id="products-sort-select"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value as SortOption)}
-          className="products-sort__select"
-        >
-          <option value="relevance">Destacados</option>
-          <option value="price-asc">Precio: Menor a Mayor</option>
-          <option value="price-desc">Precio: Mayor a Menor</option>
-          <option value="name-asc">Nombre: A - Z</option>
-        </select>
-      </div>
     </div>
 
-    <div className="products-categories-bar" aria-label="Categorías de productos">
-      <button
-        type="button"
-        className={`products-cat-pill${categoria === 'todas' ? ' is-active' : ''}`}
-        onClick={() => {
-          setCategoria('todas');
-          setSubcategoria('todas');
-        }}
-      >
-        <span>{tTodas}</span>
-      </button>
-
-      {categorias.map((nombre) => {
-        const activa = nombreCategoria(categoria).toLowerCase() === nombre.toLowerCase();
-        const Icono = iconoDeCategoria(nombre);
-        return (
-          <button
-            key={nombre}
-            type="button"
-            className={`products-cat-pill${activa ? ' is-active' : ''}`}
-            onClick={() => {
-              setCategoria(activa ? 'todas' : nombre);
-              setSubcategoria('todas');
-            }}
-          >
-            <Icono size={14} aria-hidden="true" />
-            <span>{nombre}</span>
-          </button>
-        );
-      })}
-
-      {hayFiltros ? (
+    {categorias.length > 1 ? (
+      <div className="products-categories-bar" aria-label="Categorías de productos">
         <button
           type="button"
-          className="products-cat-pill products-cat-pill--clear"
-          onClick={onLimpiarFiltros}
-          aria-label="Restablecer todos los filtros"
+          className={`products-cat-pill${categoria === 'todas' ? ' is-active' : ''}`}
+          onClick={() => {
+            setCategoria('todas');
+            setSubcategoria('todas');
+          }}
         >
-          <X size={13} aria-hidden="true" />
-          <span>{tLimpiar}</span>
+          <span>{tTodas}</span>
         </button>
-      ) : null}
-    </div>
+
+        {categorias.map((nombre) => {
+          const activa = nombreCategoria(categoria).toLowerCase() === nombre.toLowerCase();
+          return (
+            <button
+              key={nombre}
+              type="button"
+              className={`products-cat-pill${activa ? ' is-active' : ''}`}
+              onClick={() => {
+                setCategoria(activa ? 'todas' : nombre);
+                setSubcategoria('todas');
+              }}
+            >
+              <span>{nombre}</span>
+            </button>
+          );
+        })}
+
+        {hayFiltros ? (
+          <button
+            type="button"
+            className="products-cat-pill products-cat-pill--clear"
+            onClick={onLimpiarFiltros}
+            aria-label="Restablecer todos los filtros"
+          >
+            <X size={13} aria-hidden="true" />
+            <span>{tLimpiar}</span>
+          </button>
+        ) : null}
+      </div>
+    ) : null}
 
     {subcategoriasActivas.length > 0 ? (
       <div className="products-subcategories-bar" aria-label="Subcategorías">
@@ -428,13 +393,11 @@ export const Products: React.FC = () => {
   const tSinStock = useTraducir('Agotado temporalmente');
   const tDisponible = useTraducir('Disponible');
   const tAnadir = useTraducir('Añadir');
-  const tOrdenar = useTraducir('Ordenar por');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [categoria, setCategoria] = useState('todas');
   const [subcategoria, setSubcategoria] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
-  const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const [categoriasApi, setCategoriasApi] = useState<CategoriaItem[]>([]);
 
   useEffect(() => {
@@ -452,17 +415,31 @@ export const Products: React.FC = () => {
   }, []);
 
   const visibleProducts = useMemo(
-    () => rawProducts.filter((product) => product.estado !== 'Deshabilitado'),
+    () =>
+      rawProducts.filter(
+        (product) =>
+          product.estado !== 'Deshabilitado' &&
+          !esCategoriaExcluida(product.categoria) &&
+          !esCategoriaExcluida(product.subcategoria) &&
+          !esCategoriaExcluida(product.nombre),
+      ),
     [rawProducts],
   );
 
   const categoriasRaizApi = useMemo(
-    () => categoriasApi.filter(esCategoriaRaiz).map((item) => item.nombre),
+    () =>
+      categoriasApi
+        .filter(esCategoriaRaiz)
+        .filter((item) => !esCategoriaExcluida(item.nombre))
+        .map((item) => item.nombre),
     [categoriasApi],
   );
 
   const categorias = useMemo(
-    () => mergeNombres(categoriasRaizApi, categoriasUnicas(visibleProducts)),
+    () =>
+      mergeNombres(categoriasRaizApi, categoriasUnicas(visibleProducts)).filter(
+        (cat) => !esCategoriaExcluida(cat),
+      ),
     [categoriasRaizApi, visibleProducts],
   );
 
@@ -478,47 +455,20 @@ export const Products: React.FC = () => {
       filtrarPorCategoria(visibleProducts, categoria),
       (item) => item?.subcategoria,
     );
-    return mergeNombres(desdeApi, desdeProductos);
+    return mergeNombres(desdeApi, desdeProductos).filter(
+      (sub) => !esCategoriaExcluida(sub),
+    );
   }, [categoria, categoriasApi, visibleProducts]);
 
   const productosFiltrados = useMemo(() => {
     const porCategoria = filtrarPorCategoria(visibleProducts, categoria);
     const porSub = filtrarPorCategoria(porCategoria, subcategoria, (item) => item?.subcategoria);
-    const coinciden = porSub.filter((producto) => coincidenciaBusqueda(producto, busqueda));
-
-    const sorted = [...coinciden];
-    switch (sortOption) {
-      case 'price-asc':
-        sorted.sort((a, b) => {
-          const pA = Number(a.precioNormal ?? a.price ?? 0) || 0;
-          const pB = Number(b.precioNormal ?? b.price ?? 0) || 0;
-          return pA - pB;
-        });
-        break;
-      case 'price-desc':
-        sorted.sort((a, b) => {
-          const pA = Number(a.precioNormal ?? a.price ?? 0) || 0;
-          const pB = Number(b.precioNormal ?? b.price ?? 0) || 0;
-          return pB - pA;
-        });
-        break;
-      case 'name-asc':
-        sorted.sort((a, b) => {
-          const nA = nombrePorId.get(a.id) || a.nombre || '';
-          const nB = nombrePorId.get(b.id) || b.nombre || '';
-          return nA.localeCompare(nB, 'es', { sensitivity: 'base' });
-        });
-        break;
-      default:
-        break;
-    }
-
-    return sorted;
-  }, [visibleProducts, categoria, subcategoria, busqueda, sortOption, nombrePorId]);
+    return porSub.filter((producto) => coincidenciaBusqueda(producto, busqueda));
+  }, [visibleProducts, categoria, subcategoria, busqueda]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [categoria, subcategoria, busqueda, sortOption]);
+  }, [categoria, subcategoria, busqueda]);
 
   const totalPages = Math.ceil(productosFiltrados.length / PRODUCTS_PER_PAGE) || 1;
 
@@ -528,13 +478,12 @@ export const Products: React.FC = () => {
   }, [currentPage, productosFiltrados]);
 
   const hayFiltros =
-    categoria !== 'todas' || subcategoria !== 'todas' || Boolean(String(busqueda).trim()) || sortOption !== 'relevance';
+    categoria !== 'todas' || subcategoria !== 'todas' || Boolean(String(busqueda).trim());
 
   const limpiarFiltros = () => {
     setCategoria('todas');
     setSubcategoria('todas');
     setBusqueda('');
-    setSortOption('relevance');
   };
 
   const handleQuickAdd = (event: React.MouseEvent<HTMLButtonElement>, product: ProductItem) => {
@@ -586,21 +535,11 @@ export const Products: React.FC = () => {
             <h1 className="products-header__title">{tProductos}</h1>
             <p className="products-header__lead">{tLead}</p>
           </div>
-
-          <div className="products-header__stats" aria-live="polite">
-            <Package size={15} aria-hidden="true" className="text-amber-700" />
-            <span>
-              <strong>{productosFiltrados.length}</strong>{' '}
-              {productosFiltrados.length === 1 ? 'producto encontrado' : 'productos disponibles'}
-            </span>
-          </div>
         </header>
 
         <ProductFilterToolbar
           busqueda={busqueda}
           setBusqueda={setBusqueda}
-          sortOption={sortOption}
-          setSortOption={setSortOption}
           categoria={categoria}
           setCategoria={setCategoria}
           subcategoria={subcategoria}
@@ -610,7 +549,6 @@ export const Products: React.FC = () => {
           hayFiltros={hayFiltros}
           onLimpiarFiltros={limpiarFiltros}
           tBuscar={tBuscar}
-          tOrdenar={tOrdenar}
           tTodas={tTodas}
           tLimpiar={tLimpiar}
         />
