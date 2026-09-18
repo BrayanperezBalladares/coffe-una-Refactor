@@ -22,6 +22,12 @@ import { toGoogleMapsEmbedUrl } from '../../lib/googleMaps';
 import { buildIniciativasCards } from '../../lib/iniciativasCards';
 import { useRevealOnScroll } from '../../hooks/useRevealOnScroll';
 import { useTraducirLista, useTraducirObjeto } from '../../hooks/useTraducir';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../Components/ui/accordion';
 import './Home.css';
 
 const CAMPOS_TEASER = ['title', 'description', 'linkText'];
@@ -32,43 +38,6 @@ const CAMPOS_FAQ = ['eyebrow', 'title', 'description'];
 const CAMPOS_FAQ_ITEM = ['pregunta', 'respuesta'];
 const CAMPOS_TARJETAS = ['etiqueta', 'titulo', 'descripcion', 'textoBoton'];
 const CAMPOS_PRODUCTOS = ['nombre', 'descripcion', 'categoria', 'subcategoria'];
-
-function HomeFaqItem({ question, children }) {
-  const handleSummaryClick = (event) => {
-    const details = event.currentTarget.parentElement;
-    if (!details || details.tagName !== "DETAILS" || !details.open) return;
-    if (details.classList.contains("home-faq__item--cerrando")) {
-      event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    details.classList.add("home-faq__item--cerrando");
-    const panel = details.querySelector(".home-faq__cuerpo");
-    let cerrado = false;
-    const finalizar = () => {
-      if (cerrado) return;
-      cerrado = true;
-      details.open = false;
-      details.classList.remove("home-faq__item--cerrando");
-      panel?.removeEventListener("transitionend", onEnd);
-    };
-    const onEnd = (evt) => {
-      if (evt.target !== panel) return;
-      finalizar();
-    };
-    panel?.addEventListener("transitionend", onEnd);
-    window.setTimeout(finalizar, 420);
-  };
-
-  return (
-    <details className="home-faq__item">
-      <summary onClick={handleSummaryClick}>{question}</summary>
-      <div className="home-faq__cuerpo">
-        <div className="home-faq__cuerpo-inner">{children}</div>
-      </div>
-    </details>
-  );
-}
 
 function getPreloadSource(pageStatus, data) {
   if (pageStatus === 'ready' && data) return data;
@@ -392,12 +361,15 @@ const Home = () => {
               {faqSection.description ? <p className="home-faq__intro">{faqSection.description}</p> : null}
             </header>
             {faqItems.length > 0 ? (
-              <div className="home-faq__lista">
-                {faqItems.map((item) => (
-                  <HomeFaqItem key={item.id ?? item.pregunta} question={item.pregunta}>
-                    <p>{item.respuesta}</p>
-                  </HomeFaqItem>
-                ))}
+              <div className="home-faq__container">
+                <Accordion type="single" collapsible className="w-full">
+                  {faqItems.map((item, index) => (
+                    <AccordionItem key={item.id ?? index} value={`faq-${item.id ?? index}`}>
+                      <AccordionTrigger>{item.pregunta}</AccordionTrigger>
+                      <AccordionContent>{item.respuesta}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </div>
             ) : null}
           </section>
