@@ -63,9 +63,9 @@ function getTipoIcon(tipo) {
   return Sprout;
 }
 
-function SectionCard({ icon: Icon, paso, title, hint, children }) {
+function SectionCard({ id, icon: Icon, paso, title, hint, children }) {
   return (
-    <div className="section-card">
+    <div className="section-card" id={id}>
       <div className="section-card__header">
         {paso != null ? (
           <span className="section-card__paso" aria-hidden="true">
@@ -448,30 +448,50 @@ function SolicitarVoluntariado() {
     return () => window.clearTimeout(timeoutId);
   }, [formulario.identificacion, esNacionalCr, consultarDatosCedula]);
 
-  // Selección del tipo de voluntariado (Paso 1)
-  const handleTipoVoluntariado = async (tipo) => {
-    setFormulario((prev) => ({
-      ...prev,
-      tipo,
-      tipoOtro: tipo === "Otro" ? prev.tipoOtro : "",
-      fechaVoluntariado: "",
-      disponibilidad: "",
-    }));
-    setFechaSeleccionada(undefined);
-    limpiarError("tipo");
-    limpiarError("tipoOtro");
-    limpiarError("fechaVoluntariado");
-    limpiarError("disponibilidad");
+  const scrollToPasoFechas = useCallback(() => {
+    setTimeout(() => {
+      const el = document.getElementById("paso-fechas-disponibles");
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetY = scrollTop + rect.top - 80;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+      }
+    }, 60);
+  }, []);
 
-    setCargandoFechas(true);
-    try {
-      const data = await obtenerFechasDisponibles(tipo);
-      setFechasDisponibles(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.warn("Error al cargar fechas para el tipo de voluntariado:", err);
-      setFechasDisponibles([]);
-    } finally {
-      setCargandoFechas(false);
+  // Selección del tipo de voluntariado (Paso 1)
+  const handleTipoVoluntariado = async (tipo, shouldScroll = true) => {
+    const esMismoTipo = formulario.tipo === tipo;
+
+    if (!esMismoTipo) {
+      setFormulario((prev) => ({
+        ...prev,
+        tipo,
+        tipoOtro: tipo === "Otro" ? prev.tipoOtro : "",
+        fechaVoluntariado: "",
+        disponibilidad: "",
+      }));
+      setFechaSeleccionada(undefined);
+      limpiarError("tipo");
+      limpiarError("tipoOtro");
+      limpiarError("fechaVoluntariado");
+      limpiarError("disponibilidad");
+
+      setCargandoFechas(true);
+      try {
+        const data = await obtenerFechasDisponibles(tipo);
+        setFechasDisponibles(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.warn("Error al cargar fechas para el tipo de voluntariado:", err);
+        setFechasDisponibles([]);
+      } finally {
+        setCargandoFechas(false);
+      }
+    }
+
+    if (shouldScroll) {
+      scrollToPasoFechas();
     }
   };
 
@@ -846,9 +866,9 @@ function SolicitarVoluntariado() {
         className={`voluntariado-page${showPrepaint ? " voluntariado-page--prepaint" : ""}`}
         inert={inert}
       >
-        <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
-
         <section id="voluntariado" className="voluntariado-section">
+          <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
+
           <div className="voluntariado-header">
             <span className="badge--voluntariado">
               <ST>Programa de Voluntariado</ST>
@@ -971,13 +991,18 @@ function SolicitarVoluntariado() {
                           className={`opcion-radio ${
                             esSeleccionado ? "opcion-radio--activa" : ""
                           } ${!tieneFechas ? "opcion-radio--sin-fechas" : ""}`}
+                          onClick={() => {
+                            if (esSeleccionado && tieneFechas) {
+                              scrollToPasoFechas();
+                            }
+                          }}
                         >
                           <input
                             type="radio"
                             name="tipoVoluntariado"
                             value={tipo}
                             checked={esSeleccionado}
-                            onChange={() => handleTipoVoluntariado(tipo)}
+                            onChange={() => handleTipoVoluntariado(tipo, tieneFechas)}
                           />
                           <div className="opcion-radio__left">
                             <TipoIcon size={22} className="opcion-radio__icon" aria-hidden="true" />
@@ -987,10 +1012,19 @@ function SolicitarVoluntariado() {
                           </div>
                           <div className="opcion-radio__right">
                             {tieneFechas ? (
-                              <span className="opcion-radio__badge-disponible">
+                              <button
+                                type="button"
+                                className="opcion-radio__badge-disponible"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleTipoVoluntariado(tipo, true);
+                                }}
+                                aria-label={`Ver fechas disponibles para ${tipo}`}
+                              >
                                 <CalendarDays className="size-3.5" aria-hidden="true" />
                                 <span><ST>Ver fechas</ST></span>
-                              </span>
+                              </button>
                             ) : (
                               <span className="opcion-radio__badge-nodisponible">
                                 <CalendarX2 className="size-3.5" aria-hidden="true" />
@@ -1037,6 +1071,7 @@ function SolicitarVoluntariado() {
                 </SectionCard>
 
                 <SectionCard
+                  id="paso-fechas-disponibles"
                   paso={pasos.fecha}
                   icon={CalendarCheck2}
                   title={tPaso2}

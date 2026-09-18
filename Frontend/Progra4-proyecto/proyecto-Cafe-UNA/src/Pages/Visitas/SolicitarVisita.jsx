@@ -483,9 +483,9 @@ export default function SolicitarVisita() {
         inert={inert}
         ref={pageRef}
       >
-        <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
-
         <section className="voluntariado-section">
+          <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
+
           <header className="voluntariado-header">
             <h1><ST>Solicitud de visitas grupales</ST></h1>
             <p>

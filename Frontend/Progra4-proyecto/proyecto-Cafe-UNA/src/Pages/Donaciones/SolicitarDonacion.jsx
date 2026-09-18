@@ -895,8 +895,8 @@ export default function SolicitarDonacion() {
         className={`voluntariado-page donacion-page${showPrepaint ? " voluntariado-page--prepaint" : ""}`}
         inert={inert}
       >
-        <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
         <section className="voluntariado-section">
+          <BackToHomeLink homeSection={HOME_SCROLL_SECTIONS.voluntariado} />
           <div className="voluntariado-header">
             <h1>{tTitulo}</h1>
             <p>{tSub}</p>

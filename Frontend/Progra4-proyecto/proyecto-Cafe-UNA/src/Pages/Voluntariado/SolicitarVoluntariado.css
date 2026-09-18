@@ -37,11 +37,12 @@
   overflow: hidden;
 }
 
+.voluntariado-section > .page-back-link,
 .voluntariado-page > .page-back-link {
-  max-width: 780px;
-  width: 100%;
-  margin: 0 auto 18px;
-  padding: 0 16px;
+  width: fit-content;
+  max-width: fit-content;
+  align-self: flex-start;
+  margin: 0 0 18px;
 }
 
 /* =========================
@@ -317,6 +318,7 @@
   margin-bottom: 22px;
   box-shadow: 0 1px 3px rgba(44, 33, 28, 0.03);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  scroll-margin-top: 80px;
 }
 
 .section-card:hover {
@@ -1455,6 +1457,15 @@
   border: 1px solid #6ee7b7;
   white-space: nowrap;
   transition: all 0.2s ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.opcion-radio__badge-disponible:hover {
+  background: #047857;
+  color: #ffffff;
+  border-color: #047857;
+  transform: scale(1.02);
 }
 
 .opcion-radio--activa .opcion-radio__badge-disponible {
