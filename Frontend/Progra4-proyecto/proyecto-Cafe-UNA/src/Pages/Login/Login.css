@@ -99,7 +99,7 @@
 .login-field input {
   width: 100%;
   border: 1px solid #dddddd;
-  border-radius: var(--ui-btn-radius);
+  border-radius: var(--ui-radius);
   padding: 0.75rem 1rem;
   font-size: var(--text-body);
   color: #1a1a1a;
@@ -204,14 +204,14 @@
 .login-button {
   width: 100%;
   margin-top: 0.5rem;
-  padding: 0.9rem 1rem;
+  padding: 0.85rem 1rem;
   border: 1px solid #1a1a1a;
-  border-radius: var(--ui-btn-radius);
+  border-radius: var(--ui-radius);
   background: #1a1a1a;
   color: #ffffff;
   font-size: var(--text-body);
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-weight: 650;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 }

@@ -59,7 +59,7 @@
   height: auto;
   padding: 0.55rem 0.65rem;
   border: 1px solid #dddddd;
-  border-radius: var(--ui-btn-radius);
+  border-radius: var(--ui-radius);
   background: #ffffff;
   color: #555555;
   font-size: var(--text-body);
@@ -101,7 +101,7 @@
   justify-content: center;
   min-height: var(--control-height);
   border: 1px solid #dddddd;
-  border-radius: var(--ui-btn-radius);
+  border-radius: var(--ui-radius);
   background: #ffffff;
   color: #555555;
   font-size: var(--text-body);
@@ -140,7 +140,7 @@
 
 .registro-page .registro-ui-select .ui-select__trigger {
   border: 1px solid #dddddd !important;
-  border-radius: 999px !important;
+  border-radius: var(--ui-radius) !important;
   background: #ffffff;
   color: #1a1a1a;
   font-weight: 500;
@@ -211,7 +211,7 @@
   margin: 0;
   padding: 0.65rem 0.85rem;
   border: 1px solid #dddddd;
-  border-radius: var(--ui-btn-radius);
+  border-radius: var(--ui-radius);
   background: #ffffff;
   color: #444444;
   font-size: var(--text-body);

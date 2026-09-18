@@ -314,7 +314,6 @@ const Home = () => {
               >
                 <div className="iniciativa-card__top">
                   <div className="iniciativa-card__icono">{card.icono}</div>
-                  <span className="iniciativa-card__etiqueta">{card.etiqueta}</span>
                 </div>
 
                 <div className="iniciativa-card__body">

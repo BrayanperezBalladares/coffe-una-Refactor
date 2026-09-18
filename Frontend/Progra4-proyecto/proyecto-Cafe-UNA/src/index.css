@@ -698,7 +698,7 @@ input.rounded-full:not([type="checkbox"]):not([type="radio"]),
 .login-field input:not([type="checkbox"]):not([type="radio"]),
 .perfil-field input:not([type="checkbox"]):not([type="radio"]),
 .usuarios-form input:not([type="checkbox"]):not([type="radio"]) {
-  border-radius: var(--ui-btn-radius) !important;
+  border-radius: var(--ui-radius) !important;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill,
