@@ -730,14 +730,15 @@
   font-size: 1rem;
   font-weight: 600;
   color: #18181b;
-  text-decoration: none;
+  text-decoration: none !important;
   transition: color 0.15s ease;
 }
 
-.home-faq__container button[data-radix-collection-item]:hover {
+.home-faq__container button[data-radix-collection-item]:hover,
+.home-faq__container button[data-radix-collection-item]:focus,
+.home-faq__container button[data-radix-collection-item]:active {
   color: #09090b;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration: none !important;
 }
 
 .home-faq__container [data-state="open"] > button svg,
