@@ -936,9 +936,16 @@ export default function SolicitarDonacion() {
                 <ST>Por ahora no hay categorías de donación material activas.</ST>
               </p>
             )}
+
+            <div className="donacion-intro__cta">
+              <a href="#formulario-donacion" className="voluntariado-cta-banner__btn">
+                <ST>Ir al formulario de donación ↓</ST>
+              </a>
+            </div>
           </div>
 
           <form
+              id="formulario-donacion"
               onSubmit={handleSubmit}
               className="formulario-card"
               noValidate

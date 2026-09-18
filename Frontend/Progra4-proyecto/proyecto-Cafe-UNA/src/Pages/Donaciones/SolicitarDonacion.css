@@ -254,8 +254,27 @@
   }
 
   .donacion-intro {
-    padding: 20px 18px;
+    padding: 18px 16px;
+    border-radius: 16px;
+    margin-bottom: 1.25rem;
   }
+
+  .donacion-intro__cta {
+    justify-content: stretch;
+  }
+
+  .donacion-intro__cta .voluntariado-cta-banner__btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.donacion-intro__cta {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borde-input);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .donacion-page .donacion-fecha-fija:disabled {

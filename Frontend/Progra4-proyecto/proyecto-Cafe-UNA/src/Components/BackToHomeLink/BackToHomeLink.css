@@ -1,22 +1,43 @@
 .page-back-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
-  min-height: 44px;
-  padding: 0.5rem 0.25rem;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.4rem 0.85rem 0.4rem 0.7rem;
   margin: 0 0 1.25rem;
-  color: #111111;
-  font-size: var(--text-body);
+  color: #44403c;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease, transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e7e5e4;
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(8px);
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .page-back-link:hover {
-  color: #333333;
-  transform: translateX(-3px);
+  color: #1c1917;
+  background: #ffffff;
+  border-color: #d6d3d1;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.page-back-link:focus-visible {
+  outline: 2px solid #8c5332;
+  outline-offset: 2px;
 }
 
 .page-back-link svg {
   flex-shrink: 0;
+  color: #78716c;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
+
+.page-back-link:hover svg {
+  color: #1c1917;
+  transform: translateX(-2px);
+}
+

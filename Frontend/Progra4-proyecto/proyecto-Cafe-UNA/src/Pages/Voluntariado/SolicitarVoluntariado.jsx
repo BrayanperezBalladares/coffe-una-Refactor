@@ -850,12 +850,68 @@ function SolicitarVoluntariado() {
 
         <section id="voluntariado" className="voluntariado-section">
           <div className="voluntariado-header">
+            <span className="badge--voluntariado">
+              <ST>Programa de Voluntariado</ST>
+            </span>
             <h1>{tTitulo}</h1>
             <p>{tSub}</p>
           </div>
 
+          <div className="voluntariado-info-grid">
+            <div className="voluntariado-info-card">
+              <div className="voluntariado-info-card__icon-wrap">
+                <Check size={20} className="text-emerald-700" />
+              </div>
+              <h3 className="voluntariado-info-card__title">
+                <ST>Requisitos para participar</ST>
+              </h3>
+              <p className="voluntariado-info-card__text">
+                <ST>Ser mayor de 18 años o contar con aval institucional para grupos, calzado cerrado para campo y compromiso de puntualidad.</ST>
+              </p>
+            </div>
+
+            <div className="voluntariado-info-card">
+              <div className="voluntariado-info-card__icon-wrap">
+                <Sprout size={20} className="text-amber-800" />
+              </div>
+              <h3 className="voluntariado-info-card__title">
+                <ST>¿Qué actividades realizarás?</ST>
+              </h3>
+              <p className="voluntariado-info-card__text">
+                <ST>Mantenimiento de cafetales, recolección sostenible, compostaje, apoyo logístico e investigación comunitaria.</ST>
+              </p>
+            </div>
+
+            <div className="voluntariado-info-card">
+              <div className="voluntariado-info-card__icon-wrap">
+                <GraduationCap size={20} className="text-stone-800" />
+              </div>
+              <h3 className="voluntariado-info-card__title">
+                <ST>Certificación y Horas</ST>
+              </h3>
+              <p className="voluntariado-info-card__text">
+                <ST>Reconocimiento de participación formal y validación de horas comunales o de voluntariado de la Universidad Nacional.</ST>
+              </p>
+            </div>
+          </div>
+
+          <div className="voluntariado-cta-banner">
+            <div>
+              <h4 className="voluntariado-cta-banner__title">
+                <ST>¿Deseas participar como voluntario?</ST>
+              </h4>
+              <p className="voluntariado-cta-banner__text">
+                <ST>Completá los pasos de inscripción a continuación para elegir tu fecha, turno y modalidad.</ST>
+              </p>
+            </div>
+            <a href="#formulario-inscripcion" className="voluntariado-cta-banner__btn">
+              <ST>Ir a la inscripción ↓</ST>
+            </a>
+          </div>
+
           {!enviado ? (
             <form
+              id="formulario-inscripcion"
               onSubmit={handleSubmit}
               className="formulario-card"
               noValidate

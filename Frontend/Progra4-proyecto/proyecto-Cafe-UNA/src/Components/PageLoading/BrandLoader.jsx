@@ -62,7 +62,7 @@ function BrandLoaderLogo() {
           onError={() => setLogoBroken(true)}
         />
       ) : (
-        <span className="brand-loader__spinner brand-loader__spinner--inline" aria-hidden="true" />
+        <p className="brand-loader__wordmark">Café UNA</p>
       )}
     </div>
   );
