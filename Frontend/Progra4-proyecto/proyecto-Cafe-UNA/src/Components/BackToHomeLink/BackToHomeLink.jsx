@@ -6,11 +6,15 @@ import './BackToHomeLink.css';
 
 const BackToHomeLink = ({ className = '', homeSection }) => {
   const navigate = useNavigate();
-  const label = useTraducir('Volver al inicio');
+  const label = useTraducir('Volver');
 
   const handleClick = (event) => {
     event.preventDefault();
-    navigateToHomeSection(navigate, homeSection);
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigateToHomeSection(navigate, homeSection);
+    }
   };
 
   return (

@@ -81,7 +81,13 @@ export function scrollToHomeSection(sectionId) {
 
   const element = document.getElementById(sectionId);
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const navbarOffset = 75;
+    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+    const offsetPosition = Math.max(0, elementPosition - navbarOffset);
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
     return true;
   }
 

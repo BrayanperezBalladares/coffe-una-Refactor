@@ -980,25 +980,20 @@ function SolicitarVoluntariado() {
                             onChange={() => handleTipoVoluntariado(tipo)}
                           />
                           <div className="opcion-radio__left">
-                            <span className="opcion-radio__indicador" />
-                            <div className="opcion-radio__icon-box">
-                              <TipoIcon size={18} className="opcion-radio__icon" aria-hidden="true" />
-                            </div>
-                            <div className="opcion-radio__meta">
-                              <span className="opcion-radio__titulo">
-                                <ST>{tipo}</ST>
-                              </span>
-                            </div>
+                            <TipoIcon size={22} className="opcion-radio__icon" aria-hidden="true" />
+                            <span className="opcion-radio__titulo">
+                              <ST>{tipo}</ST>
+                            </span>
                           </div>
                           <div className="opcion-radio__right">
                             {tieneFechas ? (
                               <span className="opcion-radio__badge-disponible">
-                                <CalendarDays className="size-3.5" />
-                                <span>{count} {count === 1 ? "fecha disponible" : "fechas disponibles"}</span>
+                                <CalendarDays className="size-3.5" aria-hidden="true" />
+                                <span><ST>Ver fechas</ST></span>
                               </span>
                             ) : (
                               <span className="opcion-radio__badge-nodisponible">
-                                <CalendarX2 className="size-3.5" />
+                                <CalendarX2 className="size-3.5" aria-hidden="true" />
                                 <span><ST>Sin fechas disponibles</ST></span>
                               </span>
                             )}
