@@ -759,7 +759,9 @@ const Navbar = () => {
         window.location.replace('/');
     };
 
-    const isTransparent = pathname === '/' && !isScrolled;
+    // The editorial home uses a light first viewport, so the navigation stays
+    // on its accessible solid treatment instead of switching to white-on-photo.
+    const isTransparent = false;
     const useSolidNavbar = isScrolled;
     const showLogoClaro = isTransparent && !useSolidNavbar;
     const brandLogoOscuroSrc = normalizeImageUrl(logoUrl, { width: 480 });

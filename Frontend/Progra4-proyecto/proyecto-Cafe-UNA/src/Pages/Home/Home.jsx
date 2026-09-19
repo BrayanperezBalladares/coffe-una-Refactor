@@ -186,48 +186,6 @@ const Home = () => {
       <Hero data={hero} onBackgroundReady={handleHeroBackgroundReady} />
       {isFullyVisible ? (
       <main className="home-page">
-        {(aboutTeaser.title || aboutTeaser.description || aboutTeaserImageUrl) ? (
-        <section id="sobre-nosotros" className="home-page__mission-spotlight reveal-on-scroll" aria-labelledby="about-teaser-title">
-          <div className="mission-spotlight-shell">
-            <article className="mission-spotlight-card">
-              <div className="mission-spotlight-card__body">
-                <div className="mission-spotlight-card__content">
-                  {aboutTeaser.title ? (
-                    <h2 id="about-teaser-title" className="mission-spotlight-card__title">
-                      {aboutTeaser.title}
-                    </h2>
-                  ) : null}
-                  {aboutTeaser.description ? (
-                    <p className="mission-spotlight-card__description">
-                      {aboutTeaser.description}
-                    </p>
-                  ) : null}
-                  {aboutTeaser.linkText && aboutTeaser.linkUrl ? (
-                    <HomeActionLink href={aboutTeaser.linkUrl} className="mission-spotlight-card__button">
-                      {aboutTeaser.linkText}
-                    </HomeActionLink>
-                  ) : null}
-                </div>
-
-                {aboutTeaserImageUrl ? (
-                  <div className="mission-spotlight-card__media">
-                    <img
-                      src={aboutTeaserImageUrl}
-                      alt=""
-                      width={900}
-                      height={600}
-                      loading="eager"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                ) : null}
-              </div>
-            </article>
-          </div>
-        </section>
-        ) : null}
-
         {(featuredSection.title || featuredSection.description || featuredProducts.length > 0) ? (
         <section id="productos" className="home-page__featured featured-cafes-section reveal-on-scroll">
           {(featuredSection.title || featuredSection.description) ? (
@@ -258,9 +216,54 @@ const Home = () => {
         </section>
         ) : null}
 
+        {(aboutTeaser.title || aboutTeaser.description || aboutTeaserImageUrl) ? (
+        <section id="sobre-nosotros" className="home-page__mission-spotlight reveal-on-scroll" aria-labelledby="about-teaser-title">
+          <div className="mission-spotlight-shell">
+            <article className="mission-spotlight-card">
+              <div className="mission-spotlight-card__body">
+                <div className="mission-spotlight-card__content">
+                  {aboutTeaser.title ? (
+                    <h2 id="about-teaser-title" className="mission-spotlight-card__title">
+                      {aboutTeaser.title}
+                    </h2>
+                  ) : null}
+                  {aboutTeaser.description ? (
+                    <p className="mission-spotlight-card__description">
+                      {aboutTeaser.description}
+                    </p>
+                  ) : null}
+                  {aboutTeaser.linkText && aboutTeaser.linkUrl ? (
+                    <HomeActionLink href={aboutTeaser.linkUrl} className="mission-spotlight-card__button">
+                      {aboutTeaser.linkText}
+                    </HomeActionLink>
+                  ) : null}
+                </div>
+
+                {aboutTeaserImageUrl ? (
+                  <div className="mission-spotlight-card__media">
+                    <img
+                      src={aboutTeaserImageUrl}
+                      alt=""
+                      width={900}
+                      height={600}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          </div>
+        </section>
+        ) : null}
+
         <section id="iniciativas" className="home-page__iniciativas reveal-on-scroll">
           {iniciativasSection.title || iniciativasSection.description ? (
             <header className="curated-collections__header">
+              {iniciativasSection.eyebrow ? (
+                <p className="iniciativas-eyebrow">{iniciativasSection.eyebrow}</p>
+              ) : null}
               {iniciativasSection.title ? (
                 <h2 className="curated-collections__title">{iniciativasSection.title}</h2>
               ) : null}
@@ -313,6 +316,9 @@ const Home = () => {
         <section className="home-page__location reveal-on-scroll" aria-labelledby="location-title">
           <div className="location-card">
             <div className="location-card__copy">
+              {locationSection.eyebrow ? (
+                <p className="location-card__eyebrow">{locationSection.eyebrow}</p>
+              ) : null}
               {locationSection.title ? (
                 <h2 id="location-title">{locationSection.title}</h2>
               ) : null}

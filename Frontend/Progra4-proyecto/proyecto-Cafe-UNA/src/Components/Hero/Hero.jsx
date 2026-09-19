@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { normalizeImageUrl } from "../../lib/imageUtils";
 import { isExternalHeroUrl, mapHero } from "../../lib/heroData";
 import { useTraducirObjeto } from "../../hooks/useTraducir";
